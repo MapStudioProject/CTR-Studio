@@ -2,3 +2,6 @@
 	path = SPICA
 	url = https://github.com/KillzXGaming/SPICA
 	branch = master
+[submodule "MapStudio.UI"]
+	path = MapStudio.UI
+	url = https://github.com/MapStudioProject/MapStudio.UI
