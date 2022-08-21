@@ -5,3 +5,6 @@
 [submodule "MapStudio.UI"]
 	path = MapStudio.UI
 	url = https://github.com/MapStudioProject/MapStudio.UI
+[submodule "GLFrameworkEngine"]
+	path = GLFrameworkEngine
+	url = https://github.com/MapStudioProject/GLFrameworkEngine
