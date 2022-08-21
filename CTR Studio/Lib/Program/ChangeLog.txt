@@ -1,0 +1,67 @@
+Version 0.84 Beta
+IMPROVEMENT:Improved icon resolution for map objects in the asset viewer.
+BUG:Fixed the lap point reference not being selectable for map object UI.
+IMPROVEMENT:Added parameter info for the bird actor (uses lap point to fly away)
+IMPROVEMENT:Added parameter info for goomba (lap point range for detecting player movement)
+BUG:Fixed switching the rail editor not properly deselecting it out of edit mode.
+BUG:Fixed exporting map objects with materials/textures missing.
+BUG:Fixed injecting alpha channels swapping red/green channels due to incorrect rgba order.
+BUG:Fixed saving byaml clips with more than 31 clip areas.
+Version 0.83 Beta
+BUG:Fixed some viewport shortcuts activate during renaming.
+BUG:Fix changing texture channel component properties for import/replacing.
+BUG:Fix editing existing animations SRT animations causing a potential crash in game.
+ADDITION:Material parameters can be copy/pasted between bfres from clipboard.
+ADDITION:User data can be copy/pasted between bfres from clipboard (if selected).
+Version 0.82 Beta
+ADDITION:Added a right click option for file formats to open in file explorer.
+ADDITION:Add sampler/attribute assign in material UI from bfres to shaders.
+IMPROVEMENT:Improve the UI for bfres texture maps to show fragment sampler similar to stb.
+IMPROVEMENT:Collision importer has options to combine attributes, materials, and trick flags.
+BUG:Fixed crash from mini map due to missing shaders.
+BUG:Fixed regional issues from commas/periods from parsing in .obj and .dae.
+Version 0.81 Beta
+ADDITION:Switch custom tracks can now be created from scatch.
+BUG:Fixed viewing BC5 Snorm textures in material view/uv viewer (would show dark green).
+BUG:Fixed editing shader param animations with more than one parameter.
+BUG:Fixed animations importing from material presets when used more than once.
+IMPROVEMENT:Improved UI for checking tree nodes. These won't force select the tree node.
+IMPROVEMENT:Improved UI for creating new tracks to be easier.
+ADDITION:LODs can be visible when selected in the mesh UI.
+IMPROVEMENT:Model import dialog scrapped for now as settings are not necessary and makes it confusing.
+BUG:Fixed paths not expanding in tree when a point is added.
+Version 0.80 Beta
+ADDITION:Animations in dope sheets can now be resized when multi selected.
+ADDITION:Added duplication for material animations to copy all animation data from one material to another.
+ADDITION:Added frame resizing to skeletal/material animations to resize entire animations to speed up/slow down.
+ADDITION:Added XRAY option to paths so you can dispaly them through models. This can be toggled on the top viewport toolbar.
+IMPROVEMENT:Changed default font to use solid fonts for font awesome.
+ADDITION:BFRES now has a model importing dialog to configure the materials.
+IMPROVEMENT:BFRES replacements will now keep the original materials if already present in bfres.
+ADDITION:Clips can now be created and edited in tool. 
+ADDITION:Clip areas can display culled regions (if a clip is selected).
+BUG:Fixed potential crash for new projects that have no bfres.
+BUG:Fixed 2D view from the "Views" menu so it works.
+BUG:Fixed rotating certain things at certain angles (like 180 0 -90).
+IMPROVEMENT:Improved the 2D view controls.
+IMPROVEMENT:Improved bezier visuals (darker control points).
+IMPROVEMENT:Improved bezier visuals (different color for used parameters).
+BUG:Fixed selecting rail points with large sizes.
+IMPROVEMENT:Size radius is viewable for rail types.
+IMPROVEMENT:Improved color bar for color animations to look and perform better.
+BUG:Fixed BC5 Snorm normal maps displaying in debug shading view.
+BUG:Fixed moving return points disappearing (faulty collision dropping due to relative coordinates).
+BUG:Fixed return points having broken rotation gizmo placement when using the x/y/z shortcuts.
+BUG:Fixed replacing texture with dds changing texture names if the names don't match (could cause issues to re open)
+BUG:Fixed rail paths in the UI disappearing after save when using the obj path property.
+BUG:Fixed potential crash from rail paths when using the obj path property.
+ADDITION:Add setting to clear the paths for the path selector.
+BUG:Various fixes to render info and user data editor.
+IMPROVEMENT:Various UI improvements to render info and user data editor.
+ADDITION:Add UI to view mesh vertices and model vertex count/user data.
+ADDITION:Added .zip to export/replace materials. These will export with shaders/animations and optional textures.
+BUG:Fixed removing materials causing issues.
+IMPROVEMENT:When a bfres material is swapped with a preset, the cull state will stay intact.
+ADDITION:Add UI to copy parts of a material (like parameters).
+BUG:Fixed exporting map objects as .dae.
+IMPROVEMENT:Tree view does not deselect during a right click on already selected options. 

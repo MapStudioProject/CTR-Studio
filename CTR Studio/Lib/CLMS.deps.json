@@ -1,0 +1,40 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.1/",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.1": {},
+    ".NETStandard,Version=v2.1/": {
+      "CLMS/1.0.0": {
+        "dependencies": {
+          "Syroot.BinaryData": "2.0.1.0"
+        },
+        "runtime": {
+          "CLMS.dll": {}
+        }
+      },
+      "Syroot.BinaryData/2.0.1.0": {
+        "runtime": {
+          "Syroot.BinaryData.dll": {
+            "assemblyVersion": "2.0.1.0",
+            "fileVersion": "2.0.1.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CLMS/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Syroot.BinaryData/2.0.1.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

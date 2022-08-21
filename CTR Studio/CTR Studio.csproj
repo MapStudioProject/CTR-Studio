@@ -1,0 +1,161 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>CTRStudio</RootNamespace>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <SignAssembly>False</SignAssembly>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+  
+	<ItemGroup>
+		<Content Include="Lib\Shaders\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Lib\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <None Remove="Lib\Hashes\ALBW.txt" />
+	  <None Remove="Lib\Languages\English\RevoKartLibrary.txt" />
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <Content Include="Icon.ico" />
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <ProjectReference Include="..\GLFrameworkEngine\GLFrameworkEngine.csproj" />
+	  <ProjectReference Include="..\MapStudio.UI\MapStudio.UI.csproj" />
+	  <ProjectReference Include="..\Plugins\CtrLibrary\CtrLibrary.csproj" />
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <Reference Include="ImGui.NET">
+	    <HintPath>Lib\ImGui.NET.dll</HintPath>
+	  </Reference>
+	  <Reference Include="OpenTK">
+	    <HintPath>Lib\OpenTK.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Syroot.BinaryData">
+	    <HintPath>Lib\Syroot.BinaryData.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Syroot.Maths">
+	    <HintPath>Lib\Syroot.Maths.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <Content Update="Lib\Fonts\fa-regular-400.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Lib\Fonts\fa-solid-900.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Lib\Fonts\Font.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Lib\Fonts\FontBold.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Lib\Fonts\NotoSansCJKjp-Medium.otf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="Lib\Fonts\OpenFontIcons.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+  
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+  <ItemGroup>
+    <None Update="cimgui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="cimgui.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="cimgui.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="cimnodes.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Languages\English\StudioEngine.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\CafeShaderStudio.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\DecafLicense.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\IMGUI.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\OpenTK.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\Ryujinx.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\Licenses\SpirvCrossLicense.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\CubemapHDR.dds">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\CubemapLightmap.dds">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\CubemapLightmapShadow.dds">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="RG_ETC1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="tinyfiledialogs.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x64\DirectXTexNetImpl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x64\libzstd.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x86\DirectXTexNetImpl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="x86\libzstd.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Lib\Images\" />
+    <Folder Include="Lib\Presets\Materials\" />
+    <Folder Include="Lib\Presets\Combiners\" />
+  </ItemGroup>
+
+</Project>

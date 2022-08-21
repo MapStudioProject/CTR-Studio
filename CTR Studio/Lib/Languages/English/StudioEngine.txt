@@ -1,0 +1,285 @@
+﻿# Comments use # and will be ignored.
+# Label    - Translated Text
+
+# Program
+TRACK_STUDIO - Track Studio
+OPENGL_VERSION - OpenGL Version
+EXIT_NOTIFY - Are you sure you want to close the program? You may lose unsaved progress!
+CLEAR_NOTIFY - Are you sure you want to clear workspaces? You may lose unsaved progress!
+REMOVE_NOTIFY - Are you sure you want to remove the workspace? You may lose unsaved progress!
+
+# Themes
+THEME - Theme
+DARK_THEME - Dark Theme
+LIGHT_THEME - Light Theme
+DARK_BLUE_THEME - Dark Blue Theme
+
+# Common
+NAME - Name
+PATH - Path
+PREVIEW - Preview
+VALUE - Value
+EDIT - Edit
+CREATE - Create
+ADD - Add
+REPLACE - Replace
+REMOVE - Remove
+HINT - Hint
+OK - Ok
+CANCEL - Cancel
+PRESET - Preset
+TYPE - Type
+SAVE - Save
+COLOR - Color
+RESET - Reset
+TRANSPARENCY - Transparency
+SCALE - Scale
+TRANSLATE - Translate
+ROTATE - Rotate
+RECTANGLE_SCALE - Rectangle Scale
+MULTI_GIZMO - Multi Gizmo
+TRANSFORM - Transform
+PROPERTIES - Properties
+SEARCH - Search
+DISTANCE - Distance
+UNKNOWN - Unknown
+PIVOT = Pivot
+CONTROL_POINT - Control Point
+WORKSPACES - Workspaces
+EDITORS - Editors
+IMPORT - Import
+EXPORT - Export
+NONE - None
+DUPLICATE - Duplicate
+COPY - Copy
+PASTE - Paste
+MODELS - Models
+TEXTURES - Textures
+ANIMATIONS - Animations
+PLUGINS - Plugins
+TOOLS - Tools
+SCREENSHOT - Screenshot
+SELECT - Select
+DESELECT - Deselect
+UNDO - Undo
+REDO - Redo
+PLAY - Play
+STOP - Stop
+LOOP - Loop
+FRAMERATE - Framerate
+POINT - Point
+CONTROL_POINTS - Control Points
+DEBUG - Debug
+WINDOWS - Windows
+DISPLAY_RADIUS - Display Radius
+DRAW_FILLED - Draw Filled
+VISUALS - Visuals
+GROUPS - Groups
+GROUP - Group
+POINTS - Points
+POINT - Point
+GROUP_SELECTED - Assign
+SOLID - Solid
+LINKS - Links
+SELECT_ALL - Select All
+DESELECT_ALL - Deselect All
+WIDTH - Width
+HEIGHT - Height
+SIZE - Size
+LINE_WIDTH - Line Width
+ARROW_LENGTH - Arrow length
+HELP - Help
+VIEWPORT_2D - Viewport 2D
+VIEWPORT_3D - Viewport 3D
+DONATE - Donate
+OPEN_IN_EXPLORER - Open In Explorer
+RELATIVE_PATH - Path
+
+SHOW_CONSTANTS - Show Constants
+SHOW_FLOOR - Show Floor
+SHOW_BACKGROUND - Show Background
+SHOW_SHADOWS - Show Shadows
+SHOW_VISIBLE_ACTORS - Show Visible Actors
+SHOW_INVISIBLE_ACTORS - Show Invisible Actors
+SHOW_MAP_MODEL - Show Map Model
+SHOW_ACTOR_LINKS - Show Actor Links
+
+OBJ - Obj
+SOURCE_LINKS - Source Links
+DEST_LINKS - Dest Links
+
+# Tool Tips
+
+EYE_DROPPER_TOOL - Pick an object in the viewer to link to.
+
+
+# Menu
+
+FILE - File
+NEW - New
+OPEN - Open
+RECENT - Recent
+SAVE - Save
+SAVE_AS - Save As
+CANCEL - Cancel
+OPEN_PROJECT - Open Project
+RECENT_PROJECTS - Recent Projects
+SAVE_PROJECT - Save Project
+SAVE_PROJECT_AS - Save Project As
+CLEAR_WORKSPACE - Clear Workspace
+EXIT - Exit
+
+GENERAL - General
+APPEARANCE - Appearance
+
+SAVE_CONFIG - Save Config
+VIEW - View
+BACK_TO_PREVIOUS - Back To Previous
+FULL_SCREEN - Full Screen
+
+PATHS - Paths
+GAME_CONFIG - Game Config
+SETTINGS - Settings
+
+CHECK_UPDATES - Check Updates
+DOCUMENTATION - Documentation
+ABOUT - About
+CONTROLS - Controls
+CONTEXT_HELP - Context Help
+
+STYLE_EDITOR - Style Editor
+STAT_VIEWER - Stat Viewer
+
+FILTER - Filter
+SHOW_ALL - Show All
+HIDE_ALL - Hide All
+
+LANGUAGE - Language
+DUMP_UNTRANSLATED - Dump Untranslated
+FONT_SCALE - Font Scale
+
+PROJECT_NAME - Project Name
+PROJECT_FOLDER - Project Folder
+
+# Dock Windows
+
+OUTLINER - Outliner
+PROPERTIES - Properties
+VIEWPORT - Viewport
+CONSOLE - Console
+ASSETS - Assets
+TIMELINE - Timeline
+ANIMATION_GRAPH - Animation Graph
+
+# Console Window
+
+ERRORS - Errors
+WARNINGS - Warnings
+MESSAGES - Messages
+
+CHECK_ERRORS - Check Errors
+
+ERROR_FILE_UNSUPPORTED - File not supported {0}.
+
+LOADING_FILE - Loading file {0}
+SAVED_FILE - Saved file {0}
+
+# Texture Dialog
+
+TEXTURE_DIALOG - Texture Dialog
+MIP_COUNT - Mip Count
+
+# Asset Window
+
+FACE_CAMERA_AT_SPAWN - Face Camera at Spawn
+
+# Viewport Menu
+
+VIEW - View
+BACKGROUND - Background
+DISPLAY - Display
+COLOR_TOP - Color Top
+COLOR_BOTTOM - Color Bottom
+GRID_COUNT - Grid Count
+GRID_SIZE - Grid Size
+POINT_SIZE - Point Size
+
+GIZMO_SETTING - Gizmo Setting
+SNAP_SCALE - Snap Scale
+SNAP_ROTATION - Snap Rotation
+SNAP_TRANSLATION - Snap Translation
+
+SCALE_LOCAL - Scale Local
+ROTATE_LOCAL - Rotate Local
+
+GRID - Grid
+BONES - Bones
+
+COLLISION_DISPLAY - Collision Display
+COLLISION_OVERLAY - Collision Overlay
+WIREFRAME - Wireframe
+WIREFRAME_OVERLAY - Wireframe Overlay
+BOUNDING_BOXES - Bounding Boxes
+ENABLE_BLOOM - Enable Bloom
+ENABLE_FOG - Enable Fog
+
+SHADOWS - Shadows
+
+SHADING - Shading
+
+CAMERA - Camera
+DIRECTION - Direction
+MODE - Mode
+ORTHOGRAPHIC - Orthographic
+LOCK_ROTATION - Lock Rotation
+FOV_(DEGREES) - Fov (Degrees)
+ZFAR - Z Far
+ZNEAR - Z Near
+ZOOM_SPEED - Zoom Speed
+PAN_SPEED - Pan Speed
+KEY_MOVE_SPEED - Key Move Speed
+PROJECTION - Projection
+
+RESET_ANIMATIONS - Reset Animations
+RESET_TRANSFORM - Reset Transform
+
+DROP_TO_COLLISION - Drop to Collision
+
+# Camera Mode
+FLY_AROUND - Fly Around
+INSPECT - Inspect
+
+# Camera Direction
+ANY - Any
+TOP - Top
+BOTTOM - Bottom
+FRONT - Front
+BACK - Back
+LEFT - Left
+RIGHT - Right
+
+ROTATION_X - Rotation X
+ROTATION_Y - Rotation Y
+ROTATION_Z - Rotation Z
+POSITION - Position
+
+# Shading Menu
+
+DEFAULT - DEFAULT
+NORMAL - Normal
+LIGHTING - Lighting
+DIFFUSE - DIFFUSE
+VERTEX_COLORS - Vertex Colors
+UVCOORDS - UVCoords
+UVTESTPATTERN - UVTestPattern
+WEIGHTS - Weights
+TANGENTS - Tangents
+BITANGENTS - Bitangents
+
+# Debug Stats
+
+CAMERA_INFO - Camera Info
+CULLING_INFO - Frustum Culling Info
+DRAW_CALLS - Draw Calls
+DRAW_TRIANGLES - Draw Triangles
+SHADOW_DRAW_CALLS - Shadow Draw Calls

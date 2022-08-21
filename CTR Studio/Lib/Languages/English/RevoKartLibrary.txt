@@ -1,0 +1,116 @@
+﻿# Comments use # and will be ignored.
+# Label    - Translated Text
+
+DISPLAY_HEX - Display Hex
+
+PATH_WARNING - Game path not configured! Set in "Game Config" menu.
+SPEED_WARNING - Object {0} may require the speed to be higher than 0 when using paths!
+START_WARNING - A "Start" object is missing and is required for spawning players.
+SKYBOX_WARNING - A skybox object is missing and is required.
+COLLIDE_WARNING - There is {0} glider faces assigned to a wall which may need to be a floor!
+
+FILE_ERROR - File {0} failed to open.
+LINK_ERROR - Object {0} must have a linked rail path.
+ENEMY_ERROR - Enemy path {0} point {1} must be inside a lap path region.
+LAPPATH_AI_ERROR - Lap paths and Enemy paths must be both included if either is used.
+
+# Asset Window
+
+FILTER_SKYBOXES - Filter Skyboxes
+FILTER_PATH_OBJS - Filter Path Objs
+
+# Intro Camera Editor
+
+ADD_POINT - Add Point
+REMOVE_POINT - Remove Point
+
+# Context Menu
+
+ADD_OBJECT - Add Object
+OBJECTS - Objects
+
+ADD_NORMAL - Add Normal
+ADD_CIRCLE - Add Circle
+ADD_BEZIER - Add Bezier
+
+# Obj Properties
+
+OBJECT - Object
+
+# These are short for game modes (multiplayer 2 player, 4 player, wifi, etc)
+MULTI2P - Multi2P
+MULTI4P - Multi4P
+WIFI = WiFi
+WIFI2P = WiFi2P
+
+NAME - Name
+USE_COLLISION - Use Collision
+TOP_VIEW - Top View
+SINGLE - Single
+PATH_SPEED - Path Speed
+EDIT_PATH - Edit Path
+
+PARAMETERS - Parameters
+PATHS - Paths
+DISPLAY_UNUSED - Display Unused
+UNUSED = Unused
+
+RELATIVES - Relatives
+RELATIVE_OBJECT - Relative Object
+RELATIVE_AREA - Relative Area
+RELATIVE_PULL_PATH - Relative Pull Path
+RELATIVE_RAIL_PATH - Relative Rail Path
+
+OBJECT_PATH - Object Path
+RAIL_PATH - Rail Path
+LAP_PATH - Lap Path
+PATH_POINT - Path Point
+ENEMY_PATH_1 - Enemy Path 1
+ENEMY_PATH_2 - Enemy Path 2
+ITEM_PATH_1 - Item Path 1
+ITEM_PATH_2 - Item Path 2
+
+# Object PARAMETERS
+
+# Editors
+
+MAP_EDITOR - Map Editor
+COLLISION_EDITOR - Collision Editor
+LIGHTING_EDITOR - Lighting Editor
+MODEL_EDITOR - Model Editor
+INTRO_CAMERA_EDITOR - Intro Camera Editor
+
+OBJECT_EDITOR - Object Editor
+CHANGE_OBJECT - Change Object
+SPAWN_OBJECT - Spawn Object
+SELECT_OBJECT - Select Object
+
+# Tree Nodes
+
+MAP_SETTINGS - Map Settings
+MAP_OBJECTS - Map Objects
+SOUND_OBJECTS - Sound Objects
+AREAS - Areas
+CLIP - Clip
+CLIP_PATTERNS - Clip Patterns
+CLIP_AREAS - Clip Areas
+EFFECT_AREAS - Effect Areas
+INTRO_CAMERAS - Intro Cameras
+REPLAY_CAMERAS - Replay Cameras
+PATHS - Paths
+RAIL_PATHS - Rail Paths
+OBJECT_PATHS - Object Paths
+LAKITU_PATHS - Lakitu Paths
+ENEMY_PATHS - Enemy Paths
+ITEM_PATHS - Item Paths
+LAP_PATHS - Lap Paths
+CANNON_PATHS - Cannon Paths
+
+# Collision Editor
+
+MATERIAL_BY_MATERIALS - Material by Materials
+MATERIAL_BY_MESHES - Material by Meshes
+MATERIAL - Material
+ID - ID
+PRESET - Preset
+CONVERT - Convert
