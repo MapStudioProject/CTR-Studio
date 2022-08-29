@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,6 +35,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\GLFrameworkEngine\GLFrameworkEngine.csproj" />
 	  <ProjectReference Include="..\MapStudio.UI\MapStudio.UI.csproj" />
+	  <ProjectReference Include="..\PartyStudio\PartyStudio.csproj" />
 	  <ProjectReference Include="..\Plugins\CtrLibrary\CtrLibrary.csproj" />
 	</ItemGroup>
   
@@ -102,6 +103,9 @@
     <None Update="cimnodes.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Default.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Lib\Languages\English\StudioEngine.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -136,6 +140,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="tinyfiledialogs.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="tinyfiledialogs.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="x64\DirectXTexNetImpl.dll">

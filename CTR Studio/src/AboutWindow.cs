@@ -27,26 +27,6 @@ namespace CTRStudio
             AppVersion = asssemblyVersion.ToString();
             Opened = false;
 
-            //Parse changelog
-            string file = $"{Runtime.ExecutableDir}\\Lib\\Program\\ChangeLog.txt";
-            string changeLog = File.ReadAllText(file);
-            ChangeLog = changeLog.Split("\n").ToArray();
-
-            ChangeType = new string[ChangeLog.Length];
-            for (int i = 0; i < ChangeLog.Length; i++)
-            {
-                var log = ChangeLog[i].Split(":");
-                if (log.Length == 2)
-                {
-                    var type = log[0];
-                    var info = log[1];
-                    ChangeLog[i] = info;
-
-                    if (type == "ADDITION") ChangeType[i] = "\uf055";
-                    if (type == "BUG") ChangeType[i] = "\uf188";
-                    if (type == "IMPROVEMENT") ChangeType[i] = "\uf118";
-                }
-            }
         }
 
         public override void Render()
