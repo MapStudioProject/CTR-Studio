@@ -315,7 +315,7 @@ namespace CTRStudio
             }
         }
 
-        private void OpenDocsOnline() => WebUtil.OpenURL("https://mapstudioproject.github.io/TrackStudioDocs/index.html");
+        private void OpenDocsOnline() => WebUtil.OpenURL("https://github.com/MapStudioProject/CTR-Studio/wiki");
 
         private void OpenDocsOffline()
         {
