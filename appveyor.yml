@@ -14,7 +14,7 @@ after_build:
     7z a CtrStudio-Latest.zip "%APPVEYOR_BUILD_FOLDER%\CTR Studio\bin\Release\net5.0\"
 
 
-    appveyor PushArtifact "TrackStudio-Latest.zip"
+    appveyor PushArtifact "CtrStudio-Latest.zip"
 artifacts:
 - path: CtrStudio-Latest.zip
   name: CtrStudio
