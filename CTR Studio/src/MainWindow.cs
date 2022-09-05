@@ -256,7 +256,7 @@ namespace CTRStudio
             var pluginsMenu = new MenuItem("PLUGINS") { RenderItems = LoadPluginMenus };
             var helpMenu = new MenuItem("HELP");
             helpMenu.MenuItems.Add(new MenuItem("CHECK_UPDATES", CheckUpdates));
-            helpMenu.MenuItems.Add(new MenuItem("DOCUMENTATION", OpenDocsOnline) { Enabled = false });
+            helpMenu.MenuItems.Add(new MenuItem("DOCUMENTATION", OpenDocsOnline));
             helpMenu.MenuItems.Add(new MenuItem("ABOUT", () =>
             {
                 AboutWindow.Opened = !AboutWindow.Opened;
