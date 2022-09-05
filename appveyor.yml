@@ -2,36 +2,25 @@ version: 1.0.{build}
 image: Visual Studio 2022
 configuration: Release
 platform: Any CPU
-assembly_info:
-  patch: true
-  file: '**\AssemblyInfo.*'
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}'
-dotnet_csproj:
-  patch: true
-  file: '**\*.csproj'
-  version: '{version}'
-  version_prefix: '{version}'
-  package_version: '{version}'
-  assembly_version: '{version}'
-  file_version: '{version}'
-  informational_version: '{version}'
 before_build:
 - pwsh: nuget restore
 build:
   verbosity: minimal
+install:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - git submodule update --init --recursive
 after_build:
 - cmd: >-
-    7z a TrackStudio-Latest.zip "%APPVEYOR_BUILD_FOLDER%\Track Studio\bin\Release\net5.0\"
+    7z a CtrStudio-Latest.zip "%APPVEYOR_BUILD_FOLDER%\CTR Studio\bin\Release\net5.0\"
 
 
     appveyor PushArtifact "TrackStudio-Latest.zip"
 artifacts:
-- path: TrackStudio-Latest.zip
-  name: TrackStudio
+- path: CtrStudio-Latest.zip
+  name: CtrStudio
 deploy:
 - provider: GitHub
-  release: Release
+  auth_token:
+    secure: cU87aOEy4F3ryNAjszwRJm6bEKEa/KJ09sSVj+nk8DFCPKQwwXfWgkxbcRg+W+uB
   repository: MapStudioProject/CTR-Studio
-  artifact: TrackStudio
+  artifact: CtrStudio
