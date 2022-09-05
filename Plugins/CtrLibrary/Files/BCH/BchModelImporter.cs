@@ -94,6 +94,9 @@ namespace CtrLibrary.Bch
                     if (boneList[i].Parent != null)
                         bn.ParentIndex = (short)h3dModel.Skeleton.Find(boneList[i].Parent.Name);
                 }
+
+                foreach (var bone in h3dModel.Skeleton)
+                    bone.CalculateTransform(h3dModel.Skeleton);
             }
 
             //If no bones are present, then make default root bone. This is required for transforming in worldspace with a map editor
@@ -101,8 +104,6 @@ namespace CtrLibrary.Bch
                 h3dModel.Skeleton.Add(new H3DBone("Root"));
             }
 
-            foreach (var bone in h3dModel.Skeleton)
-                bone.CalculateTransform(h3dModel.Skeleton);
 
             if (h3dModel.Skeleton?.Count > 0)
                 h3dModel.Flags |= H3DModelFlags.HasSkeleton;
