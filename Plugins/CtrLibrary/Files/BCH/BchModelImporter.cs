@@ -22,7 +22,6 @@ namespace CtrLibrary.Bch
     {
         public static H3DModel Import(string filePath, BCH bchWrapper, H3DModel parent, CtrImportSettings settings)
         {
-            bool importBones = false;
             //Load the .dae/.fbx/.obj into a scene object for importing data.
             var scene = IOManager.LoadScene(filePath, new IONET.ImportSettings() {
                 Optimize = settings.Optimize,

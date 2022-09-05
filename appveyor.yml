@@ -5,6 +5,7 @@ platform: Any CPU
 before_build:
 - pwsh: nuget restore
 build:
+  project: CTR Studio.sln
   verbosity: minimal
 install:
   - cd %APPVEYOR_BUILD_FOLDER%
