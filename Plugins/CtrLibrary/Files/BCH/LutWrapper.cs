@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Toolbox.Core.ViewModels;
+using Toolbox.Core;
 
 namespace CtrLibrary.Bch
 {
@@ -54,6 +55,8 @@ namespace CtrLibrary.Bch
             {
                 Name = "LUT_Table",
             };
+            lut.Name = Utils.RenameDuplicateString(lut.Name, this.Children.Select(x => x.Header).ToList());
+
             AddChild(new LUTWrapper(H3DRender, H3DFile, lut));
 
             H3DFile.LUTs.Add(lut);
@@ -64,6 +67,31 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
+            dlg.FileName = $"{Header}.json";
+            dlg.AddFilter("json", "json");
+            if (dlg.ShowDialog())
+            {
+                var lut = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
+                lut.Name = Utils.RenameDuplicateString(lut.Name, this.Children.Select(x => x.Header).ToList());
+
+                AddChild(new LUTWrapper(H3DRender, H3DFile, lut));
+                H3DFile.LUTs.Add(lut);
+            }
+        }
+
+        internal void RemoveLUT(LUTWrapper wrapper)
+        {
+            this.Children.Remove(wrapper);
+            H3DFile.LUTs.Remove(wrapper.Section);
+            //Remove from cache
+            if (SPICA.Rendering.Renderer.LUTCache.ContainsKey(wrapper.Header))
+                SPICA.Rendering.Renderer.LUTCache.Remove(wrapper.Header);
+            if (H3DRender.LUTCache.ContainsKey(wrapper.Header))
+                H3DRender.LUTCache.Remove(wrapper.Header);
+
+            //Remove from current render
+            if (H3DRender.Renderer.LUTs.ContainsKey(wrapper.Header))
+                H3DRender.Renderer.LUTs.Remove(wrapper.Header);
         }
     }
 
@@ -93,9 +121,38 @@ namespace CtrLibrary.Bch
             this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
             this.ContextMenus.Add(new MenuItemModel(""));
             this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+            this.ContextMenus.Add(new MenuItemModel(""));
+            this.ContextMenus.Add(new MenuItemModel("Remove", RemoveBatch));
+
+            
 
             foreach (var sampler in lut.Samplers)
                 AddChild(new LUTSamplerWrapper(sampler));
+        }
+
+        private void RemoveBatch()
+        {
+            var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+
+            string msg = $"Are you sure you want to delete the ({selected.Count}) selected nodes? This cannot be undone!";
+            if (selected.Count == 1)
+                msg = $"Are you sure you want to delete {Header}? This cannot be undone!";
+
+            int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
+            if (result != 1)
+                return;
+
+            var folder = (LUTFolder)this.Parent;
+
+            foreach (LUTWrapper lut in selected)
+                folder.RemoveLUT(lut);
+        }
+
+        internal void RemoveSampler(LUTSamplerWrapper wrapper)
+        {
+            this.Children.Remove(wrapper);
+            Section.Samplers.Remove(wrapper.Sampler);
+            ReloadRender();
         }
 
         private void CreateSampler()
@@ -104,6 +161,8 @@ namespace CtrLibrary.Bch
             {
                 Name = "NewSampler",
             };
+            samp.Name = Utils.RenameDuplicateString(samp.Name, this.Children.Select(x => x.Header).ToList());
+
             Section.Samplers.Add(samp);
             AddChild(new LUTSamplerWrapper(samp));
             ReloadRender();
@@ -174,6 +233,26 @@ namespace CtrLibrary.Bch
                 this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Delete", RemoveBatch));
+            }
+
+            public void RemoveBatch()
+            {
+                var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+
+                string msg = $"Are you sure you want to delete the ({selected.Count}) selected nodes? This cannot be undone!";
+                if (selected.Count == 1)
+                    msg = $"Are you sure you want to delete {Header}? This cannot be undone!";
+
+                int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
+                if (result != 1)
+                    return;
+
+                var folder = (LUTWrapper)this.Parent;
+
+                foreach (LUTSamplerWrapper lut in selected)
+                    folder.RemoveSampler(lut);
             }
 
             public Type GetTypeUI() => typeof(LUTViewer);

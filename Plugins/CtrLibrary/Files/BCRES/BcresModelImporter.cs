@@ -90,6 +90,7 @@ namespace CtrLibrary.Bcres
                     bn.UpdateTransformFlags();
                     bn.LocalTransform = new SPICA.Math3D.Matrix3x4(bn.CalculateLocalMatrix());
                     bn.MetaData = new GfxDict<GfxMetaData>();
+                    bn.ParentIndex = -1;
                     skeleton.Bones.Add(bn);
                 }
                 //Setup references

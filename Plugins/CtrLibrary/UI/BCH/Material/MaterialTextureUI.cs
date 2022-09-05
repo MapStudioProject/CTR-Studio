@@ -23,6 +23,8 @@ namespace CtrLibrary
         static int selectedTextureIndex = 0;
         bool open_texture_dialog = false;
 
+        float uvWindowHeight = 150;
+
         H3DMaterial Material;
         private H3DModel GfxModel;
         private MaterialWrapper UINode;
@@ -315,16 +317,35 @@ namespace CtrLibrary
             var borderColor = texMap.BorderColor;
             int cameraIndex = texCoord.ReferenceCameraIndex;
 
-            if (ImGui.BeginChild("uvWindow", new Vector2(width, 150), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
-            {   
-                var pos = ImGui.GetCursorScreenPos();
+            var size = ImGui.GetWindowSize();
 
-                this.UVViewport.Render((int)width, (int)ImGui.GetWindowHeight());
+            if (ImGui.CollapsingHeader("Preview", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                if (ImGui.BeginChild("uvWindow", new Vector2(width, uvWindowHeight), false))
+                {
+                    var pos = ImGui.GetCursorScreenPos();
 
-                ImGui.SetCursorScreenPos(pos);
-                ImGui.Checkbox("Show UVs", ref this.UVViewport.DisplayUVs);
+                    this.UVViewport.Render((int)width, (int)ImGui.GetWindowHeight());
+
+                    ImGui.SetCursorScreenPos(pos);
+                    ImGui.Checkbox("Show UVs", ref this.UVViewport.DisplayUVs);
+                }
+                ImGui.EndChild();
+
+                ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetStyle().Colors[(int)ImGuiCol.Separator]);
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGui.GetStyle().Colors[(int)ImGuiCol.SeparatorHovered]);
+                ImGui.Button("##hsplitter", new Vector2(-1, 2));
+                if (ImGui.IsItemActive())
+                {
+                    var deltaY = -ImGui.GetIO().MouseDelta.Y;
+                    if (uvWindowHeight - deltaY < size.Y - 22 && uvWindowHeight - deltaY > 22)
+                        uvWindowHeight -= deltaY;
+                }
             }
-            ImGui.EndChild();
+
+            ImGui.PopStyleColor(2);
+
+            ImGui.BeginChild("propertiesWindow");
 
             if (ImGui.CollapsingHeader("Info", ImGuiTreeNodeFlags.DefaultOpen))
             {
@@ -521,6 +542,7 @@ namespace CtrLibrary
                 if (sourceChanged)
                     ReloadUVDisplay();
             }
+            ImGui.EndChild();
         }
 
         void UpdateUniforms()

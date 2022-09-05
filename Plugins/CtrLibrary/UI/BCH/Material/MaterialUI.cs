@@ -15,7 +15,6 @@ using SPICA.Math3D;
 using SPICA.PICA.Commands;
 using Toolbox.Core.ViewModels;
 using SPICA.Formats.CtrH3D.Model.Mesh;
-using CtrLibrary.Bcres;
 using CtrLibrary.Rendering;
 using CtrLibrary.Bch;
 
@@ -30,6 +29,7 @@ namespace CtrLibrary
         MaterialRenderStateUI RenderStateUI = new MaterialRenderStateUI();
         MaterialTextureUI MaterialTextureUI = new MaterialTextureUI();
         MaterialCombinerUI MaterialCombinerUI = new MaterialCombinerUI();
+        UserDataInfoEditor UserDataInfoEditor = new UserDataInfoEditor();
 
         H3DMaterial Material;
         private H3DModel GfxModel;
@@ -116,6 +116,18 @@ namespace CtrLibrary
                     if (ImGui.InputInt("", ref lightSetID))
                         Material.MaterialParams.LightSetIndex = (ushort)lightSetID;
                 }
+                if (ImGui.CollapsingHeader("User Data", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    //Check if bcres node
+                    if (UINode is Bcres.MTOB)
+                    {
+                        var node = UINode as Bcres.MTOB;
+                        Bcres.UserDataInfoEditor.Render(node.GfxMaterial.MetaData);
+                    }
+                    else
+                        UserDataInfoEditor.Render(Material.MaterialParams.MetaData);
+                }
+
                 if (update)
                     GLFrameworkEngine.GLContext.ActiveContext.UpdateViewport = true;
             }));
@@ -305,28 +317,34 @@ namespace CtrLibrary
         void DrawColorPage()
         {
             if (ImGui.SliderFloat("Vertex Color Intensity", ref Material.MaterialParams.ColorScale, 0, 1))
+            {
+                BatchParamsEditField("ColorScale", Material.MaterialParams.ColorScale);
                 UpdateShaders();
+            }
 
             ImGui.Columns(3);
 
-            DrawColorUI("Diffuse", ref Material.MaterialParams.DiffuseColor); ImGui.NextColumn();
-            DrawColorUI("Emission", ref Material.MaterialParams.EmissionColor); ImGui.NextColumn();
-            DrawColorUI("Ambient", ref Material.MaterialParams.AmbientColor); ImGui.NextColumn();
-            DrawColorUI("Specular 0", ref Material.MaterialParams.Specular0Color); ImGui.NextColumn();
-            DrawColorUI("Specular 1", ref Material.MaterialParams.Specular1Color); ImGui.NextColumn();
-            DrawColorUI("Blend Color", ref Material.MaterialParams.BlendColor); ImGui.NextColumn();
-            DrawColorUI("Constant 0", ref Material.MaterialParams.Constant0Color); ImGui.NextColumn();
-            DrawColorUI("Constant 1", ref Material.MaterialParams.Constant1Color); ImGui.NextColumn();
-            DrawColorUI("Constant 2", ref Material.MaterialParams.Constant2Color); ImGui.NextColumn();
-            DrawColorUI("Constant 3", ref Material.MaterialParams.Constant3Color); ImGui.NextColumn();
-            DrawColorUI("Constant 4", ref Material.MaterialParams.Constant4Color); ImGui.NextColumn();
-            DrawColorUI("Constant 5", ref Material.MaterialParams.Constant5Color); ImGui.NextColumn();
+            DrawColorUI("Diffuse", "DiffuseColor"); ImGui.NextColumn();
+            DrawColorUI("Emission", "EmissionColor"); ImGui.NextColumn();
+            DrawColorUI("Ambient", "AmbientColor"); ImGui.NextColumn();
+            DrawColorUI("Specular 0", "Specular0Color"); ImGui.NextColumn();
+            DrawColorUI("Specular 1", "Specular1Color"); ImGui.NextColumn();
+            DrawColorUI("Blend Color", "BlendColor"); ImGui.NextColumn();
+            DrawColorUI("Constant 0", "Constant0Color"); ImGui.NextColumn();
+            DrawColorUI("Constant 1", "Constant1Color"); ImGui.NextColumn();
+            DrawColorUI("Constant 2", "Constant2Color"); ImGui.NextColumn();
+            DrawColorUI("Constant 3", "Constant3Color"); ImGui.NextColumn();
+            DrawColorUI("Constant 4", "Constant4Color"); ImGui.NextColumn();
+            DrawColorUI("Constant 5", "Constant5Color"); ImGui.NextColumn();
 
             ImGui.Columns(1);
         }
 
-        void DrawColorUI(string name, ref RGBA rgba)
+        void DrawColorUI(string name, string fieldName)
         {
+            var prop = Material.MaterialParams.GetType().GetField(fieldName);
+            var rgba = (RGBA)prop.GetValue(Material.MaterialParams);
+
             var color = new Vector4(
                 rgba.R / 255.0f,
                 rgba.G / 255.0f,
@@ -340,7 +358,18 @@ namespace CtrLibrary
                     (byte)(color.Y * 255),
                     (byte)(color.Z * 255),
                     (byte)(color.W * 255));
+                BatchParamsEditField(fieldName, rgba);
                 GLFrameworkEngine.GLContext.ActiveContext.UpdateViewport = true;
+            }
+        }
+
+        void BatchParamsEditField(string fieldName, object value)
+        {
+            var parent = this.UINode.Parent;
+            foreach (MaterialWrapper selected in parent.Children.Where(x => x.IsSelected))
+            {
+                var prop = selected.Material.MaterialParams.GetType().GetField(fieldName);
+                prop.SetValue(selected.Material.MaterialParams, value);
             }
         }
 

@@ -22,6 +22,7 @@ namespace CtrLibrary.Bch
         private H3DModel H3DModel;
 
         private int selectedMeshID = 0;
+        private int hoveredMeshID = -1;
 
         public void Init(CMDL modelNode, H3DModel model)
         {
@@ -44,6 +45,7 @@ namespace CtrLibrary.Bch
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
+                UserDataInfoEditor.Render(H3DModel.MetaData);
                 ImGui.EndTabItem();
             }
             ImGui.EndTabBar();
@@ -68,6 +70,10 @@ namespace CtrLibrary.Bch
                 if (ImguiCustomWidgets.ComboScrollable("Render Layer", RenderLayer[mesh.Layer], ref transparentLayer, RenderLayer))
                 {
                     mesh.Layer = int.Parse(transparentLayer[0].ToString());
+
+                    var meshList = H3DModel.Meshes.ToList();
+                    H3DModel.ClearMeshes();
+                    H3DModel.AddMeshes(meshList);
                 }
 
                 var renderPriority = H3DModel.Meshes[selectedMeshID].Priority;
@@ -92,8 +98,15 @@ namespace CtrLibrary.Bch
                 {
                     ImGui.BeginColumns("meshListHeader", 4);
 
+                    //Set the same header colors as hovered and active. This makes nav scrolling more seamless looking
+                    var active = ImGui.GetStyle().Colors[(int)ImGuiCol.Header];
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, active);
+                    ImGui.PushStyleColor(ImGuiCol.NavHighlight, new System.Numerics.Vector4(0));
+
                     for (int i = 0; i < H3DModel.Meshes.Count; i++)
                         DrawMeshItem(H3DModel.Meshes[i], i);
+
+                    ImGui.PopStyleColor(2);
 
                     ImGui.EndColumns();
                     ImGui.EndChild();
@@ -142,21 +155,87 @@ namespace CtrLibrary.Bch
         private void DrawMeshItem(H3DMesh mesh, int index)
         {
             string meshName = $"Mesh{index}";
+            if (H3DModel.MeshNodesTree.Count > mesh.NodeIndex) {
+                meshName = H3DModel.MeshNodesTree.Find(mesh.NodeIndex);
+            }
+
+            bool isDragging = hoveredMeshID == index && ImGui.IsMouseDragging(0) && ImGui.IsWindowFocused();
+            if (isDragging)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, ThemeHandler.Theme.Warning);
+                ImGui.PushStyleVar(ImGuiStyleVar.ChildBorderSize, 2);
+            }
 
             bool selected = index == selectedMeshID;
             var mat = H3DModel.Materials[mesh.MaterialIndex];
 
-            if (ImGui.Selectable($"{meshName}##MeshItem{index}", selected, ImGuiSelectableFlags.SpanAllColumns))
-            {
+            ImGui.AlignTextToFramePadding();
+            bool select = ImGui.Selectable($"##MeshItem{index}", selected, ImGuiSelectableFlags.SpanAllColumns);
+            if (select)
                 selectedMeshID = index;
+
+            if (ImGui.IsItemHovered())
+            {
+                hoveredMeshID = index;
             }
+
+            if (ImGui.IsMouseReleased(0))
+            {
+                hoveredMeshID = -1;
+            }
+
+
+            if (ImGui.IsItemClicked())
+                selectedMeshID = index;
+            ImGui.SetItemAllowOverlap();
+
+            //Drag drop order check
+            if (isDragging)
+            {
+                if (hoveredMeshID != selectedMeshID)
+                {
+                    ReorderMesh(mesh, selectedMeshID, hoveredMeshID);
+                    selectedMeshID = index;
+                    hoveredMeshID = index;  
+                }
+            }
+
+
+
+            ImGui.SameLine();
+
+            ImGui.AlignTextToFramePadding();
+            ImGui.Text(meshName);
             ImGui.NextColumn();
+            ImGui.AlignTextToFramePadding();
             ImGui.Text(mat.Name);
             ImGui.NextColumn();
+            ImGui.AlignTextToFramePadding();
             ImGui.Text(RenderLayer[mesh.Layer]);
             ImGui.NextColumn();
+            ImGui.AlignTextToFramePadding();
             ImGui.Text(mesh.Priority.ToString());
             ImGui.NextColumn();
+
+            if (isDragging)
+            {
+                ImGui.PopStyleColor();
+                ImGui.PopStyleVar();
+            }
+        }
+
+        private void ReorderMesh(H3DMesh mesh, int index, int n_next)
+        {
+            //Swap them out
+            var srcMesh = H3DModel.Meshes[index];
+            var dstMesh = H3DModel.Meshes[n_next];
+
+            H3DModel.Meshes[index] = dstMesh;
+            H3DModel.Meshes[n_next] = srcMesh;
+
+            var meshList = H3DModel.Meshes.ToList();
+            H3DModel.ClearMeshes();
+            H3DModel.AddMeshes(meshList);
         }
 
         string[] RenderLayer = new string[]

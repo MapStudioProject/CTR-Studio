@@ -33,6 +33,7 @@ namespace CtrLibrary.Bcres
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
+                UserDataInfoEditor.Render(GfxBone.MetaData);
                 ImGui.EndTabItem();
             }
 

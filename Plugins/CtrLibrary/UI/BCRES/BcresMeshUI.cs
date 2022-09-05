@@ -15,11 +15,13 @@ namespace CtrLibrary.Bcres
     {
         private GfxModel GfxModel;
         private GfxMesh GfxMesh;
+        private SOBJ MeshNode;
 
         public void Init(SOBJ meshNode, GfxModel model, GfxMesh mesh)
         {
             GfxModel = model;
             GfxMesh = mesh;
+            MeshNode = meshNode;
         }
 
         public void Render()
@@ -33,6 +35,7 @@ namespace CtrLibrary.Bcres
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
+                UserDataInfoEditor.Render(GfxMesh.MetaData);
                 ImGui.EndTabItem();
             }
 
@@ -49,9 +52,14 @@ namespace CtrLibrary.Bcres
             ImGuiHelper.InputFromText("Vis Node Name", GfxMesh, "MeshNodeName", 0x200);
             if (ImGui.Checkbox("Is Visible", ref isVisible))
             {
-                GfxMesh.IsVisible = isVisible;
-                if (GfxMesh.H3DMesh != null)
-                    GfxMesh.H3DMesh.IsVisible = GfxMesh.IsVisible;
+                var selected = MeshNode.Parent.Children.Where(x => x.IsSelected);
+                foreach (SOBJ select in selected)
+                {
+                    select.Mesh.IsVisible = isVisible;
+                    if (select.Mesh.H3DMesh != null)
+                        select.Mesh.H3DMesh.IsVisible = isVisible;
+                }
+
                 GLContext.ActiveContext.UpdateViewport = true;
             }
             void DrawMatIcon(int id)

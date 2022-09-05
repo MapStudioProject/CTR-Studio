@@ -268,6 +268,10 @@ namespace CtrLibrary.Bch
                 else
                     Console.WriteLine($"Cannot find material {poly.MaterialName}!");
             }
+
+            //Check what material gets used and set the mesh layer to what is ideal
+            mesh.Layer = h3dModel.Materials[mesh.MaterialIndex].MaterialParams.RenderLayer;
+
             mesh.VertexStride = VerticesConverter.CalculateStride(attributes);
             mesh.RawBuffer = VerticesConverter.GetBuffer(vertices, attributes, mesh.VertexStride);
 

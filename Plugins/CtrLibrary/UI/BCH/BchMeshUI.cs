@@ -40,6 +40,7 @@ namespace CtrLibrary.Bch
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
+                UserDataInfoEditor.Render(GfxMesh.MetaData);
                 ImGui.EndTabItem();
             }
 

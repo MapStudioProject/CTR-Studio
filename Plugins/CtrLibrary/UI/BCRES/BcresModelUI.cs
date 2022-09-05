@@ -41,6 +41,7 @@ namespace CtrLibrary.Bcres
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
+                UserDataInfoEditor.Render(GfxModel.MetaData);
                 ImGui.EndTabItem();
             }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "Stats"))
