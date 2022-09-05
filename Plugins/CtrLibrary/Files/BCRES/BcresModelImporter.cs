@@ -240,35 +240,6 @@ namespace CtrLibrary.Bcres
             return gfxModel;
         }
 
-        static void DumpSkeletonInfo(GfxSkeleton skeleton, string filePath)
-        {
-            using (var writer = new StreamWriter(filePath))
-            {
-                writer.WriteLine($"skeleton {skeleton.Name}");
-                writer.WriteLine($"ScalingRule {skeleton.ScalingRule}");
-                writer.WriteLine($"IsTranslationAnimEnabled {skeleton.IsTranslationAnimEnabled}");
-
-                foreach (var bn in skeleton.Bones)
-                {
-                    writer.WriteLine(bn.Name);
-                    writer.WriteLine(bn.Flags.ToString());
-                    writer.WriteLine($"Index {bn.Index}");
-                    writer.WriteLine($"ParentIndex {bn.ParentIndex}");
-                    writer.WriteLine($"BillboardMode {bn.BillboardMode}");
-                    writer.WriteLine($"Scale {bn.Scale}");
-                    writer.WriteLine($"Rotation {bn.Rotation}");
-                    writer.WriteLine($"Translation {bn.Translation}");
-                    writer.WriteLine($"Parent {(bn.Parent != null ? bn.Parent.Name : "None")}");
-                    writer.WriteLine($"Parent {(bn.Child != null ? bn.Child.Name : "None")}");
-                    writer.WriteLine($"Parent {(bn.PrevSibling != null ? bn.PrevSibling.Name : "None")}");
-                    writer.WriteLine($"Parent {(bn.NextSibling != null ? bn.NextSibling.Name : "None")}");
-                    writer.WriteLine($"LocalTransform {bn.LocalTransform}");
-                    writer.WriteLine($"WorldTransform {bn.WorldTransform}");
-                    writer.WriteLine($"InvWorldTransform {bn.InvWorldTransform}");
-                }
-            }
-        }
-
         //Gets a bone in world space
         static Matrix4x4 GetWorldTransform(GfxDict<GfxBone> skeleton, GfxBone bn)
         {
