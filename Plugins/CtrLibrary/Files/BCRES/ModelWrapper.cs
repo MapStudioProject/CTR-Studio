@@ -290,7 +290,11 @@ namespace CtrLibrary.Bcres
 
             Model = BcresModelImporter.Import(filePath, ParentBCRESNode, Model, settings);
             Model.Name = this.Header;
-            BcresFile.Models.Insert(modelIndex, Model);
+
+            if (modelIndex != -1)
+                BcresFile.Models.Insert(modelIndex, Model);
+            else
+                BcresFile.Models.Add(Model);
 
             var h3d = Model.ToH3D();
 
