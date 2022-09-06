@@ -201,8 +201,7 @@ namespace CtrLibrary.Rendering
             Renderer.Camera.Translation = context.Camera.TargetPosition;
 
             //Draw the models
-            foreach (var model in Renderer.Models)
-                model.Render();
+            Renderer.Render();
 
             //Reset depth state to defaults
             GL.DepthMask(true);
