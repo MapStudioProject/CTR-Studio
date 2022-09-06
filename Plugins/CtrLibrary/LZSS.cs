@@ -19,79 +19,69 @@ namespace CtrLibrary
 
         public bool Identify(Stream stream, string fileName)
         {
-            //Check by extension. Used by games like kirby planet robobot
-            return fileName.EndsWith(".cmp");
+            using (var reader = new FileReader(stream, true)) {
+                return reader.CheckSignature(4, "IECP");
+            }
         }
 
         public bool CanCompress { get; } = false;
 
-        public Stream Decompress(Stream stream)
+        public Stream Decompress(Stream data)
         {
-            byte[] input = stream.ToArray();
+            uint decodedLength = 0;
+            using (var reader = new FileReader(data, true))
+            {
+                reader.ReadUInt32();
+                decodedLength = reader.ReadUInt32();
+            }
 
-            uint compressedSize = 0;
-            uint decodedLength = BitConverter.ToUInt32(input, 0) >> 8;
+            byte[] input = new byte[data.Length - data.Position];
+            data.Read(input, 0, input.Length);
+            data.Close();
+            long inputOffset = 0;
 
             byte[] output = new byte[decodedLength];
-            long outputOffset = 0;
-            long inputOffset = 4;
+            byte[] dictionary = new byte[4096];
 
-            byte mask = 0;
+            long outputOffset = 0;
+            long dictionaryOffset = 4078;
+
+            ushort mask = 0x80;
             byte header = 0;
 
             while (outputOffset < decodedLength)
             {
-                if ((mask >>= 1) == 0)
+                if ((mask <<= 1) == 0x100)
                 {
                     header = input[inputOffset++];
-                    mask = 0x80;
+                    mask = 1;
                 }
 
-                if ((header & mask) == 0)
+                if ((header & mask) > 0)
                 {
-                    output[outputOffset++] = input[inputOffset++];
+                    if (outputOffset == output.Length) break;
+                    output[outputOffset++] = input[inputOffset];
+                    dictionary[dictionaryOffset] = input[inputOffset++];
+                    dictionaryOffset = (dictionaryOffset + 1) & 0xfff;
                 }
                 else
                 {
-                    int byte1, byte2, byte3, byte4;
-                    byte1 = input[inputOffset++];
-                    int position, length;
-                    switch (byte1 >> 4)
-                    {
-                        case 0:
-                            byte2 = input[inputOffset++];
-                            byte3 = input[inputOffset++];
-
-                            position = ((byte2 & 0xf) << 8) | byte3;
-                            length = (((byte1 & 0xf) << 4) | (byte2 >> 4)) + 0x11;
-                            break;
-                        case 1:
-                            byte2 = input[inputOffset++];
-                            byte3 = input[inputOffset++];
-                            byte4 = input[inputOffset++];
-
-                            position = ((byte3 & 0xf) << 8) | byte4;
-                            length = (((byte1 & 0xf) << 12) | (byte2 << 4) | (byte3 >> 4)) + 0x111;
-                            break;
-                        default:
-                            byte2 = input[inputOffset++];
-
-                            position = ((byte1 & 0xf) << 8) | byte2;
-                            length = (byte1 >> 4) + 1;
-                            break;
-                    }
-                    position++;
+                    ushort value = (ushort)(input[inputOffset++] | (input[inputOffset++] << 8));
+                    int length = ((value >> 8) & 0xf) + 3;
+                    int position = ((value & 0xf000) >> 4) | (value & 0xff);
 
                     while (length > 0)
                     {
-                        output[outputOffset] = output[outputOffset - position];
-                        outputOffset++;
+                        dictionary[dictionaryOffset] = dictionary[position];
+                        output[outputOffset++] = dictionary[dictionaryOffset];
+                        dictionaryOffset = (dictionaryOffset + 1) & 0xfff;
+                        position = (position + 1) & 0xfff;
                         length--;
                     }
                 }
             }
 
-            return new MemoryStream(output);
+            return new MemoryStream(output); 
         }
 
         public Stream Compress(Stream stream)

@@ -289,6 +289,17 @@ namespace CtrLibrary.Bcres
 
             //Calculate skinning amount from max amount of weights used
             skinningCount = iomesh.Vertices.Max(x => x.Envelope.Weights.Count);
+
+            if (skinningCount > 4)
+            {
+                //Remove extra weights if required
+                for (int v = 0; v < iomesh.Vertices.Count; v++)
+                {
+                    iomesh.Vertices[v].Envelope.LimtSkinCount(4);
+                    iomesh.Vertices[v].Envelope.NormalizeByteType();
+                }
+            }
+
             //Check how many bones are used total
             var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();
             //If only one bone is used, no skinning requred as a bone can be used as a single binded rigid body.

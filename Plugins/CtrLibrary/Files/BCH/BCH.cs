@@ -98,7 +98,7 @@ namespace CtrLibrary.Bch
             H3DData = H3D.Open(new MemoryStream(stream.ToArray()));
             if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
             {
-                ModelBinary = new MBn(new BinaryReader(File.OpenRead(FileInfo.FilePath.Replace(".bch", ".mbn"))), H3DData);
+                ModelBinary = new MBn(FileInfo.FilePath.Replace(".bch", ".mbn"), H3DData);
                 H3DData = ModelBinary.ToH3D();
             }
 
@@ -172,13 +172,35 @@ namespace CtrLibrary.Bch
         /// </summary>
         public void Save(Stream stream)
         {
+            if (ModelBinary != null)
+                SaveMbn();
+
             foreach (CMDL model in ModelFolder.Children)
                 model.OnSave();
 
             H3DData.Textures = TextureFolder.GetTextures();
 
-
             H3D.Save(stream, H3DData);
+
+            //Reload raw data from binary if needed
+            if (ModelBinary != null)
+                ModelBinary.ToH3D();
+        }
+
+        private void SaveMbn()
+        {
+            if (H3DData.Models.Count == 0)
+                return;
+
+            ModelBinary.FromH3D(H3DData.Models[0]);
+            ModelBinary.Save($"{FileInfo.FilePath.Replace(".bch", ".mbn")}");
+            //Blank out data as mbn stores the vertex/index data
+            foreach (var mesh in H3DData.Models[0].Meshes)
+            {
+                mesh.RawBuffer = new byte[0];
+                foreach (var sm in mesh.SubMeshes)
+                    sm.Indices = new ushort[0];
+            }
         }
 
         /// <summary>
