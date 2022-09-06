@@ -250,7 +250,7 @@ namespace CtrLibrary.Bch
             dlg.AddFilter(".fbx", "fbx");
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.EndsWith(".dae") || dlg.FilePath.EndsWith(".fbx"))
+                if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
                     DialogHandler.Show("Importer", 400, 300, () =>
