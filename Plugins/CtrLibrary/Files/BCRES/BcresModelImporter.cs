@@ -298,6 +298,7 @@ namespace CtrLibrary.Bcres
                     iomesh.Vertices[v].Envelope.LimtSkinCount(4);
                     iomesh.Vertices[v].Envelope.NormalizeByteType();
                 }
+                skinningCount = 4;
             }
 
             //Check how many bones are used total
