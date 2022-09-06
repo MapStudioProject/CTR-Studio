@@ -234,8 +234,8 @@ namespace CtrLibrary.Bch
             H3DModel.Meshes[n_next] = srcMesh;
 
             var meshList = H3DModel.Meshes.ToList();
-            H3DModel.ClearMeshes();
-            H3DModel.AddMeshes(meshList);
+          //  H3DModel.ClearMeshes();
+         //   H3DModel.AddMeshes(meshList);
         }
 
         string[] RenderLayer = new string[]
