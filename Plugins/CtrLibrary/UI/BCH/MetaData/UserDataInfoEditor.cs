@@ -168,6 +168,8 @@ namespace CtrLibrary.Bch
 
         static string GetDataString(H3DMetaDataValue userData, string seperator = "\n")
         {
+            if (userData.Values == null) return "<NULL>";
+
             switch (userData.Type)
             {
                 case H3DMetaDataType.ASCIIString:
