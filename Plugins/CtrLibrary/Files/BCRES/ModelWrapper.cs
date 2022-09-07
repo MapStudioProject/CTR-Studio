@@ -61,7 +61,7 @@ namespace CtrLibrary.Bcres
         public void Import(string filePath)
         {
             CtrModelImportUI importerUI = new CtrModelImportUI();
-            DialogHandler.Show("Importer", 400, 300, () =>
+            DialogHandler.Show("Importer", 400, 400, () =>
             {
                 importerUI.Render();
             }, (o) =>
@@ -270,7 +270,7 @@ namespace CtrLibrary.Bcres
                 if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 300, () =>
+                    DialogHandler.Show("Importer", 400, 400, () =>
                     {
                         importerUI.Render();
                     }, (o) =>
@@ -614,6 +614,7 @@ namespace CtrLibrary.Bcres
                 if (vertexBuffer is GfxVertexBufferInterleaved)
                 {
                     var vbo = vertexBuffer as GfxVertexBufferInterleaved;
+                    vbo.VertexStride = stride;
                     vbo.RawBuffer = rawBuffer;
                 }
             }
