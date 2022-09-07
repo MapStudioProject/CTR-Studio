@@ -55,6 +55,7 @@ namespace CtrLibrary
                 ImGui.Checkbox("Import Textures", ref Settings.ImportTextures);
                 ImGui.Checkbox("Import Bones (Experimental)", ref Settings.ImportBones);
                 ImGuiHelper.Tooltip("Imports bones from .dae/.fbx. Keep in mind blender is difficult to work with bones and may not output very well.");
+                ImGui.Checkbox("Import Tangents", ref Settings.ImportTangents);
 
                 ImGui.Checkbox("Flip UVs", ref Settings.FlipUVs);
                 ImGui.Checkbox("Optimize Vertices", ref Settings.Optimize);

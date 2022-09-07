@@ -605,7 +605,7 @@ namespace CtrLibrary.Bch
                 }
             }
             //Tangents for lighting
-            if (mesh.HasTangents)
+            if (settings.ImportTangents)
             {
                 attributes.Add(new PICAAttribute()
                 {
