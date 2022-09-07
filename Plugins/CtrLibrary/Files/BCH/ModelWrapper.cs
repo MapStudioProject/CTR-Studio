@@ -64,7 +64,7 @@ namespace CtrLibrary.Bch
                 if (dlg.FilePath.EndsWith(".dae"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 300, () =>
+                    DialogHandler.Show("Importer", 400, 400, () =>
                     {
                         importerUI.Render();
                     }, (o) =>
@@ -260,7 +260,7 @@ namespace CtrLibrary.Bch
                 if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 300, () =>
+                    DialogHandler.Show("Importer", 400, 400, () =>
                     {
                         importerUI.Render();
                     }, (o) =>
