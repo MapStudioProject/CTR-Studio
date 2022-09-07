@@ -20,7 +20,7 @@ namespace Updater
                 {
                     case "-d":
                     case "--download":
-                        UpdaterHelper.Setup("MapStudioProject", "Track-Studio", "TrackStudio.exe");
+                        UpdaterHelper.Setup("MapStudioProject", "CTR-Studio", "CtrStudio.exe");
                         UpdaterHelper.DownloadLatest(execDirectory, 0, force);
                         break;
                     case "-i":
@@ -32,11 +32,6 @@ namespace Updater
                         Boot();
                         Environment.Exit(0);
                         break;
-                    case "-bl":
-                    case "--boot_launcher":
-                        BootLauncher();
-                        Environment.Exit(0);
-                        break;
                     case "-e":
                     case "--exit":
                         Environment.Exit(0);
@@ -45,20 +40,12 @@ namespace Updater
             }
         }
 
-        static void BootLauncher()
-        {
-            Console.WriteLine("Booting...");
-
-            Thread.Sleep(3000);
-            System.Diagnostics.Process.Start(Path.Combine(execDirectory, "TrackStudioLauncher.exe"));
-        }
-
         static void Boot()
         {
             Console.WriteLine("Booting...");
 
             Thread.Sleep(3000);
-            System.Diagnostics.Process.Start(Path.Combine(execDirectory, "TrackStudio.exe"));
+            System.Diagnostics.Process.Start(Path.Combine(execDirectory, "CTR Studio.exe"));
         }
     }
 }

@@ -119,7 +119,7 @@ namespace Updater
         /// </summary>
         public static void Install(string folderDir)
         {
-            string path = $"{folderDir}\\latest\\net5.0";
+            string path = $"{folderDir}\\latest\\net6.0";
 
             if (!Directory.Exists(path)) {
                 Console.WriteLine($"No downloaded directory found!");
