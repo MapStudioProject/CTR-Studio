@@ -77,9 +77,17 @@ namespace CtrLibrary.Bcres
                         FaceCulling = SPICA.PICA.Commands.PICAFaceCulling.BackFace,
                         Skeleton = new GfxSkeleton() { Name = "", },
                     };
-                    var modelWrapper = new CMDL(ParentBCRESNode, BcresFile, model);
-                    modelWrapper.ImportFile(filePath, importerUI.Settings);
-                    AddChild(modelWrapper);
+
+                    try
+                    {
+                        var modelWrapper = new CMDL(ParentBCRESNode, BcresFile, model);
+                        modelWrapper.ImportFile(filePath, importerUI.Settings);
+                        AddChild(modelWrapper);
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogHandler.ShowException(ex);
+                    }
                 }
             });
         }
@@ -268,7 +276,16 @@ namespace CtrLibrary.Bcres
                     }, (o) =>
                     {
                         if (o)
-                            ImportFile(dlg.FilePath, importerUI.Settings);
+                        {
+                            try
+                            {
+                                ImportFile(dlg.FilePath, importerUI.Settings);
+                            }
+                            catch (Exception ex)
+                            {
+                                DialogHandler.ShowException(ex);
+                            }
+                        }
                     });
                 }
             }

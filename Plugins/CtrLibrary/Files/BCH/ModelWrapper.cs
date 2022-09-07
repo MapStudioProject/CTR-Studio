@@ -71,13 +71,20 @@ namespace CtrLibrary.Bch
                     {
                         if (o)
                         {
-                            H3DModel model = new H3DModel()
+                            try
                             {
-                                Name = "NewModel",
-                            };
-                            var modelWrapper = new CMDL(ParentBCHNode, H3DFile, model);
-                            modelWrapper.ImportFile(dlg.FilePath, importerUI.Settings);
-                            AddChild(modelWrapper);
+                                H3DModel model = new H3DModel()
+                                {
+                                    Name = "NewModel",
+                                };
+                                var modelWrapper = new CMDL(ParentBCHNode, H3DFile, model);
+                                modelWrapper.ImportFile(dlg.FilePath, importerUI.Settings);
+                                AddChild(modelWrapper);
+                            }
+                            catch (Exception ex)
+                            {
+                                DialogHandler.ShowException(ex);
+                            }
                         }
                     });
                 }
@@ -259,7 +266,16 @@ namespace CtrLibrary.Bch
                     }, (o) =>
                     {
                         if (o)
-                            ImportFile(dlg.FilePath, importerUI.Settings);
+                        {
+                            try
+                            {
+                                ImportFile(dlg.FilePath, importerUI.Settings);
+                            }
+                            catch (Exception ex)
+                            {
+                                DialogHandler.ShowException(ex);
+                            }
+                        }
                     });
                 }
             }
