@@ -59,6 +59,7 @@ namespace CtrLibrary
             var alphaTest = Material.MaterialParams.AlphaTest;
             var depthTest = Material.MaterialParams.DepthColorMask;
 
+            var blendModeGfx = Material.MaterialParams.BlendMode;
             var blendMode = Material.MaterialParams.ColorOperation.BlendMode;
             var fragOpMode = Material.MaterialParams.ColorOperation.FragOpMode;
 
@@ -108,6 +109,7 @@ namespace CtrLibrary
                     BlendMode = blendMode,
                     FragOpMode = fragOpMode,
                 };
+                Material.MaterialParams.BlendMode = blendModeGfx;
 
                 if (updateShaders)
                     MaterialWrapper.UpdateShaders();
@@ -154,7 +156,11 @@ namespace CtrLibrary
 
             if (ImGui.CollapsingHeader("Blend State", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                BcresUIHelper.DrawEnum("Blend Mode", ref blendMode, UpdateState);
+                if (MaterialWrapper is Bcres.MTOB) //Used by bcres only
+                    BcresUIHelper.DrawEnum("Blend Mode", ref blendModeGfx, UpdateState);
+                else
+                    BcresUIHelper.DrawEnum("Blend Mode", ref blendMode, UpdateState);
+
                 BcresUIHelper.DrawEnum("Frag Operation Source", ref fragOpMode, UpdateState);
             }
 
