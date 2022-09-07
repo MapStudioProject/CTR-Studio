@@ -200,12 +200,21 @@ namespace CtrLibrary.Rendering
             Renderer.Camera.ViewMatrix = context.Camera.ViewMatrix;
             Renderer.Camera.Translation = context.Camera.TargetPosition;
 
+            GL.PushAttrib(AttribMask.AllAttribBits);
+
             //Draw the models
             Renderer.Render();
 
+            GL.PopAttrib();
+
             //Reset depth state to defaults
             GL.DepthMask(true);
+            GL.ColorMask(true, true, true, true);
             GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(CullFaceMode.Back);
+            GL.Disable(EnableCap.StencilTest);
+
         }
 
         private void PrepareDebugShading()
