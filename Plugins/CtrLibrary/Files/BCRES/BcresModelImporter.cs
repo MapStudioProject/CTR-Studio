@@ -262,6 +262,9 @@ namespace CtrLibrary.Bcres
         private static void ConvertMesh(IONET.Core.IOScene scene, IOMesh iomesh,
             GfxModel gfxModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings)
         {
+            if (iomesh.Vertices.Count == 0)
+                return;
+
             string meshName = iomesh.Name;
             //Mesh data
             GfxShape gfxShape = new GfxShape();
