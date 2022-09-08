@@ -134,6 +134,9 @@ namespace CTRStudio
                     ImGui.SetNextWindowSize(contentSize, ImGuiCond.Once);
                 }
 
+                if (workspace.IsFocused && Workspace.ActiveWorkspace != workspace)
+                    Workspace.UpdateActive(workspace);
+
                 workspace.Show();
 
                 if (!workspace.Opened)
