@@ -159,9 +159,10 @@ namespace CtrLibrary
                 if (MaterialWrapper is Bcres.MTOB) //Used by bcres only
                     BcresUIHelper.DrawEnum("Blend Mode", ref blendModeGfx, UpdateState);
                 else
+                {
                     BcresUIHelper.DrawEnum("Blend Mode", ref blendMode, UpdateState);
-
-                BcresUIHelper.DrawEnum("Frag Operation Source", ref fragOpMode, UpdateState);
+                    BcresUIHelper.DrawEnum("Frag Operation Source", ref fragOpMode, UpdateState);
+                }
             }
 
             if (ImGui.CollapsingHeader("Color Blend", ImGuiTreeNodeFlags.DefaultOpen))

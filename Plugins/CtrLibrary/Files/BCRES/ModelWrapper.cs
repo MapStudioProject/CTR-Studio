@@ -270,6 +270,8 @@ namespace CtrLibrary.Bcres
                 if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
+                    importerUI.Settings.DisableSkeleton = !(this.Model is GfxModelSkeletal);
+
                     DialogHandler.Show("Importer", 400, 400, () =>
                     {
                         importerUI.Render();
@@ -320,10 +322,13 @@ namespace CtrLibrary.Bcres
 
             ReloadModel();
 
-            if (ParentBCRESNode.Render.Skeletons.Contains(this.SkeletonRenderer))
-                ParentBCRESNode.Render.Skeletons.Remove(this.SkeletonRenderer);
+            if (SkeletonRenderer != null)
+            {
+                if (ParentBCRESNode.Render.Skeletons.Contains(this.SkeletonRenderer))
+                    ParentBCRESNode.Render.Skeletons.Remove(this.SkeletonRenderer);
 
-            ParentBCRESNode.Render.Skeletons.Add(this.SkeletonRenderer);
+                ParentBCRESNode.Render.Skeletons.Add(this.SkeletonRenderer);
+            }
 
             //Generate and save a .div based on the generated sub mesh bounding boxes
             if (settings.DivideMK7)

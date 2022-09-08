@@ -52,8 +52,13 @@ namespace CtrLibrary
                 ImGui.Checkbox("Display Both Face Sides", ref Settings.DisplayBothFaces);
 
                 ImGui.Checkbox("Use Original Materials", ref Settings.UseOriginalMaterials);
+                ImGui.Checkbox("No Skeleton", ref Settings.DisableSkeleton);
+
                 ImGui.Checkbox("Import Textures", ref Settings.ImportTextures);
-                ImGui.Checkbox("Import Bones (Experimental)", ref Settings.ImportBones);
+
+                if (!Settings.DisableSkeleton)
+                    ImGui.Checkbox("Import Bones (Experimental)", ref Settings.ImportBones);
+
                 ImGuiHelper.Tooltip("Imports bones from .dae/.fbx. Keep in mind blender is difficult to work with bones and may not output very well.");
                 ImGui.Checkbox("Import Tangents", ref Settings.ImportTangents);
 
@@ -238,6 +243,16 @@ namespace CtrLibrary
         public bool IsPokemon;
 
         /// <summary>
+        /// Determines to use Smash 3DS specific vertex shader adjustments on import.
+        /// </summary>
+        public bool UseSingleAttributeBuffer = false;
+
+        /// <summary>
+        /// Determines to use Smash 3DS specific vertex shader adjustments on import.
+        /// </summary>
+        public bool IsSmash3DS = false;
+
+        /// <summary>
         /// Determines to keep original materials during import.
         /// </summary>
         public bool UseOriginalMaterials = true;
@@ -251,6 +266,11 @@ namespace CtrLibrary
         /// Imports texture linked from the provided .dae/.fbx file.
         /// </summary>
         public bool ImportTextures = true;
+
+        /// <summary>
+        /// Don't import any bones.
+        /// </summary>
+        public bool DisableSkeleton = false;
 
         /// <summary>
         /// Imports bones from the provided .dae/.fbx instead of using original boneset.

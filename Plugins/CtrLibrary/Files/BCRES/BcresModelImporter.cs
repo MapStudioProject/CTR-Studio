@@ -45,124 +45,126 @@ namespace CtrLibrary.Bcres
             //We currently always want to use bones for map editor purposes
             bool hasBones = true;
             //Copy model data into a new model for both static and normal bone types
-            //Todo, would be nice to support creating these from scatch than rely on injecting
-            var gfxModel = new GfxModelSkeletal()
-            {
-                Materials = settings.UseOriginalMaterials ? parent.Materials : new GfxDict<GfxMaterial>(),
-                MetaData = parent.MetaData,
-                AnimationsGroup = parent.AnimationsGroup,
-                Childs = parent.Childs,
-                FaceCulling = parent.FaceCulling,
-                Flags = parent.Flags,
-                LayerId = parent.LayerId,
-                IsBranchVisible = parent.IsBranchVisible,
-                TransformScale = parent.TransformScale,
-                TransformRotation = parent.TransformRotation,
-                TransformTranslation = parent.TransformTranslation,
-                LocalTransform = parent.LocalTransform,
-                WorldTransform = parent.WorldTransform,
-                MeshNodeVisibilities = parent.MeshNodeVisibilities,
-                Name = parent.Name,
-            };
+            GfxModel gfxModel = settings.DisableSkeleton ? new GfxModel() : new GfxModelSkeletal();
+            gfxModel.Materials = settings.UseOriginalMaterials ? parent.Materials : new GfxDict<GfxMaterial>();
+            gfxModel.MetaData = parent.MetaData;
+            gfxModel.AnimationsGroup = parent.AnimationsGroup;
+            gfxModel.Childs = parent.Childs;
+            gfxModel.FaceCulling = parent.FaceCulling;
+            gfxModel.Flags = parent.Flags;
+            gfxModel.LayerId = parent.LayerId;
+            gfxModel.IsBranchVisible = parent.IsBranchVisible;
+            gfxModel.TransformScale = parent.TransformScale;
+            gfxModel.TransformRotation = parent.TransformRotation;
+            gfxModel.TransformTranslation = parent.TransformTranslation;
+            gfxModel.LocalTransform = parent.LocalTransform;
+            gfxModel.WorldTransform = parent.WorldTransform;
+            gfxModel.MeshNodeVisibilities = parent.MeshNodeVisibilities;
+            gfxModel.Name = parent.Name;
+
             //Match the file name as the imported name
             gfxModel.Name = Path.GetFileNameWithoutExtension(filePath);
             Console.WriteLine($"Importing model {model.Name}");
-            //Todo
-            if (settings.ImportBones)
-            {    //Create a skeleton
-                GfxSkeleton skeleton = new GfxSkeleton();
-                skeleton.Name = "";
-                skeleton.ScalingRule = GfxSkeletonScalingRule.Maya;
-                skeleton.MetaData = new GfxDict<GfxMetaData>();
-                gfxModel.Skeleton = skeleton;
 
-                var boneList = model.Skeleton.BreathFirstOrder();
-                foreach (var bone in boneList)
-                {
-                    var bn = new GfxBone();
-                    bn.Name = bone.Name;
-                    bn.Translation = bone.Translation;
-                    bn.Rotation = bone.RotationEuler;
-                    bn.Scale = bone.Scale;
-                    bn.BillboardMode = GfxBillboardMode.Off;
-                    bn.Flags = GfxBoneFlags.IsNeededRendering | GfxBoneFlags.IsLocalMtxCalculate | GfxBoneFlags.IsWorldMtxCalculate;
-                    bn.Flags |= GfxBoneFlags.HasSkinningMtx;
-                    bn.UpdateTransformFlags();
-                    bn.LocalTransform = new SPICA.Math3D.Matrix3x4(bn.CalculateLocalMatrix());
-                    bn.MetaData = new GfxDict<GfxMetaData>();
-                    bn.ParentIndex = -1;
-                    skeleton.Bones.Add(bn);
-                }
-                //Setup references
-                for (int i = 0; i < boneList.Count; i++)
-                {
-                    var bn = skeleton.Bones[boneList[i].Name];
-                    bn.Index = i;
-                    //Setup parent
-                    if (boneList[i].Parent != null)
+            if (gfxModel is GfxModelSkeletal)
+            {
+                //Todo
+                if (settings.ImportBones)
+                {    //Create a skeleton
+                    GfxSkeleton skeleton = new GfxSkeleton();
+                    skeleton.Name = "";
+                    skeleton.ScalingRule = GfxSkeletonScalingRule.Maya;
+                    skeleton.MetaData = new GfxDict<GfxMetaData>();
+                    ((GfxModelSkeletal)gfxModel).Skeleton = skeleton;
+
+                    var boneList = model.Skeleton.BreathFirstOrder();
+                    foreach (var bone in boneList)
                     {
-                        //The bone parent
-                        bn.Parent = skeleton.Bones[boneList[i].Parent.Name];
-                        //The child bone of parent
-                        if (skeleton.Bones[boneList[i].Parent.Name].Child == null)
-                            skeleton.Bones[boneList[i].Parent.Name].Child = bn;
-                        bn.ParentIndex = skeleton.Bones.Find(boneList[i].Parent.Name);
+                        var bn = new GfxBone();
+                        bn.Name = bone.Name;
+                        bn.Translation = bone.Translation;
+                        bn.Rotation = bone.RotationEuler;
+                        bn.Scale = bone.Scale;
+                        bn.BillboardMode = GfxBillboardMode.Off;
+                        bn.Flags = GfxBoneFlags.IsNeededRendering | GfxBoneFlags.IsLocalMtxCalculate | GfxBoneFlags.IsWorldMtxCalculate;
+                        bn.Flags |= GfxBoneFlags.HasSkinningMtx;
+                        bn.UpdateTransformFlags();
+                        bn.LocalTransform = new SPICA.Math3D.Matrix3x4(bn.CalculateLocalMatrix());
+                        bn.MetaData = new GfxDict<GfxMetaData>();
+                        bn.ParentIndex = -1;
+                        skeleton.Bones.Add(bn);
+                    }
+                    //Setup references
+                    for (int i = 0; i < boneList.Count; i++)
+                    {
+                        var bn = skeleton.Bones[boneList[i].Name];
+                        bn.Index = i;
+                        //Setup parent
+                        if (boneList[i].Parent != null)
+                        {
+                            //The bone parent
+                            bn.Parent = skeleton.Bones[boneList[i].Parent.Name];
+                            //The child bone of parent
+                            if (skeleton.Bones[boneList[i].Parent.Name].Child == null)
+                                skeleton.Bones[boneList[i].Parent.Name].Child = bn;
+                            bn.ParentIndex = skeleton.Bones.Find(boneList[i].Parent.Name);
+                        }
+                    }
+                    for (int i = 0; i < boneList.Count; i++)
+                    {
+                        var bn = skeleton.Bones[boneList[i].Name];
+
+                        //Siblings
+                        var siblings = skeleton.Bones.Where(x => x.Parent == bn.Parent).ToList();
+                        for (int j = 0; j < siblings.Count; j++)
+                        {
+                            //Check if bone is after this bone
+                            if (siblings.Count > j + 1 && siblings[j + 1] == bn)
+                                bn.PrevSibling = siblings[j];
+                            //Check if bone is behind this bone
+                            if (j > 0 && siblings[j - 1] == bn)
+                                bn.NextSibling = siblings[j];
+                        }
+
+                        //Calculate world space matrix
+                        bn.UpdateMatrices();
                     }
                 }
-                for (int i = 0; i < boneList.Count; i++)
+                else
                 {
-                    var bn = skeleton.Bones[boneList[i].Name];
+                    //Create a skeleton
+                    GfxSkeleton skeleton = new GfxSkeleton();
+                    skeleton.Name = "";
+                    skeleton.ScalingRule = GfxSkeletonScalingRule.Maya;
+                    //Set into the model
+                    ((GfxModelSkeletal)gfxModel).Skeleton = skeleton;
 
-                    //Siblings
-                    var siblings = skeleton.Bones.Where(x => x.Parent == bn.Parent).ToList();
-                    for (int j = 0; j < siblings.Count; j++)
+                    //Copy the parent skeleton data if used
+                    if (parent is GfxModelSkeletal)
                     {
-                        //Check if bone is after this bone
-                        if (siblings.Count > j + 1 && siblings[j + 1] == bn)
-                            bn.PrevSibling = siblings[j];
-                        //Check if bone is behind this bone
-                        if (j > 0 && siblings[j - 1] == bn)
-                            bn.NextSibling = siblings[j];
+                        skeleton = ((GfxModelSkeletal)parent).Skeleton;
+                        ((GfxModelSkeletal)gfxModel).Skeleton = skeleton;
                     }
-
-                    //Calculate world space matrix
-                    bn.UpdateMatrices();
                 }
-            }
-            else
-            {
-                //Create a skeleton
-                GfxSkeleton skeleton = new GfxSkeleton();
-                skeleton.Name = "";
-                skeleton.ScalingRule = GfxSkeletonScalingRule.Maya;
-                //Set into the model
-                gfxModel.Skeleton = skeleton;
-
-                //Copy the parent skeleton data if used
-                if (parent is GfxModelSkeletal)
+                //If no bones are present, then make default root bone. This is required for transforming in worldspace with a map editor
+                if (((GfxModelSkeletal)gfxModel).Skeleton.Bones.Count == 0)
                 {
-                    skeleton = ((GfxModelSkeletal)parent).Skeleton;
-                    gfxModel.Skeleton = skeleton;
+                    ((GfxModelSkeletal)gfxModel).Skeleton.Bones.Add(new GfxBone()
+                    {
+                        Name = gfxModel.Name,
+                        MetaData = new GfxDict<GfxMetaData>(),
+                        Translation = new Vector3(),
+                        Scale = new Vector3(1, 1, 1),
+                        Rotation = new Vector3(),
+                        BillboardMode = GfxBillboardMode.Off,
+                        Flags = (GfxBoneFlags)415 | GfxBoneFlags.IsNeededRendering,
+                        Index = 0,
+                        ParentIndex = -1,
+                        WorldTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
+                        InvWorldTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
+                        LocalTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
+                    });
                 }
-            }
-            //If no bones are present, then make default root bone. This is required for transforming in worldspace with a map editor
-            if (gfxModel.Skeleton.Bones.Count == 0)
-            {
-                gfxModel.Skeleton.Bones.Add(new GfxBone()
-                {
-                    Name = gfxModel.Name,
-                    MetaData = new GfxDict<GfxMetaData>(),
-                    Translation = new Vector3(),
-                    Scale = new Vector3(1, 1, 1),
-                    Rotation = new Vector3(),
-                    BillboardMode = GfxBillboardMode.Off,
-                    Flags = (GfxBoneFlags)415 | GfxBoneFlags.IsNeededRendering,
-                    Index = 0,
-                    ParentIndex = -1,
-                    WorldTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
-                    InvWorldTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
-                    LocalTransform = new SPICA.Math3D.Matrix3x4(Matrix4x4.Identity),
-                });
             }
 
             //Create a skinning list for inverted matrices to convert vertex data into local space later

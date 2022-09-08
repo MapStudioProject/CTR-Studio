@@ -104,11 +104,17 @@ namespace CtrLibrary.Bch
                 h3dModel.Skeleton.Add(new H3DBone("Root"));
             }
 
-
             if (h3dModel.Skeleton?.Count > 0)
                 h3dModel.Flags |= H3DModelFlags.HasSkeleton;
 
-                //Todo maybe include sub mesh generating (need to figure out rest of the struct)
+            //Force skeleton to be disabled
+            if (settings.DisableSkeleton)
+            {
+                h3dModel.Skeleton = new H3DDict<H3DBone>();
+                h3dModel.Flags &= ~H3DModelFlags.HasSkeleton;
+            }
+
+            //Todo maybe include sub mesh generating (need to figure out rest of the struct)
             h3dModel.SubMeshCullings = new List<H3DSubMeshCulling>();
             //Match the file name as the imported name
             h3dModel.Name = Path.GetFileNameWithoutExtension(filePath);
@@ -199,7 +205,7 @@ namespace CtrLibrary.Bch
             //Check how many bones are used total
             var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();
             //If only one bone is used, no skinning requred as a bone can be used as a single binded rigid body.
-            if (boneList?.Count == 1)
+            if (boneList?.Count == 1 || settings.DisableSkeleton)
                 skinningCount = 0;
 
             Console.WriteLine($"skinningCount {skinningCount}");
@@ -284,39 +290,44 @@ namespace CtrLibrary.Bch
                     mesh.NodeIndex = (ushort)i;
             }
 
-            //Create a default color set if one is not present
-             if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.Color))
-             {
-                 mesh.FixedAttributes.Add(new PICAFixedAttribute()
-                 {
-                    Name = PICAAttributeName.Color,
-                    Value = new PICAVectorFloat24(1, 1, 1, 1),
-                 });
-             }
-
-            if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.BoneWeight))
+            if (!settings.IsSmash3DS)
             {
-                mesh.FixedAttributes.Add(new PICAFixedAttribute()
+                //Create a default color set if one is not present
+                if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.Color))
                 {
-                    Name = PICAAttributeName.BoneWeight,
-                    Value = new PICAVectorFloat24(1, 0, 0, 1),
-                });
+                    mesh.FixedAttributes.Add(new PICAFixedAttribute()
+                    {
+                        Name = PICAAttributeName.Color,
+                        Value = new PICAVectorFloat24(1, 1, 1, 1),
+                    });
+                }
+
+                if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.BoneWeight))
+                {
+                    mesh.FixedAttributes.Add(new PICAFixedAttribute()
+                    {
+                        Name = PICAAttributeName.BoneWeight,
+                        Value = new PICAVectorFloat24(1, 0, 0, 1),
+                    });
+                }
+
+                if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.BoneIndex))
+                {
+                    mesh.FixedAttributes.Add(new PICAFixedAttribute()
+                    {
+                        Name = PICAAttributeName.BoneIndex,
+                        Value = new PICAVectorFloat24(0, 0, 0, 1),
+                    });
+                }
             }
 
-            if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.BoneIndex))
-            {
-                mesh.FixedAttributes.Add(new PICAFixedAttribute()
-                {
-                    Name = PICAAttributeName.BoneIndex,
-                    Value = new PICAVectorFloat24(0, 0, 0, 1),
-                });
-            }
-
-            mesh.UpdateBoolUniforms(h3dModel.Materials[mesh.MaterialIndex], settings.IsPokemon);
+            mesh.UpdateBoolUniforms(h3dModel.Materials[mesh.MaterialIndex], settings.IsPokemon, settings.IsSmash3DS);
 
             mesh.MetaData = new H3DMetaData();
-         //   mesh.MetaData.Add(new H3DMetaDataValue("$BBoxMinMax", CalculateBoundingMinMax(iomesh)));
-            mesh.MetaData.Add(new H3DMetaDataValue("OBBox", CalculateBounding(iomesh)));
+            if (settings.IsPokemon)
+                mesh.MetaData.Add(new H3DMetaDataValue("$BBoxMinMax", CalculateBoundingMinMax(iomesh)));
+            if (!settings.IsSmash3DS)
+                mesh.MetaData.Add(new H3DMetaDataValue("OBBox", CalculateBounding(iomesh)));
         }
 
 
@@ -638,6 +649,13 @@ namespace CtrLibrary.Bch
                 if (vertex.UVs?.Count > 2)
                     picaVertex.TexCoord2 = new Vector4(vertex.UVs[2].X, vertex.UVs[2].Y, 0, 0);
                 picaVertex.Tangent = new Vector4(vertex.Tangent.X, vertex.Tangent.Y, vertex.Tangent.Z, 1.0f);
+
+                //Default weight values in the event these are forced to be used
+                if (vertex.Envelope.Weights.Count == 0)
+                {
+                    picaVertex.Indices.b0 = 0;
+                    picaVertex.Weights.w0 = 1;
+                }
 
                 for (int j = 0; j < vertex.Envelope.Weights.Count; j++)
                 {
