@@ -607,22 +607,32 @@ namespace CtrLibrary.Bcres
 
         private void UpdateVertexData(Action action)
         {
-            PicaVertexEditor.Start(Mesh.H3DMesh);
-            action();
-            var vertices = PicaVertexEditor.End(Mesh.H3DMesh);
-            var stride = VerticesConverter.CalculateStride(Mesh.H3DMesh.Attributes);
-            var rawBuffer = VerticesConverter.GetBuffer(vertices, Mesh.H3DMesh.Attributes, stride);
-            Mesh.H3DMesh.RawBuffer = rawBuffer;
+            var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+            var meshes = selected.Select(x => ((SOBJ)x).Mesh.H3DMesh).ToArray();
 
-            foreach (var vertexBuffer in Model.Shapes[Mesh.ShapeIndex].VertexBuffers)
+            PicaVertexEditor.Start(meshes);
+            action();
+
+            for (int i = 0; i < meshes.Length; i++)
             {
-                if (vertexBuffer is GfxVertexBufferInterleaved)
+                var meshNode = selected[i] as SOBJ;
+
+                var vertices = PicaVertexEditor.End(meshes[i], i);
+                var stride = VerticesConverter.CalculateStride(meshes[i].Attributes);
+                var rawBuffer = VerticesConverter.GetBuffer(vertices, meshes[i].Attributes, stride);
+                meshes[i].RawBuffer = rawBuffer;
+
+                foreach (var vertexBuffer in Model.Shapes[meshNode.Mesh.ShapeIndex].VertexBuffers)
                 {
-                    var vbo = vertexBuffer as GfxVertexBufferInterleaved;
-                    vbo.VertexStride = stride;
-                    vbo.RawBuffer = rawBuffer;
+                    if (vertexBuffer is GfxVertexBufferInterleaved)
+                  {
+                        var vbo = vertexBuffer as GfxVertexBufferInterleaved;
+                        vbo.VertexStride = stride;
+                        vbo.RawBuffer = rawBuffer;
+                    }
                 }
             }
+
             var cmdl = this.Parent.Parent as CMDL;
             cmdl.ReloadRender();
         }

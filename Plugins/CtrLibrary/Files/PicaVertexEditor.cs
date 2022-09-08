@@ -13,70 +13,77 @@ namespace CtrLibrary
 {
     internal class PicaVertexEditor
     {
-        static STGenericMesh Mesh;
+        static List<STGenericMesh> Meshes;
 
-        public static void Start(H3DMesh mesh)
+        public static void Start(params H3DMesh[] meshes)
         {
             //Convert to an in tool generic mesh for manipulating with
-            Mesh = new STGenericMesh();
+            Meshes = new List<STGenericMesh>();
 
-            var vertices = mesh.GetVertices();
-            for (int i = 0; i < vertices.Length; i++)
+            foreach (var mesh in meshes)
             {
-                Mesh.Vertices.Add(new STVertex()
+                var Mesh = new STGenericMesh();
+                Meshes.Add(Mesh);
+
+                var vertices = mesh.GetVertices();
+                for (int i = 0; i < vertices.Length; i++)
                 {
-                    Position = new Vector3(
-                         vertices[i].Position.X,
-                         vertices[i].Position.Y,
-                         vertices[i].Position.Z),
-                    Normal = new Vector3(
-                         vertices[i].Normal.X,
-                         vertices[i].Normal.Y,
-                         vertices[i].Normal.Z),
-                    TexCoords = new Vector2[1]
+                    Mesh.Vertices.Add(new STVertex()
                     {
+                        Position = new Vector3(
+                             vertices[i].Position.X,
+                             vertices[i].Position.Y,
+                             vertices[i].Position.Z),
+                        Normal = new Vector3(
+                             vertices[i].Normal.X,
+                             vertices[i].Normal.Y,
+                             vertices[i].Normal.Z),
+                        TexCoords = new Vector2[1]
+                        {
                         new Vector2(
                          vertices[i].TexCoord0.X,
                          vertices[i].TexCoord0.Y),
-                    },
-                    Colors = new Vector4[1]
-                    {
+                        },
+                        Colors = new Vector4[1]
+                        {
                         new Vector4(
                          vertices[i].Color.X,
                          vertices[i].Color.Y,
                          vertices[i].Color.Z,
                          vertices[i].Color.W),
-                    },
-                });
-            }
-            STPolygonGroup poly = new STPolygonGroup();
-            Mesh.PolygonGroups.Add(poly);
-            foreach (var sm in mesh.SubMeshes)
-            {
-                foreach (var ind in sm.Indices)
-                    poly.Faces.Add(ind);
+                        },
+                    });
+                }
+                STPolygonGroup poly = new STPolygonGroup();
+                Mesh.PolygonGroups.Add(poly);
+                foreach (var sm in mesh.SubMeshes)
+                {
+                    foreach (var ind in sm.Indices)
+                        poly.Faces.Add(ind);
+                }
             }
         }
 
         /// <summary>
         /// Recalculates the normals based on vertex positions.
         /// </summary>
-        public static void CalculateNormals() => Mesh.CalculateNormals();
+        public static void CalculateNormals() => Meshes.ForEach(x => x.CalculateNormals());
 
-        public static void FlipUVsVertical() => Mesh.FlipUvsVertical();
-        public static void FlipUvsHorizontal() => Mesh.FlipUvsHorizontal();
-        public static void CalculateTangent() => Mesh.CalculateTangentBitangent(0);
-        public static void SetVertexColor(Vector4 color) => Mesh.SetVertexColor(color);
+        public static void FlipUVsVertical() => Meshes.ForEach(x => x.FlipUvsVertical());
+        public static void FlipUvsHorizontal() => Meshes.ForEach(x => x.FlipUvsHorizontal());
+        public static void CalculateTangent() => Meshes.ForEach(x => x.CalculateTangentBitangent(0));
+        public static void SetVertexColor(Vector4 color) => Meshes.ForEach(x => x.SetVertexColor(color));
 
         public static void SmoothNormals()
         {
             bool cancel = false;
-            Mesh.SmoothNormals(ref cancel);
+            STGenericMesh.SmoothNormals(ref cancel, Meshes);
         }
 
-        public static PICAVertex[] End(H3DMesh mesh)
+        public static PICAVertex[] End(H3DMesh mesh, int index = 0)
         {
             //Convert to an in tool generic mesh for manipulating with
+            var Mesh = Meshes[index];
             var vertices = mesh.GetVertices();
             for (int i = 0; i < Mesh.Vertices.Count; i++)
             {

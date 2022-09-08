@@ -531,14 +531,21 @@ namespace CtrLibrary.Bch
 
         private void UpdateVertexData(Action action)
         {
-            PicaVertexEditor.Start(Mesh);
-            action();
-            var vertices = PicaVertexEditor.End(Mesh);
-            var stride = VerticesConverter.CalculateStride(Mesh.Attributes);
-            var rawBuffer = VerticesConverter.GetBuffer(vertices, Mesh.Attributes, stride);
+            var selected = this.Parent.Children.Where(x => x.IsSelected);
+            var meshes = selected.Select(x => ((SOBJ)x).Mesh).ToArray();
 
-            Mesh.RawBuffer = rawBuffer;
-            Mesh.VertexStride = stride;
+            PicaVertexEditor.Start(meshes);
+            action();
+
+            for (int i = 0; i < meshes.Length; i++)
+            {
+                var vertices = PicaVertexEditor.End(meshes[i], i);
+                var stride = VerticesConverter.CalculateStride(meshes[i].Attributes);
+                var rawBuffer = VerticesConverter.GetBuffer(vertices, meshes[i].Attributes, stride);
+
+                meshes[i].RawBuffer = rawBuffer;
+                meshes[i].VertexStride = stride;
+            }
 
             var cmdl = this.Parent.Parent as CMDL;
             cmdl.ReloadRender();
