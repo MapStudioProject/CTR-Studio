@@ -69,11 +69,29 @@ namespace CtrLibrary
         /// </summary>
         public static void CalculateNormals() => Meshes.ForEach(x => x.CalculateNormals());
 
+        /// <summary>
+        /// Flips all UVs vertical.
+        /// </summary>
         public static void FlipUVsVertical() => Meshes.ForEach(x => x.FlipUvsVertical());
+
+        /// <summary>
+        /// Flips all UVs horizontal.
+        /// </summary>
         public static void FlipUvsHorizontal() => Meshes.ForEach(x => x.FlipUvsHorizontal());
+
+        /// <summary>
+        /// Calculates tangent data.
+        /// </summary>
         public static void CalculateTangent() => Meshes.ForEach(x => x.CalculateTangentBitangent(0));
+
+        /// <summary>
+        /// Sets a single constant vertex color.
+        /// </summary>
         public static void SetVertexColor(Vector4 color) => Meshes.ForEach(x => x.SetVertexColor(color));
 
+        /// <summary>
+        /// Smooths normals from the current set of meshes.
+        /// </summary>
         public static void SmoothNormals()
         {
             bool cancel = false;

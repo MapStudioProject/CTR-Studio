@@ -148,8 +148,7 @@ namespace CtrLibrary.Bcres
             Root.AddChild(ModelFolder);
             Root.AddChild(TextureFolder);
             Root.AddChild(LUTFolder);
-            //Todo shaders have a quirk with keys
-            //AddNodeGroup(BcresData.Shaders, new H3DGroupNode(H3DGroupType.Shaders));
+            AddNodeGroup(H3DGroupType.Shaders, BcresData.Shaders);
             AddNodeGroup(H3DGroupType.Cameras, BcresData.Cameras);
             AddNodeGroup(H3DGroupType.Fogs, BcresData.Fogs);
             AddNodeGroup(H3DGroupType.Lights, BcresData.Lights);
