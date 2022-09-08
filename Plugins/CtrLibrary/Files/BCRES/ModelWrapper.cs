@@ -83,6 +83,7 @@ namespace CtrLibrary.Bcres
                         var modelWrapper = new CMDL(ParentBCRESNode, BcresFile, model);
                         modelWrapper.ImportFile(filePath, importerUI.Settings);
                         AddChild(modelWrapper);
+                        GLContext.ActiveContext.UpdateViewport = true;
                     }
                     catch (Exception ex)
                     {
@@ -175,6 +176,8 @@ namespace CtrLibrary.Bcres
             BcresFile.Models.Remove(Model);
             //Remove from gui
             Parent.Children.Remove(this);
+
+            GLContext.ActiveContext.UpdateViewport = true;
         }
 
         private void ReloadModel()
