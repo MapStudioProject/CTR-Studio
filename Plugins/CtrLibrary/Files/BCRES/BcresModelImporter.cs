@@ -529,6 +529,13 @@ namespace CtrLibrary.Bcres
                     }
                     void UpdateVertex(int ind, ref PICAVertex[] vertices)
                     {
+                        if (float.IsNaN(vertices[ind].Normal.X) ||
+                            float.IsNaN(vertices[ind].Normal.Y) ||
+                            float.IsNaN(vertices[ind].Normal.Z))
+                        {
+                            vertices[ind].Normal = new Vector4(0, 1, 0, 0);
+                        }
+
                         //Create a new vertex instance, as we need to assign new vertices
                         var v = new PICAVertex()
                         {
