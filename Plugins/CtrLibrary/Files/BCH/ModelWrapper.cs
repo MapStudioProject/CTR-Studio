@@ -59,9 +59,15 @@ namespace CtrLibrary.Bch
             dlg.SaveDialog = false;
             dlg.FileName = $"{Header}";
             dlg.AddFilter(".dae", "dae");
+            dlg.AddFilter(".fbx", "fbx");
+            dlg.AddFilter(".smd", "smd");
+
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.EndsWith(".dae"))
+                if (dlg.FilePath.ToLower().EndsWith(".dae") ||
+                    dlg.FilePath.ToLower().EndsWith(".fbx") ||
+                    dlg.FilePath.ToLower().EndsWith(".smd") ||
+                    dlg.FilePath.ToLower().EndsWith(".obj"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
                     DialogHandler.Show("Importer", 400, 400, () =>
@@ -255,9 +261,14 @@ namespace CtrLibrary.Bch
             dlg.FileName = $"{Header}";
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".fbx", "fbx");
+            dlg.AddFilter(".smd", "smd");
+
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
+                if (dlg.FilePath.ToLower().EndsWith(".dae") ||
+                             dlg.FilePath.ToLower().EndsWith(".fbx") ||
+                             dlg.FilePath.ToLower().EndsWith(".smd") ||
+                             dlg.FilePath.ToLower().EndsWith(".obj"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
                     DialogHandler.Show("Importer", 400, 400, () =>

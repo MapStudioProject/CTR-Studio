@@ -268,9 +268,13 @@ namespace CtrLibrary.Bcres
             dlg.FileName = $"{Header}";
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".fbx", "fbx");
+            dlg.AddFilter(".smd", "smd");
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.ToLower().EndsWith(".dae") || dlg.FilePath.ToLower().EndsWith(".fbx"))
+                if (dlg.FilePath.ToLower().EndsWith(".dae") || 
+                    dlg.FilePath.ToLower().EndsWith(".fbx") ||
+                    dlg.FilePath.ToLower().EndsWith(".smd") ||
+                    dlg.FilePath.ToLower().EndsWith(".obj"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
                     importerUI.Settings.DisableSkeleton = !(this.Model is GfxModelSkeletal);
