@@ -264,7 +264,7 @@ namespace CtrLibrary.Bcres
         private static void ConvertMesh(IONET.Core.IOScene scene, IOMesh iomesh,
             GfxModel gfxModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings)
         {
-            if (iomesh.Vertices.Count == 0)
+            if (iomesh.Vertices.Count == 0 || iomesh.Polygons.Sum(x => x.Indicies.Count) == 0)
                 return;
 
             string meshName = iomesh.Name;
@@ -397,7 +397,6 @@ namespace CtrLibrary.Bcres
             gfxModel.Meshes.Add(gfxMesh);
             gfxModel.Shapes.Add(gfxShape);
         }
-
 
         static void CalculatePositionScaleOffset(GfxAttribute attributePos, GfxShape shape, IOMesh iomesh)
         {
