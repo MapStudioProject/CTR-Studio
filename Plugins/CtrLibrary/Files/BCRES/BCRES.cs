@@ -148,11 +148,12 @@ namespace CtrLibrary.Bcres
             Root.AddChild(ModelFolder);
             Root.AddChild(TextureFolder);
             Root.AddChild(LUTFolder);
+
             AddNodeGroup(H3DGroupType.Shaders, BcresData.Shaders);
             AddNodeGroup(H3DGroupType.Cameras, BcresData.Cameras);
             AddNodeGroup(H3DGroupType.Fogs, BcresData.Fogs);
             AddNodeGroup(H3DGroupType.Lights, BcresData.Lights);
-            AddNodeGroup(H3DGroupType.Scenes, BcresData.Scenes);
+           // AddNodeGroup(H3DGroupType.Scenes, BcresData.Scenes);
             AddNodeGroup(H3DGroupType.SkeletalAnim, BcresData.SkeletalAnimations);
             AddNodeGroup(H3DGroupType.MaterialAnim, BcresData.MaterialAnimations);
             AddNodeGroup(H3DGroupType.VisibiltyAnim, BcresData.VisibilityAnimations);
