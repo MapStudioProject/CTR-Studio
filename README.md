@@ -1,9 +1,18 @@
 # CTR-Studio
 An editor for 3DS formats including BCH and BCRES.
 
-[Discord](https://discord.gg/rGCv9JRWGH)
-
 ![image](https://user-images.githubusercontent.com/13475262/188504837-c1040cc4-bbf5-4a90-90dc-3ad6dac1120c.png)
+
+<p align="center">
+    <a href="https://ci.appveyor.com/project/KillzXGaming/track-studio">
+        <img src="https://ci.appveyor.com/api/projects/status/jqcx1xb06xp0txxa?svg=true"
+            alt="Appveyor">
+    </a>
+    <a href="https://discord.gg/TjatyEE9NW">
+        <img src="https://img.shields.io/discord/1034629789128065044" alt="Discord">
+    </a>
+</p>
+
 
 ## Features (BCRES/BCH)
 - Export/replacing for models with full rig support, custom bones, vertex colors and uv layers.
