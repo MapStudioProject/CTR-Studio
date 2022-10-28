@@ -7,11 +7,11 @@
   </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<OutputPath>..\..\CTR Studio\bin\Debug\net6.0\plugins\</OutputPath>
+		<OutputPath>..\..\CTR Studio\bin\Debug\net6.0\Plugins\</OutputPath>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<OutputPath>..\..\CTR Studio\bin\Release\net6.0\plugins\</OutputPath>
+		<OutputPath>..\..\CTR Studio\bin\Release\net6.0\Plugins\</OutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -74,6 +74,15 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Lib\MTVertexFormats\M11.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Lib\MTVertexFormats\MHGU.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
