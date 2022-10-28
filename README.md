@@ -8,7 +8,7 @@ An editor for 3DS formats including BCH and BCRES.
             alt="Appveyor">
     </a>
     <a href="https://discord.gg/rGCv9JRWGH">
-        <img src="https://img.shields.io/discord/958107162972921906?color=%09%237289DA&label=discord"
+        <img src="https://img.shields.io/discord/1034629789128065044"
             alt="Discord">
     </a>
 </p>
