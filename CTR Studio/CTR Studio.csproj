@@ -163,6 +163,7 @@
     <Folder Include="Lib\Images\" />
     <Folder Include="Lib\Presets\Materials\" />
     <Folder Include="Lib\Presets\Combiners\" />
+    <Folder Include="LUTs\" />
   </ItemGroup>
 
 </Project>
