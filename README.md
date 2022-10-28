@@ -1,7 +1,17 @@
 # CTR-Studio
 An editor for 3DS formats including BCH and BCRES.
 
-[Discord](https://discord.gg/rGCv9JRWGH)
+
+<p align="center">
+    <a href="https://ci.appveyor.com/project/KillzXGaming/ctr-studio/">
+        <img src="https://ci.appveyor.com/api/projects/status/7e9dck74enr8yu32?svg=true"
+            alt="Appveyor">
+    </a>
+    <a href="https://discord.gg/rGCv9JRWGH">
+        <img src="https://img.shields.io/discord/958107162972921906?color=%09%237289DA&label=discord"
+            alt="Discord">
+    </a>
+</p>
 
 ![image](https://user-images.githubusercontent.com/13475262/188504837-c1040cc4-bbf5-4a90-90dc-3ad6dac1120c.png)
 
