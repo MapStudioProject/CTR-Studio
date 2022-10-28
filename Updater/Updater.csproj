@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <BaseOutputPath>..\CTRStudio\bin</BaseOutputPath>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Octokit" Version="0.50.0" />
   </ItemGroup>
