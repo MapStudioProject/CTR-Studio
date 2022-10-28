@@ -1,6 +1,8 @@
 # CTR-Studio
 An editor for 3DS formats including BCH and BCRES.
 
+[Discord](https://discord.gg/rGCv9JRWGH)
+
 ![image](https://user-images.githubusercontent.com/13475262/188504837-c1040cc4-bbf5-4a90-90dc-3ad6dac1120c.png)
 
 ## Features (BCRES/BCH)
