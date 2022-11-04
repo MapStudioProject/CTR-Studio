@@ -17,6 +17,14 @@ using CtrLibrary.Rendering;
 using GLFrameworkEngine;
 using CtrLibrary.UI;
 using SPICA.Formats.ModelBinary;
+using SPICA.Formats.CtrH3D.Model;
+using SPICA.Formats.CtrH3D.Texture;
+using SPICA.Formats.CtrH3D.Animation;
+using SPICA.Formats.CtrH3D.Shader;
+using SPICA.Formats.CtrH3D.Scene;
+using SPICA.Formats.CtrH3D.Light;
+using SPICA.Formats.CtrH3D.Fog;
+using SPICA.Formats.CtrH3D.LUT;
 
 namespace CtrLibrary.Bch
 {
@@ -259,7 +267,7 @@ namespace CtrLibrary.Bch
 
         class H3DGroupNode : NodeBase
         {
-            H3DGroupType Type;
+            public H3DGroupType Type;
 
             public H3DGroupNode(H3DGroupType type)
             {
@@ -310,6 +318,11 @@ namespace CtrLibrary.Bch
                 this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+
+                this.OnHeaderRenamed += delegate
+                {
+                    ReloadName();
+                };
             }
 
             void Replace()
@@ -317,12 +330,46 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter("json", "json");
+                dlg.AddFilter(".raw", "raw");
+                dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
-                    Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                    Dict[this.Header] = (T)Section;
+                    if (dlg.FilePath.ToLower().EndsWith(".raw"))
+                    {
+                        ReplaceRaw(dlg.FilePath);
+                    }
+                    else
+                    {
+                        Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
+                        Dict[this.Header] = (T)Section;
+                    }
+                    ReloadName();
                 }
+            }
+
+            void ReplaceRaw(string filePath)
+            {
+                var type = ((H3DGroupNode)this.Parent).Type;
+
+                H3D h3d = H3D.Open(File.ReadAllBytes(filePath));
+                switch (type)
+                {
+                    case H3DGroupType.Models: Section = h3d.Models[0]; break;
+                    case H3DGroupType.Textures: Section = h3d.Textures[0]; break;
+                    case H3DGroupType.SkeletalAnim: Section = h3d.SkeletalAnimations[0]; break;
+                    case H3DGroupType.MaterialAnim: Section = h3d.MaterialAnimations[0]; break;
+                    case H3DGroupType.Lookups: Section = h3d.LUTs[0]; break;
+                    case H3DGroupType.Lights: Section = h3d.Lights[0]; break;
+                    case H3DGroupType.Fogs: Section = h3d.Fogs[0]; break;
+                    case H3DGroupType.Scenes: Section = h3d.Scenes[0]; break;
+                    case H3DGroupType.Shaders: Section = h3d.Shaders[0]; break;
+                    case H3DGroupType.VisibiltyAnim: Section = h3d.VisibilityAnimations[0]; break;
+                    case H3DGroupType.CameraAnim: Section = h3d.CameraAnimations[0]; break;
+                    case H3DGroupType.LightAnim: Section = h3d.LightAnimations[0]; break;
+                    default:
+                        throw new Exception($"Unsupported section! {type}");
+                }
+                Dict[this.Header] = (T)Section;
             }
 
             void Export()
@@ -330,11 +377,49 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter("json", "json");
+                dlg.AddFilter(".raw", "raw");
+                dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
-                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    if (dlg.FilePath.ToLower().EndsWith(".raw"))
+                    {
+                        ExportRaw(dlg.FilePath);
+                    }
+                    else
+                    {
+                        File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    }
                 }
+            }
+
+            void ExportRaw(string filePath)
+            {
+                var type = ((H3DGroupNode)this.Parent).Type;
+
+                H3D h3d = new H3D();
+                switch (type)
+                {
+                    case H3DGroupType.Models: h3d.Models.Add((H3DModel)Section); break;
+                    case H3DGroupType.Textures: h3d.Textures.Add((H3DTexture)Section); break;
+                    case H3DGroupType.SkeletalAnim: h3d.SkeletalAnimations.Add((H3DAnimation)Section); break;
+                    case H3DGroupType.MaterialAnim: h3d.MaterialAnimations.Add((H3DMaterialAnim)Section); break;
+                    case H3DGroupType.Lookups: h3d.LUTs.Add((H3DLUT)Section); break;
+                    case H3DGroupType.Lights: h3d.Lights.Add((H3DLight)Section); break;
+                    case H3DGroupType.Fogs: h3d.Fogs.Add((H3DFog)Section); break;
+                    case H3DGroupType.Scenes: h3d.Scenes.Add((H3DScene)Section); break;
+                    case H3DGroupType.Shaders: h3d.Shaders.Add((H3DShader)Section); break;
+                    case H3DGroupType.VisibiltyAnim: h3d.VisibilityAnimations.Add((H3DAnimation)Section); break;
+                    case H3DGroupType.CameraAnim: h3d.CameraAnimations.Add((H3DAnimation)Section); break;
+                    case H3DGroupType.LightAnim: h3d.LightAnimations.Add((H3DAnimation)Section); break;
+                    default:
+                        throw new Exception($"Unsupported section! {type}");
+                }
+                Dict[this.Header] = (T)Section;
+            }
+
+            void ReloadName()
+            {
+                ((SPICA.Formats.Common.INamed)Section).Name = this.Header;
             }
         }
     }

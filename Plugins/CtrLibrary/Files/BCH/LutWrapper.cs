@@ -69,6 +69,7 @@ namespace CtrLibrary.Bch
             dlg.SaveDialog = false;
             dlg.FileName = $"{Header}.json";
             dlg.AddFilter("json", "json");
+
             if (dlg.ShowDialog())
             {
                 var lut = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
@@ -192,11 +193,18 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}.json";
+            dlg.FileName = $"{Header}.blut";
+            dlg.AddFilter("blut", "blut");
             dlg.AddFilter("json", "json");
+
             if (dlg.ShowDialog())
             {
-                Section = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
+                if (dlg.FilePath.ToLower().EndsWith(".blut"))
+                    this.Section.Replace(dlg.FilePath);
+                else
+                    Section = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
+
+                Section.Name = this.Header;
                 H3D.LUTs[this.Header] = Section;
             }
         }
@@ -205,11 +213,15 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = true;
-            dlg.FileName = $"{Header}.json";
+            dlg.FileName = $"{Header}.blut";
+            dlg.AddFilter("blut", "blut");
             dlg.AddFilter("json", "json");
             if (dlg.ShowDialog())
             {
-                File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                if (dlg.FilePath.ToLower().EndsWith(".blut"))
+                    this.Section.Export(dlg.FilePath);
+                else
+                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
             }
         }
 

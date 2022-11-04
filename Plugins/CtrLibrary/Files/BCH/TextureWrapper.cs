@@ -198,6 +198,8 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
+            dlg.AddFilter(".bctex", "Raw Texture (H3D)");
+
             foreach (var ext in TextureDialog.SupportedExtensions)
                 dlg.AddFilter(ext, ext);
 
@@ -207,6 +209,14 @@ namespace CtrLibrary.Bch
 
         public void ReplaceTexture(string filePath)
         {
+            if (filePath.ToLower().EndsWith(".bctex"))
+            {
+                this.Texture.Replace(filePath);
+                this.Texture.Name = this.Header;
+                ReloadImported();
+                return;
+            }
+
             var dlg = new H3DTextureDialog();
             var tex = dlg.AddTexture(filePath);
             tex.Format = Texture.Format;
@@ -242,6 +252,11 @@ namespace CtrLibrary.Bch
             Texture.Height = tex.Height;
             Texture.MipmapSize = (byte)tex.MipCount;
             Texture.Format = tex.Format;
+            ReloadImported();
+        }
+
+        private void ReloadImported()
+        {
 
             Tag = new EditableTexture(this, Texture);
             //Update texture render used for icons
@@ -306,8 +321,13 @@ namespace CtrLibrary.Bch
 
         public void ExportTexture(string filePath)
         {
-            var tex = this.Tag as STGenericTexture;
-            tex.Export(filePath, new TextureExportSettings());
+            if (filePath.ToLower().EndsWith(".bctex"))
+                this.Texture.Export(filePath);
+            else
+            {
+                var tex = this.Tag as STGenericTexture;
+                tex.Export(filePath, new TextureExportSettings());
+            }
         }
 
         private void ExportTextureDialog()
@@ -329,6 +349,8 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{this.Header}.png";
+                dlg.AddFilter(".bctex", "Raw Texture (H3D)");
+
                 foreach (var ext in TextureDialog.SupportedExtensions)
                     dlg.AddFilter(ext, ext);
 
