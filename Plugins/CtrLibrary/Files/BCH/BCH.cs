@@ -419,6 +419,7 @@ namespace CtrLibrary.Bch
                 default:
                     throw new Exception($"Unsupported section! {type}");
             }
+            H3D.Save(filePath, h3d);
         }
     }
 }
