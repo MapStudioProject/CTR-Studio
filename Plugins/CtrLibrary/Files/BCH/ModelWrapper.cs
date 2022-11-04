@@ -326,7 +326,7 @@ namespace CtrLibrary.Bch
             int modelIndex = H3DFile.Models.Find(Model.Name);
 
             if (filePath.EndsWith(".bcmdl"))
-                BCH.ReplaceRaw(filePath, BCH.H3DGroupType.Models);
+                Model = (H3DModel)BCH.ReplaceRaw(filePath, BCH.H3DGroupType.Models);
             else
                 Model = BchModelImporter.Import(filePath, ParentBCHNode, Model, settings);
             //Keep the same name
