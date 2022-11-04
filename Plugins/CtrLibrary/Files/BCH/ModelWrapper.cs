@@ -57,10 +57,10 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}";
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".fbx", "fbx");
             dlg.AddFilter(".smd", "smd");
+            dlg.AddFilter(".bcmdl", "bcmdl");
 
             if (dlg.ShowDialog())
             {
@@ -93,6 +93,16 @@ namespace CtrLibrary.Bch
                             }
                         }
                     });
+                }
+                else if (dlg.FilePath.ToLower().EndsWith(".bcmdl"))
+                {
+                    H3DModel model = new H3DModel()
+                    {
+                        Name = "NewModel",
+                    };
+                    var modelWrapper = new CMDL(ParentBCHNode, H3DFile, model);
+                    modelWrapper.ImportFile(dlg.FilePath, new CtrImportSettings());
+                    AddChild(modelWrapper);
                 }
             }
         }
@@ -233,6 +243,8 @@ namespace CtrLibrary.Bch
             dlg.FileName = $"{Header}";
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".json", "json");
+            dlg.AddFilter(".bcmdl", "bcmdl");
+
             if (dlg.ShowDialog())
             {
                 if (dlg.FilePath.EndsWith(".dae"))
@@ -249,8 +261,12 @@ namespace CtrLibrary.Bch
                         h3dTex.ToBitmap().Save(Path.Combine(folder, $"{h3dTex.Name}.png"));
                     }
                 }
-                if (dlg.FilePath.EndsWith(".json"))
+                else if (dlg.FilePath.EndsWith(".json"))
                     File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Model, Formatting.Indented));
+                else if (dlg.FilePath.EndsWith(".bcmdl"))
+                {
+                    BCH.ExportRaw(dlg.FilePath, Model, BCH.H3DGroupType.Models);
+                }
             }
         }
 
@@ -262,6 +278,7 @@ namespace CtrLibrary.Bch
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".fbx", "fbx");
             dlg.AddFilter(".smd", "smd");
+            dlg.AddFilter(".bcmdl", "bcmdl");
 
             if (dlg.ShowDialog())
             {
@@ -289,6 +306,17 @@ namespace CtrLibrary.Bch
                         }
                     });
                 }
+                else if (dlg.FilePath.ToLower().EndsWith(".bcmdl"))
+                {
+                    try
+                    {
+                        ImportFile(dlg.FilePath, new CtrImportSettings());
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogHandler.ShowException(ex);
+                    }
+                }
             }
         }
 
@@ -297,7 +325,10 @@ namespace CtrLibrary.Bch
             //Index of current model
             int modelIndex = H3DFile.Models.Find(Model.Name);
 
-            Model = BchModelImporter.Import( filePath, ParentBCHNode, Model, settings);
+            if (filePath.EndsWith(".bcmdl"))
+                BCH.ReplaceRaw(filePath, BCH.H3DGroupType.Models);
+            else
+                Model = BchModelImporter.Import(filePath, ParentBCHNode, Model, settings);
             //Keep the same name
             Model.Name = this.Header;
 
