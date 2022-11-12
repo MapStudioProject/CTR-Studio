@@ -10,4 +10,12 @@
     <PackageReference Include="Octokit" Version="0.50.0" />
   </ItemGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<OutputPath>..\..\CTR Studio\bin\Debug\net6.0\</OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<OutputPath>..\..\CTR Studio\bin\Release\net6.0\</OutputPath>
+	</PropertyGroup>
+	
 </Project>
