@@ -101,6 +101,8 @@ namespace CtrLibrary.Bch
         //Folder for texture data
         private TextureFolder TextureFolder;
 
+        public override bool DisplayViewport => ModelFolder.Children.Count > 0;
+
         public void Load(Stream stream)
         {
             H3DData = H3D.Open(new MemoryStream(stream.ToArray()));
@@ -322,6 +324,18 @@ namespace CtrLibrary.Bch
                 this.OnHeaderRenamed += delegate
                 {
                     ReloadName();
+                };
+
+
+                if (section is H3DAnimation)
+                {
+                    var wrapper = new AnimationWrapper((H3DAnimation)section);
+                    Tag = wrapper;
+                }
+                this.OnSelected += delegate
+                {
+                    if (Tag is AnimationWrapper)
+                        ((AnimationWrapper)Tag).AnimationSet();
                 };
             }
 

@@ -559,11 +559,11 @@ namespace CTRStudio
             string ext = Path.GetExtension(filePath);
             bool isProject = ext == ".json";
             ProcessLoading.Instance.IsLoading = true;
+            bool createNew = !GlobalSettings.Current.Program.UseSameWorkspace;
 
             //Load asset based format
             if (!isProject)
             {
-                bool createNew = true;
 
                 Workspace workspace = Workspace.ActiveWorkspace;
                 if (createNew || workspace == null)
@@ -604,7 +604,8 @@ namespace CTRStudio
             ProcessLoading.Instance.IsLoading = false;
             ForceFocus = true;
 
-            OnWorkspaceChanged();
+            if (createNew)
+                OnWorkspaceChanged();
         }
 
         private void OnWorkspaceChanged()

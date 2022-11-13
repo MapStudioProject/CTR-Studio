@@ -293,14 +293,12 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.png";
-                dlg.AddFilter("png", "png");
+                dlg.AddFilter(".png", ".png");
                 if (dlg.ShowDialog())
                 {
                     var image = Image.Load<Rgba32>(dlg.FilePath);
                     if (image.Width != 512)
                         throw new Exception($"Invalid image width for LUT! Expected 512 but got {image.Width}!");
-
-                    image.Mutate(x => x.GaussianBlur());
 
                     //Get rgba data
                     var rgba = image.GetSourceInBytes();
@@ -315,7 +313,7 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{Header}.png";
-                dlg.AddFilter("png", "png");
+                dlg.AddFilter(".png", ".png");
                 if (dlg.ShowDialog())
                 {
                     //From png. Convert rgba then create image
@@ -351,7 +349,7 @@ namespace CtrLibrary.Bch
                 int width = 512;
 
                 byte[] data = new byte[width * height * 4];
-                //Create a 1D texture sheet from the span of the timeline covering all the colors
+                //Create a 1D texture sheet
                 int index = 0;
                 for (int h = 0; h < height; h++)
                 {

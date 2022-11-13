@@ -18,6 +18,7 @@ using CtrLibrary.UI;
 using SPICA.Formats.CtrGfx.Texture;
 using SPICA.Formats.CtrH3D.Animation;
 using SPICA.Formats.CtrGfx.Animation;
+using GLFrameworkEngine;
 
 namespace CtrLibrary.Bcres
 {
@@ -74,6 +75,7 @@ namespace CtrLibrary.Bcres
             return true;
         }
 
+        public override bool DisplayViewport => ModelFolder.Children.Count > 0;
 
         /// <summary>
         /// The render instance used to display the model in 3D view.
@@ -369,6 +371,18 @@ namespace CtrLibrary.Bcres
                 this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+
+                if (section is GfxAnimation)
+                {
+                    var anim = ((GfxAnimation)section).ToH3DAnimation();
+                    var wrapper = new AnimationWrapper((H3DAnimation)anim);
+                    Tag = wrapper;
+                }
+                this.OnSelected += delegate
+                {
+                    if (Tag is AnimationWrapper)
+                        ((AnimationWrapper)Tag).AnimationSet();
+                };
             }
 
             public void ExportAsJson(string filePath)
