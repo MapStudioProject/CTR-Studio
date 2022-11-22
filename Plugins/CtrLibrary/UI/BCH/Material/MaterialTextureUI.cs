@@ -445,8 +445,6 @@ namespace CtrLibrary
                 ImGuiHelper.BoldText($"Coordinate Index #{CoordIndex}");
 
                 BcresUIHelper.DrawEnum("Mapping Type", ref texCoord.MappingType, () => { 
-                    UINode.UpdateUniformBooleans();
-
                     //Camera types are the only source > 2 from what I can tell, so reset to 0 if necessary
                     if (texCoord.MappingType != H3DTextureMappingType.CameraCubeEnvMap &&
                         texCoord.MappingType != H3DTextureMappingType.CameraSphereEnvMap && texSourceID > 2)
@@ -462,6 +460,7 @@ namespace CtrLibrary
 
                     updateUniforms = true;
                     UpdateShaders();
+                    UINode.UpdateUniformBooleans();
                 });
 
                 if (texCoord.MappingType == H3DTextureMappingType.UvCoordinateMap)

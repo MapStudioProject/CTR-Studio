@@ -225,7 +225,6 @@ namespace CtrLibrary.Bcres
                     {
                         Console.WriteLine($"Mapping {texture} to diffuse at slot 0");
                         //Map them out into the first texturemap slot for diffuse.
-                        //Todo might work better to map based on combiner data?
                         if (mat.TextureMappers[0] == null)
                             mat.TextureMappers[0] = new GfxTextureMapper();
 

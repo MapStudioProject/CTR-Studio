@@ -186,10 +186,13 @@ namespace CtrLibrary
 
         public override void Reset()
         {
-            foreach (var model in Render.Renderer.Models)
+            if (Render != null)
             {
-                model.SkeletalAnim.SetAnimations(new List<H3DAnimation>());
-                model.SkeletalAnim.Stop();
+                foreach (var model in Render.Renderer.Models)
+                {
+                    model.SkeletalAnim.SetAnimations(new List<H3DAnimation>());
+                    model.SkeletalAnim.Stop();
+                }
             }
             base.Reset();
         }
@@ -198,10 +201,13 @@ namespace CtrLibrary
         {
             if (H3DAnimation.AnimationType == H3DAnimationType.Skeletal)
             {
-                foreach (var model in Render.Renderer.Models)
+                foreach (var render in H3DRender.RenderCache)
                 {
-                    model.SkeletalAnim.SetAnimations(new List<H3DAnimation>() { H3DAnimation });
-                    model.SkeletalAnim.Play();
+                    foreach (var model in render.Models)
+                    {
+                        model.SkeletalAnim.SetAnimations(new List<H3DAnimation>() { H3DAnimation });
+                        model.SkeletalAnim.Play();
+                    }
                 }
             }
         }
@@ -216,8 +222,14 @@ namespace CtrLibrary
 
             if (H3DAnimation.AnimationType == H3DAnimationType.Skeletal)
             {
-                Render.Renderer.Models[0].SkeletalAnim.Frame = this.Frame;
-                Render.Renderer.Models[0].UpdateAnimationTransforms();
+                foreach (var render in H3DRender.RenderCache)
+                {
+                    foreach (var model in render.Models)
+                    {
+                        model.SkeletalAnim.Frame = this.Frame;
+                        model.UpdateAnimationTransforms();
+                    }
+                }
             }
 
             foreach (ElementNode group in this.AnimGroups)

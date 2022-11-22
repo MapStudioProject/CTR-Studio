@@ -34,6 +34,8 @@ namespace CtrLibrary.Rendering
         /// </summary>v
         public static Dictionary<string, H3DLUT> LUTCache = new Dictionary<string, H3DLUT>();
 
+        public static List<Renderer> RenderCache = new List<Renderer>();
+
         //The H3D scene instance
         private H3D Scene;
 
@@ -107,6 +109,7 @@ namespace CtrLibrary.Rendering
 
             //Local render for workspaces
             Renderer = new Renderer(1, 1);
+            RenderCache.Add(Renderer);
 
             //Configurable scene lighting
             if (File.Exists("CtrScene.json"))
@@ -181,6 +184,7 @@ namespace CtrLibrary.Rendering
                     LUTCache.Remove(lut.Key);
 
             Renderer.DeleteAll();
+            RenderCache.Remove(this.Renderer);
         }
 
         public override void DrawModel(GLContext context, Pass pass)
@@ -191,9 +195,21 @@ namespace CtrLibrary.Rendering
             //Setup the debug render data
             PrepareDebugShading();
 
-            //Draw the skeleton
-            foreach (var skeleton in Skeletons) 
-                    skeleton.DrawModel(context, pass);
+            for (int i = 0; i < Skeletons.Count; i++)
+            {
+                var skel = Skeletons[i];
+                if (Renderer.Models[i].SkeletalAnim != null)
+                {
+                    var skelAnim = Renderer.Models[i].SkeletalAnim.FrameSkeleton;
+                    for (int j = 0; j < skelAnim.Length; j++)
+                    {
+                        skel.Bones[j].BoneData.AnimationController.Position = skelAnim[j].Translation;
+                        skel.Bones[j].BoneData.AnimationController.Rotation = skelAnim[j].Rotation;
+                        skel.Bones[j].BoneData.AnimationController.Scale = skelAnim[j].Scale;
+                    }
+                    skel.Update();
+                }
+            }
 
             //Setup the camera
             Renderer.Camera.ProjectionMatrix = context.Camera.ProjectionMatrix;
@@ -202,6 +218,10 @@ namespace CtrLibrary.Rendering
 
             //Draw the models
             Renderer.Render();
+
+            //Draw the skeleton
+            foreach (var skeleton in Skeletons)
+                skeleton.DrawModel(context, pass);
 
             //Reset depth state to defaults
             GL.DepthMask(true);
