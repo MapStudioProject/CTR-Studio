@@ -186,9 +186,9 @@ namespace CtrLibrary
 
         public override void Reset()
         {
-            if (Render != null)
+            foreach (var render in H3DRender.RenderCache)
             {
-                foreach (var model in Render.Renderer.Models)
+                foreach (var model in render.Models)
                 {
                     model.SkeletalAnim.SetAnimations(new List<H3DAnimation>());
                     model.SkeletalAnim.Stop();
