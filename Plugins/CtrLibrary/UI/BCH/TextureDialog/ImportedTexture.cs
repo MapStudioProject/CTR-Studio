@@ -115,8 +115,11 @@ namespace CtrLibrary
 
         public H3DImportedTexture(string fileName) {
             FilePath = fileName;
-            Name = Path.GetFileNameWithoutExtension(fileName);
             Format = PICATextureFormat.ETC1A4;
+
+            //Remove extension. Fix for keeping . in filenames
+            string ext = fileName.Split(".").LastOrDefault();
+            Name = fileName.Replace($".{ext}", "");
 
             Surfaces.Add(new Surface(fileName));
             Reload(0);
