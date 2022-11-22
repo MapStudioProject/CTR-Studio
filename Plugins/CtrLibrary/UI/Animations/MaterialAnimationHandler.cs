@@ -16,6 +16,8 @@ namespace CtrLibrary
         public static List<Tuple<MaterialState, H3DMaterial>> GetAnimationStates(Rendering.H3DRender render, string name)
         {
             List<Tuple<MaterialState, H3DMaterial>> states = new List<Tuple<MaterialState, H3DMaterial>>();
+            if (render == null) return states;
+
             foreach (var model in render.Renderer.Models)
             {
                 //Get the animation state and update it
