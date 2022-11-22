@@ -119,7 +119,7 @@ namespace CtrLibrary
 
             //Remove extension. Fix for keeping . in filenames
             string ext = fileName.Split(".").LastOrDefault();
-            Name = fileName.Replace($".{ext}", "");
+            Name = Path.GetFileName(fileName.Replace($".{ext}", ""));
 
             Surfaces.Add(new Surface(fileName));
             Reload(0);
