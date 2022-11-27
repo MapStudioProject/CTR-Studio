@@ -201,8 +201,11 @@ namespace CtrLibrary.Rendering
                 if (Renderer.Models[i].SkeletalAnim != null)
                 {
                     var skelAnim = Renderer.Models[i].SkeletalAnim.FrameSkeleton;
-                    for (int j = 0; j < skelAnim.Length; j++)
+                    for (int j = 0; j < skel.Bones.Count; j++)
                     {
+                        if (skelAnim.Length <= j)
+                            continue;
+
                         skel.Bones[j].BoneData.AnimationController.Position = skelAnim[j].Translation;
                         skel.Bones[j].BoneData.AnimationController.Rotation = skelAnim[j].Rotation;
                         skel.Bones[j].BoneData.AnimationController.Scale = skelAnim[j].Scale;
