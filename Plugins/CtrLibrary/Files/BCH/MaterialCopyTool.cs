@@ -23,6 +23,7 @@ namespace CtrLibrary
             { "Copy LUTs", true },
             { "Copy Polygon State", true },
             { "Copy Render State", true },
+            { "Copy User Data", true },
         };
 
         public static void Copy(H3DMaterial material)
@@ -36,6 +37,7 @@ namespace CtrLibrary
             if (CopyToggles["Copy LUTs"]) copied.LUTData = new LUTData(material);
             if (CopyToggles["Copy Polygon State"]) copied.MaterialRasterData = new MaterialRaster(material);
             if (CopyToggles["Copy Render State"]) copied.RenderState = new RenderState(material);
+            if (CopyToggles["Copy User Data"]) copied.MetaData = material.MaterialParams.MetaData;
 
             string json = JsonConvert.SerializeObject(copied, Formatting.Indented);
             ImGuiNET.ImGui.SetClipboardText(json);
@@ -69,6 +71,7 @@ namespace CtrLibrary
             if (copied.MaterialRasterData != null) copied.MaterialRasterData.Paste(material);
             if (copied.RenderState != null)        copied.RenderState.Paste(material);
             if (copied.MaterialInfo != null)       copied.MaterialInfo.Paste(material);
+            if (copied.MetaData != null) material.MaterialParams.MetaData = copied.MetaData;
         }
 
         class CopyData
@@ -88,6 +91,7 @@ namespace CtrLibrary
 
             public RenderState RenderState;
 
+            public H3DMetaData MetaData;
         }
 
         class MaterialInfo
@@ -98,15 +102,12 @@ namespace CtrLibrary
             public ushort FogIndex;
             public ushort LightSetIndex;
 
-            public H3DMetaData MetaData;
-
             public MaterialInfo() { }
 
             public MaterialInfo(H3DMaterial material)
             {
                 Flags = material.MaterialParams.Flags;
                 ShaderReference = material.MaterialParams.ShaderReference;
-                MetaData = material.MaterialParams.MetaData;
                 FogIndex = material.MaterialParams.FogIndex;
                 LightSetIndex = material.MaterialParams.LightSetIndex;
             }
@@ -115,7 +116,6 @@ namespace CtrLibrary
             {
                 material.MaterialParams.Flags = Flags;
                 material.MaterialParams.ShaderReference = ShaderReference;
-                material.MaterialParams.MetaData = MetaData;
                 material.MaterialParams.FogIndex = FogIndex;
                 material.MaterialParams.LightSetIndex = LightSetIndex;
 
