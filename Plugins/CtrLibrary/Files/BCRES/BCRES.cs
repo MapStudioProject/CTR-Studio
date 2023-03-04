@@ -19,6 +19,7 @@ using SPICA.Formats.CtrGfx.Texture;
 using SPICA.Formats.CtrH3D.Animation;
 using SPICA.Formats.CtrGfx.Animation;
 using GLFrameworkEngine;
+using SPICA.Formats.Common;
 
 namespace CtrLibrary.Bcres
 {
@@ -382,6 +383,10 @@ namespace CtrLibrary.Bcres
                 {
                     if (Tag is AnimationWrapper)
                         ((AnimationWrapper)Tag).AnimationSet();
+                };
+                this.OnHeaderRenamed += delegate
+                {
+                    ((INamed)Section).Name = this.Header;
                 };
             }
 

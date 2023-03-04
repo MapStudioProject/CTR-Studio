@@ -25,6 +25,7 @@ using SPICA.Formats.CtrH3D.Scene;
 using SPICA.Formats.CtrH3D.Light;
 using SPICA.Formats.CtrH3D.Fog;
 using SPICA.Formats.CtrH3D.LUT;
+using SPICA.Formats.Common;
 
 namespace CtrLibrary.Bch
 {
@@ -336,6 +337,10 @@ namespace CtrLibrary.Bch
                 {
                     if (Tag is AnimationWrapper)
                         ((AnimationWrapper)Tag).AnimationSet();
+                };
+                this.OnHeaderRenamed += delegate
+                {
+                    ((INamed)Section).Name = this.Header;
                 };
             }
 
