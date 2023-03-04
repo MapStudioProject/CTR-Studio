@@ -367,6 +367,7 @@ namespace CtrLibrary
         public void RenderStage(int index, bool isAlpha = false)
         {
             var stage = StageList[index];
+            var nextStage = ((index + 1) < StageList.Count) ? StageList[index + 1] : null;
 
             var stageView = Stages[index];
 
@@ -394,7 +395,8 @@ namespace CtrLibrary
             var alphaCombiner = stage.Combiner.Alpha;
             var alphaScale = stage.Scale.Alpha;
 
-            var colorUpdate = stage.UpdateColorBuffer;
+            var colorUpdate = nextStage != null ? nextStage.UpdateColorBuffer : false;
+            var alphaUpdate = nextStage != null ? nextStage.UpdateAlphaBuffer : false;
 
             bool update = false;
 
@@ -416,7 +418,11 @@ namespace CtrLibrary
                 stage.Operand.Alpha[0] = opAlphaA;
                 stage.Operand.Alpha[1] = opAlphaB;
                 stage.Operand.Alpha[2] = opAlphaC;
-                stage.UpdateColorBuffer = colorUpdate;
+                if (nextStage != null)
+                {
+                    nextStage.UpdateColorBuffer = colorUpdate;
+                    nextStage.UpdateAlphaBuffer = alphaUpdate;
+                }
 
                 UpdateShaders();
 
@@ -514,7 +520,7 @@ namespace CtrLibrary
                     break;
             }
 
-            if (ImGui.Checkbox("Update Buffer", ref colorUpdate))
+            if (nextStage != null && ImGui.Checkbox("Save To Buffer", ref ((isAlpha) ? ref alphaUpdate : ref colorUpdate)))
                 UpdateStage();
 
             ImGui.SameLine();
