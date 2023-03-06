@@ -521,9 +521,11 @@ namespace CtrLibrary
             }
 
             if (nextStage != null && ImGui.Checkbox("Save To Buffer", ref ((isAlpha) ? ref alphaUpdate : ref colorUpdate)))
+            {
                 UpdateStage();
+                ImGui.SameLine();
+            }
 
-            ImGui.SameLine();
             if (isAlpha)
                 DrawScale("Alpha Scale", index, ref alphaScale, UpdateStage);
             else
