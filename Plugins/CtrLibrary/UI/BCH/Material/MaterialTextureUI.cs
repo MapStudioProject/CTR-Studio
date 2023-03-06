@@ -312,7 +312,8 @@ namespace CtrLibrary
             var wrapU = texMap.WrapU;
             var wrapV = texMap.WrapV;
             var magFilter = texMap.MagFilter;
-            var minFilter = texMap.MinFilter;
+            var minFilter = ExtractMinFilterMode(texMap.MinFilter);
+            var mipmapFilter = ExtractMipmapMode(texMap.MinFilter);
             var minLOD = (int)texMap.MinLOD;
             var borderColor = texMap.BorderColor;
             int cameraIndex = texCoord.ReferenceCameraIndex;
@@ -492,6 +493,7 @@ namespace CtrLibrary
             {
                 BcresUIHelper.DrawEnum("Min Filter", ref minFilter, () => { updateUniforms = true; });
                 BcresUIHelper.DrawEnum("Mag Filter", ref magFilter, () => { updateUniforms = true; });
+                BcresUIHelper.DrawEnum("Mipmap", ref mipmapFilter, () => { updateUniforms = true; });
 
                 if (texMap.MinFilter.ToString().Contains("Mipmap"))
                 {
@@ -522,7 +524,7 @@ namespace CtrLibrary
                     LODBias = texMap.LODBias,
                     MinLOD = (byte)minLOD,
                     MagFilter = magFilter,
-                    MinFilter = minFilter,
+                    MinFilter = MergeMinFilterMipmapMode(minFilter, mipmapFilter),
                     BorderColor = borderColor,
                     SamplerType = texMap.SamplerType,
                 };
@@ -583,6 +585,74 @@ namespace CtrLibrary
 
                 default: throw new ArgumentException("Invalid minification filter!");
             }
+        }
+
+        private enum MipmapMode
+        {
+            None,
+            Nearest,
+            Linear
+        };
+        private enum MinFilterMode
+        {
+            Nearest,
+            Linear
+        };
+
+        private static MipmapMode ExtractMipmapMode(H3DTextureMinFilter Filter)
+        {
+            switch (Filter)
+            {
+                case H3DTextureMinFilter.Nearest: return MipmapMode.None;
+                case H3DTextureMinFilter.NearestMipmapNearest: return MipmapMode.Nearest;
+                case H3DTextureMinFilter.NearestMipmapLinear: return MipmapMode.Linear;
+                case H3DTextureMinFilter.Linear: return MipmapMode.None;
+                case H3DTextureMinFilter.LinearMipmapNearest: return MipmapMode.Nearest;
+                case H3DTextureMinFilter.LinearMipmapLinear: return MipmapMode.Linear;
+
+                default: throw new ArgumentException("Invalid minification filter!");
+            }
+        }
+
+        private static MinFilterMode ExtractMinFilterMode(H3DTextureMinFilter Filter)
+        {
+            switch (Filter)
+            {
+                case H3DTextureMinFilter.Nearest:
+                case H3DTextureMinFilter.NearestMipmapNearest:
+                case H3DTextureMinFilter.NearestMipmapLinear: 
+                    return MinFilterMode.Nearest;
+                case H3DTextureMinFilter.Linear:
+                case H3DTextureMinFilter.LinearMipmapNearest:
+                case H3DTextureMinFilter.LinearMipmapLinear:
+                    return MinFilterMode.Linear;
+
+                default: throw new ArgumentException("Invalid minification filter!");
+            }
+        }
+
+        private static H3DTextureMinFilter MergeMinFilterMipmapMode(MinFilterMode Filter, MipmapMode Mipmap)
+        {
+            if (Filter == MinFilterMode.Nearest)
+            {
+                switch (Mipmap)
+                {
+                    case MipmapMode.None: return H3DTextureMinFilter.Nearest;
+                    case MipmapMode.Nearest: return H3DTextureMinFilter.NearestMipmapNearest;
+                    case MipmapMode.Linear: return H3DTextureMinFilter.NearestMipmapLinear;
+                    default: break;
+                }
+            } else if (Filter == MinFilterMode.Linear)
+            {
+                switch (Mipmap)
+                {
+                    case MipmapMode.None: return H3DTextureMinFilter.Linear;
+                    case MipmapMode.Nearest: return H3DTextureMinFilter.LinearMipmapNearest;
+                    case MipmapMode.Linear: return H3DTextureMinFilter.LinearMipmapLinear;
+                    default: break;
+                }
+            }
+            throw new ArgumentException("Invalid minification filter!");
         }
 
         private static TextureMagFilter GetMagFilter(H3DTextureMagFilter Filter)
