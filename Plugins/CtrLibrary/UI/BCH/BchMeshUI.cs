@@ -89,6 +89,7 @@ namespace CtrLibrary.Bch
                     if (select)
                         ImGui.SetItemDefaultFocus();
                 }
+                ImGui.EndCombo();
             }
 
 
