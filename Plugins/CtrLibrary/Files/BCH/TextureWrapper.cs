@@ -14,6 +14,7 @@ using MapStudio.UI;
 using System.IO;
 using GLFrameworkEngine;
 using CtrLibrary.Rendering;
+using IONET.Collada.FX.Rendering;
 
 namespace CtrLibrary.Bch
 {
@@ -91,6 +92,8 @@ namespace CtrLibrary.Bch
             //Dialog for importing textures. 
             ImguiFileDialog fileDialog = new ImguiFileDialog();
             fileDialog.MultiSelect = true;
+            fileDialog.AddFilter(".bctex", ".bctex");
+
             foreach (var ext in TextureDialog.SupportedExtensions)
                 fileDialog.AddFilter(ext, ext);
 
@@ -104,7 +107,17 @@ namespace CtrLibrary.Bch
         {
             var dlg = new H3DTextureDialog();
             foreach (var filePath in filePaths)
-                dlg.AddTexture(filePath);
+            {
+                if (filePath.ToLower().EndsWith(".bctex"))
+                {
+                    H3DTexture texture = new H3DTexture();
+                    texture.Replace(filePath);
+                    texture.Name = Path.GetFileNameWithoutExtension(filePath);
+                    AddChild(new CTEX(H3DRender, texture));
+                }
+                else
+                    dlg.AddTexture(filePath);
+            }
 
             if (dlg.Textures.Count == 0)
                 return;
