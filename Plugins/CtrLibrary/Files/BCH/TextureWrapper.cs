@@ -15,6 +15,9 @@ using System.IO;
 using GLFrameworkEngine;
 using CtrLibrary.Rendering;
 using IONET.Collada.FX.Rendering;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
+using SPICA.PICA.Converters;
 
 namespace CtrLibrary.Bch
 {
@@ -220,7 +223,7 @@ namespace CtrLibrary.Bch
                 ReplaceTexture(dlg.FilePath);
         }
 
-        public void ReplaceTexture(string filePath)
+        public void ReplaceTexture(string filePath, bool keepAlpha = false)
         {
             if (filePath.ToLower().EndsWith(".bctex"))
             {
@@ -240,12 +243,19 @@ namespace CtrLibrary.Bch
                     return;
 
                 dlg.Textures[0].Name = this.Header;
-                ImportTexture(dlg.Textures[0]);
+                ImportTexture(dlg.Textures[0], keepAlpha);
             });
         }
 
-        public void ImportTexture(H3DImportedTexture tex)
+        public void ImportTexture(H3DImportedTexture tex, bool keepAlpha)
         {
+            if (keepAlpha)
+            {
+                //Keep original alpha channel intact by encoding the data back with original alpha channel
+                for (int i = 0; i < tex.Surfaces.Count; i++)
+                    tex.Surfaces[i].EncodedData = EncodeWithOriginalAlpha(tex.DecodeTexture(i), tex.Format, (int)tex.MipCount);
+            }
+
             Texture = new H3DTexture();
             Texture.Name = tex.Name;
             if (tex.Surfaces.Count == 6)
@@ -270,7 +280,6 @@ namespace CtrLibrary.Bch
 
         private void ReloadImported()
         {
-
             Tag = new EditableTexture(this, Texture);
             //Update texture render used for icons
             ((EditableTexture)Tag).LoadRenderableTexture();
@@ -294,6 +303,32 @@ namespace CtrLibrary.Bch
 
             //Update viewer
             GLContext.ActiveContext.UpdateViewport = true;
+        }
+
+        //Replace only RGB color, not alpha
+        private byte[] EncodeWithOriginalAlpha(byte[] rgba, PICATextureFormat format, int mipCount)
+        {
+            //Get original rgba 
+            var originalRgba = Texture.ToRGBA(0);
+
+            int index = 0;
+            for (int w = 0; w < Texture.Width; w++)
+            {
+                for (int h = 0; h < Texture.Height; h++)
+                {
+                    //Set alpha to original
+                    rgba[index + 3] = originalRgba[index + 3];
+                    index += 4;
+                }
+            }
+
+            Image<Rgba32> Img = Image.Load<Rgba32>(rgba);
+
+            //Re encode with updated alpha
+            var output = TextureConverter.Encode(Img, format, mipCount);
+            Img.Dispose();
+
+            return output;
         }
 
         public void RemoveBatch()
