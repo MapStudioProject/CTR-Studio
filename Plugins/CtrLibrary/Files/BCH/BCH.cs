@@ -137,7 +137,7 @@ namespace CtrLibrary.Bch
             };
 
             var light = Render.Renderer.Lights[0];
-            AddRender(new SceneLightingUI.LightPreview(light));
+           // AddRender(new SceneLightingUI.LightPreview(light));
 
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {
@@ -244,7 +244,22 @@ namespace CtrLibrary.Bch
             {
                 folder.AddChild(new NodeSection<T>(subSections, item.Name, item));
             }
-            if (folder.Children.Count > 0)
+            folder.AddNode += (string name) =>
+            {
+                var item = (T)Activator.CreateInstance(typeof(T));
+                item.Name = Path.GetFileNameWithoutExtension(name);
+                if (subSections.Contains(item.Name))
+                    return;
+
+                subSections.Add(item);
+
+                var node = new NodeSection<T>(subSections, item.Name, item);
+                node.Replace(name);
+
+                folder.AddChild(node);
+            };
+
+           // if (folder.Children.Count > 0)
                 Root.AddChild(folder);
         }
 
@@ -272,10 +287,26 @@ namespace CtrLibrary.Bch
         {
             public H3DGroupType Type;
 
+            public Action<string> AddNode;
+
             public H3DGroupNode(H3DGroupType type)
             {
                 Type = type;
                 Header = GetName();
+                this.ContextMenus.Add(new MenuItemModel("Import", Import));
+            }
+
+            private void Import()
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = false;
+                dlg.FileName = $"{Header}.json";
+                dlg.AddFilter("json", "json");
+
+                if (dlg.ShowDialog())
+                {
+                    AddNode(dlg.FilePath);
+                }
             }
 
             private string GetName()
@@ -353,18 +384,23 @@ namespace CtrLibrary.Bch
                 dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
-                    if (dlg.FilePath.ToLower().EndsWith(".raw"))
-                    {
-                        var type = ((H3DGroupNode)this.Parent).Type;
-                        Dict[this.Header] = (T)ReplaceRaw(dlg.FilePath, type);
-                    }
-                    else
-                    {
-                        Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                        Dict[this.Header] = (T)Section;
-                    }
-                    ReloadName();
+                    Replace(dlg.FilePath);
                 }
+            }
+
+            public void Replace(string filePath)
+            {
+                if (filePath.ToLower().EndsWith(".raw"))
+                {
+                    var type = ((H3DGroupNode)this.Parent).Type;
+                    Dict[this.Header] = (T)ReplaceRaw(filePath, type);
+                }
+                else
+                {
+                    Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(filePath));
+                    Dict[this.Header] = (T)Section;
+                }
+                ReloadName();
             }
 
             void Export()
@@ -376,7 +412,11 @@ namespace CtrLibrary.Bch
                 dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
-                    if (dlg.FilePath.ToLower().EndsWith(".raw"))
+                    if (Section is H3DShader)
+                    {
+                        var shader = (H3DShader)Section;
+                    }
+                    else if (dlg.FilePath.ToLower().EndsWith(".raw"))
                     {
                         var type = ((H3DGroupNode)this.Parent).Type;
                         ExportRaw(dlg.FilePath, Section, type);

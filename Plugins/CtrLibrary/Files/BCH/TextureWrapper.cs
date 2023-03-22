@@ -18,6 +18,8 @@ using IONET.Collada.FX.Rendering;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using SPICA.PICA.Converters;
+using SPICA.Math3D;
+using SixLabors.ImageSharp.Processing;
 
 namespace CtrLibrary.Bch
 {
@@ -175,14 +177,29 @@ namespace CtrLibrary.Bch
         /// </summary>
         public H3DTexture Texture { get; set; }
 
+        public enum EditMode
+        {
+            Default,
+            ColorOnly,
+            AlphaOnly,
+        }
+
         public CTEX(H3DRender render)
         {
             H3DRender = render;
             Icon = MapStudio.UI.IconManager.IMAGE_ICON.ToString();
             CanRename = true;
 
-            ContextMenus.Add(new MenuItemModel("Export", ExportTextureDialog));
-            ContextMenus.Add(new MenuItemModel("Replace", ReplaceTextureDialog));
+            var exportMenu = new MenuItemModel("Export", () => ExportTextureDialog());
+            exportMenu.MenuItems.Add(new MenuItemModel("Color Only", () => ExportTextureDialog(EditMode.ColorOnly)));
+            exportMenu.MenuItems.Add(new MenuItemModel("Alpha Only", () => ExportTextureDialog(EditMode.AlphaOnly)));
+
+            var replaceMenu = new MenuItemModel("Replace", () => ReplaceTextureDialog(EditMode.Default));
+            replaceMenu.MenuItems.Add(new MenuItemModel("Color Only", () => ReplaceTextureDialog(EditMode.ColorOnly)));
+            replaceMenu.MenuItems.Add(new MenuItemModel("Alpha Only", () => ReplaceTextureDialog(EditMode.AlphaOnly)));
+
+            ContextMenus.Add(exportMenu);
+            ContextMenus.Add(replaceMenu);
             ContextMenus.Add(new MenuItemModel(""));
             ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
             ContextMenus.Add(new MenuItemModel(""));
@@ -210,7 +227,7 @@ namespace CtrLibrary.Bch
 
         }
 
-        private void ReplaceTextureDialog()
+        private void ReplaceTextureDialog(EditMode editMode)
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
@@ -220,10 +237,10 @@ namespace CtrLibrary.Bch
                 dlg.AddFilter(ext, ext);
 
             if (dlg.ShowDialog())
-                ReplaceTexture(dlg.FilePath);
+                ReplaceTexture(dlg.FilePath, editMode);
         }
 
-        public void ReplaceTexture(string filePath, bool keepAlpha = false)
+        public void ReplaceTexture(string filePath, EditMode editMode = EditMode.Default)
         {
             if (filePath.ToLower().EndsWith(".bctex"))
             {
@@ -243,17 +260,22 @@ namespace CtrLibrary.Bch
                     return;
 
                 dlg.Textures[0].Name = this.Header;
-                ImportTexture(dlg.Textures[0], keepAlpha);
+                ImportTexture(dlg.Textures[0], editMode);
             });
         }
 
-        public void ImportTexture(H3DImportedTexture tex, bool keepAlpha)
+        public void ImportTexture(H3DImportedTexture tex, EditMode editMode = EditMode.Default)
         {
-            if (keepAlpha)
+            if (editMode != EditMode.Default)
             {
                 //Keep original alpha channel intact by encoding the data back with original alpha channel
                 for (int i = 0; i < tex.Surfaces.Count; i++)
-                    tex.Surfaces[i].EncodedData = EncodeWithOriginalAlpha(tex.DecodeTexture(i), tex.Format, (int)tex.MipCount);
+                {
+                    if (editMode == EditMode.ColorOnly)
+                        tex.Surfaces[i].EncodedData = EncodeWithOriginalAlpha(tex.DecodeTexture(i), tex.Format, (int)tex.MipCount);
+                    else if (editMode == EditMode.AlphaOnly)
+                        tex.Surfaces[i].EncodedData = EncodeWithOriginalColor(tex.DecodeTexture(i), tex.Format, (int)tex.MipCount);
+                }
             }
 
             Texture = new H3DTexture();
@@ -309,7 +331,8 @@ namespace CtrLibrary.Bch
         private byte[] EncodeWithOriginalAlpha(byte[] rgba, PICATextureFormat format, int mipCount)
         {
             //Get original rgba 
-            var originalRgba = Texture.ToRGBA(0);
+            var originalRgba = TextureConverter.FlipData(Texture.ToRGBA(0), Texture.Width, Texture.Height);
+
 
             int index = 0;
             for (int w = 0; w < Texture.Width; w++)
@@ -322,7 +345,39 @@ namespace CtrLibrary.Bch
                 }
             }
 
-            Image<Rgba32> Img = Image.Load<Rgba32>(rgba);
+            //Prepare imagesharp img used for encoding and mip generating
+            Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
+
+            //Re encode with updated alpha
+            var output = TextureConverter.Encode(Img, format, mipCount);
+            Img.Dispose();
+
+            return output;
+        }
+
+        //Replace only alpha, not RGB color
+        private byte[] EncodeWithOriginalColor(byte[] rgba, PICATextureFormat format, int mipCount)
+        {
+            //Get original rgba 
+            var originalRgba = TextureConverter.FlipData(Texture.ToRGBA(0), Texture.Width, Texture.Height);
+
+            int index = 0;
+            for (int w = 0; w < Texture.Width; w++)
+            {
+                for (int h = 0; h < Texture.Height; h++)
+                {
+                    //Set alpha directly from red
+                    rgba[index + 3] = rgba[index + 0];
+                    //Set color to original
+                    rgba[index + 0] = originalRgba[index + 0];
+                    rgba[index + 1] = originalRgba[index + 1];
+                    rgba[index + 2] = originalRgba[index + 2];
+                    index += 4;
+                }
+            }
+
+            //Prepare imagesharp img used for encoding and mip generating
+            Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
 
             //Re encode with updated alpha
             var output = TextureConverter.Encode(Img, format, mipCount);
@@ -367,18 +422,73 @@ namespace CtrLibrary.Bch
             Icon = $"{Texture.Name}";
         }
 
-        public void ExportTexture(string filePath)
+        public void ExportTexture(string filePath, EditMode channel = EditMode.Default)
         {
             if (filePath.ToLower().EndsWith(".bctex"))
                 this.Texture.Export(filePath);
             else
             {
-                var tex = this.Tag as STGenericTexture;
-                tex.Export(filePath, new TextureExportSettings());
+                if (channel != EditMode.Default)
+                {
+                    if (channel == EditMode.ColorOnly)
+                        ExportColorOnly(filePath);
+                    else
+                        ExportAlphaOnly(filePath);
+                }
+                else
+                {
+                    var tex = this.Tag as STGenericTexture;
+                    tex.Export(filePath, new TextureExportSettings());
+                }
             }
         }
 
-        private void ExportTextureDialog()
+        private void ExportColorOnly(string filePath)
+        {
+            //Get original rgba 
+            var rgba = TextureConverter.FlipData(Texture.ToRGBA(0), Texture.Width, Texture.Height);
+
+            int index = 0;
+            for (int w = 0; w < Texture.Width; w++)
+            {
+                for (int h = 0; h < Texture.Height; h++)
+                {
+                    //Set alpha to 255
+                    rgba[index + 3] =  255;
+                    index += 4;
+                }
+            }
+
+            Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
+            Img.Save(filePath);
+            Img.Dispose();
+        }
+
+        private void ExportAlphaOnly(string filePath)
+        {
+            //Get original rgba 
+            var rgba = TextureConverter.FlipData(Texture.ToRGBA(0), Texture.Width, Texture.Height);
+
+            int index = 0;
+            for (int w = 0; w < Texture.Width; w++)
+            {
+                for (int h = 0; h < Texture.Height; h++)
+                {
+                    //Set alpha to 255
+                    rgba[index + 0] = rgba[index + 3];
+                    rgba[index + 1] = rgba[index + 3];
+                    rgba[index + 2] = rgba[index + 3];
+                    rgba[index + 3] = 255;
+                    index += 4;
+                }
+            }
+
+            Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
+            Img.Save(filePath);
+            Img.Dispose();
+        }
+
+        private void ExportTextureDialog(EditMode channel = EditMode.Default)
         {
             //Multi select export
             var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
@@ -389,7 +499,7 @@ namespace CtrLibrary.Bch
                 if (dlg.ShowDialog())
                 {
                     foreach (var sel in selected)
-                        ExportTexture(Path.Combine(dlg.SelectedPath, $"{sel.Header}.png"));
+                        ExportTexture(Path.Combine(dlg.SelectedPath, $"{sel.Header}.png"), channel);
                 }
             }
             else
@@ -403,7 +513,7 @@ namespace CtrLibrary.Bch
                     dlg.AddFilter(ext, ext);
 
                 if (dlg.ShowDialog())
-                    ExportTexture(dlg.FilePath);
+                    ExportTexture(dlg.FilePath, channel);
             }
         }
     }
