@@ -833,7 +833,6 @@ namespace CtrLibrary.Bch
                 Model.Materials[index] = Material;
                 this.UpdateShaders();
 
-
                 ReloadIcon();
 
                 GLContext.ActiveContext.UpdateViewport = true;
@@ -944,14 +943,19 @@ namespace CtrLibrary.Bch
 
                         if (keepTextures)
                         {
-                            Material.Texture0Name = texture0;
-                            Material.Texture1Name = texture1;
-                            Material.Texture2Name = texture2;
+                            if (!string.IsNullOrEmpty(texture0))
+                                Material.Texture0Name = texture0;
+                            if (!string.IsNullOrEmpty(texture1))
+                                Material.Texture1Name = texture1;
+                            if (!string.IsNullOrEmpty(texture2))
+                                Material.Texture2Name = texture2;
                         }
 
                         //Update render
                         Model.Materials[index] = Material;
                         this.UpdateShaders();
+
+                        ReloadIcon();
 
                         GLContext.ActiveContext.UpdateViewport = true;
                         reloadUI = true;
