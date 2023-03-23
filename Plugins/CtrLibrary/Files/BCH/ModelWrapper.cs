@@ -205,7 +205,7 @@ namespace CtrLibrary.Bch
         public void OnSave()
         {
             //Update the vis names on save so they can be adjusted in editors without conflicts
-           /*8 Model.MeshNodesTree.Clear();
+            Model.MeshNodesTree.Clear();
             foreach (SOBJ mesh in _meshFolder.Children)
             {
                 mesh.Mesh.NodeIndex = 0;
@@ -215,8 +215,8 @@ namespace CtrLibrary.Bch
                         Model.MeshNodesTree.Add(mesh.MeshVisName);
                     mesh.Mesh.NodeIndex = (ushort)Model.MeshNodesTree.Find(mesh.MeshVisName);
                 }
-                mesh.Mesh.UpdateBoolUniforms(Model.Materials[mesh.Mesh.MaterialIndex]);
-            }*/
+               // mesh.Mesh.UpdateBoolUniforms(Model.Materials[mesh.Mesh.MaterialIndex]);
+            }
         }
 
         private void Delete()
