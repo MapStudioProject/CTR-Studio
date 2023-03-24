@@ -190,11 +190,13 @@ namespace CtrLibrary.Bch
             Icon = MapStudio.UI.IconManager.IMAGE_ICON.ToString();
             CanRename = true;
 
-            var exportMenu = new MenuItemModel("Export", () => ExportTextureDialog());
+            ContextMenus.Add(new MenuItemModel("Export", () => ExportTextureDialog()));
+            var exportMenu = new MenuItemModel("Export Special", () => ExportTextureDialog());
             exportMenu.MenuItems.Add(new MenuItemModel("Color Only", () => ExportTextureDialog(EditMode.ColorOnly)));
             exportMenu.MenuItems.Add(new MenuItemModel("Alpha Only", () => ExportTextureDialog(EditMode.AlphaOnly)));
 
-            var replaceMenu = new MenuItemModel("Replace", () => ReplaceTextureDialog(EditMode.Default));
+            ContextMenus.Add(new MenuItemModel("Replace", () => ReplaceTextureDialog(EditMode.Default)));
+            var replaceMenu = new MenuItemModel("Replace Special", () => ReplaceTextureDialog(EditMode.Default));
             replaceMenu.MenuItems.Add(new MenuItemModel("Color Only", () => ReplaceTextureDialog(EditMode.ColorOnly)));
             replaceMenu.MenuItems.Add(new MenuItemModel("Alpha Only", () => ReplaceTextureDialog(EditMode.AlphaOnly)));
 
