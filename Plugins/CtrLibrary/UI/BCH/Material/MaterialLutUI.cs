@@ -168,7 +168,11 @@ namespace CtrLibrary
                 ImGuiHelper.BeginBoldText();
                 if (ImGui.MenuItem("Open LUT Folder"))
                 {
-                    FileUtility.OpenFolder(Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "LUTS"));
+                    string folder = Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "LUTS");
+                    if (!Directory.Exists(folder))
+                        Directory.CreateDirectory(folder);
+
+                    FileUtility.OpenFolder(folder);
                 }
                 ImGuiHelper.EndBoldText();
 
