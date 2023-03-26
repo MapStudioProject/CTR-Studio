@@ -31,6 +31,8 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\GLFrameworkEngine\GLFrameworkEngine.csproj" />
 	  <ProjectReference Include="..\..\MapStudio.UI\MapStudio.UI.csproj" />
+	  <ProjectReference Include="..\..\SPICA\SPICA.Rendering\SPICA.Rendering.csproj" />
+	  <ProjectReference Include="..\..\SPICA\SPICA\SPICA.csproj" />
 	  <ProjectReference Include="..\..\Toolbox.Core\Toolbox.Core.csproj" />
 	</ItemGroup>
 
@@ -46,12 +48,6 @@
     </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\..\CTR Studio\Lib\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="SPICA">
-      <HintPath>..\..\CTR Studio\Lib\SPICA.dll</HintPath>
-    </Reference>
-    <Reference Include="SPICA.Rendering">
-      <HintPath>..\..\CTR Studio\Lib\SPICA.Rendering.dll</HintPath>
     </Reference>
     <Reference Include="Syroot.BinaryData">
       <HintPath>..\..\CTR Studio\Lib\Syroot.BinaryData.dll</HintPath>
