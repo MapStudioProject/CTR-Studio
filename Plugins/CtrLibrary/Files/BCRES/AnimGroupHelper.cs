@@ -16,6 +16,11 @@ namespace CtrLibrary.Bcres
     /// </summary>
     internal class AnimGroupHelper
     {
+        public class AnimationSettings
+        {
+
+        }
+
         /// <summary>
         /// A list of bindable material animation elements.
         /// </summary>
@@ -124,7 +129,7 @@ namespace CtrLibrary.Bcres
             return animations;
         }
 
-        static GfxAnimGroup GenerateMatAnims(GfxDict<GfxMaterial> materials)
+        public static GfxAnimGroup GenerateMatAnims(GfxDict<GfxMaterial> materials)
         {
             var anim = new GfxAnimGroup()
             {
@@ -155,6 +160,9 @@ namespace CtrLibrary.Bcres
                             var element = (GfxAnimGroupTexCoord)elem.Value.Generate(elementName);
                             element.TexCoordIndex = j;
                             element.MaterialName = mat.Name;
+
+                            Console.WriteLine("Generating element " + element.Name);
+
                             anim.Elements.Add(element);
                         }
                     }
@@ -168,18 +176,23 @@ namespace CtrLibrary.Bcres
                             if (!hasTextures)
                                 continue;
 
+                            elementName = string.Format(elem.Key, mat.Name, j);
+
                             //Create the element
-                            var element = elem.Value.Generate(string.Format(elem.Key, mat.Name, j));
+                            var element = elem.Value.Generate(elementName);
                             if (element is GfxAnimGroupTexMapper)
                             {
                                 ((GfxAnimGroupTexMapper)element).TexMapperIndex = j;
-                                ((GfxAnimGroupTexMapper)element).Name = mat.Name;
+                                ((GfxAnimGroupTexMapper)element).MaterialName = mat.Name;
                             }
                             if (element is GfxAnimGroupTexSampler)
                             {
                                 ((GfxAnimGroupTexSampler)element).TexSamplerIndex = j;
-                                ((GfxAnimGroupTexSampler)element).Name = mat.Name;
+                                ((GfxAnimGroupTexSampler)element).MaterialName = mat.Name;
                             }
+
+                            Console.WriteLine("Generating element " + element.Name);
+
                             anim.Elements.Add(element);
                         }
                     }
@@ -191,6 +204,8 @@ namespace CtrLibrary.Bcres
                             ((GfxAnimGroupMaterialColor)element).MaterialName = mat.Name;
                         if (elementType == typeof(GfxAnimGroupBlendOp))
                             ((GfxAnimGroupBlendOp)element).MaterialName = mat.Name;
+
+                        Console.WriteLine("Generating element " + element.Name);
 
                         anim.Elements.Add(element);
                     }
