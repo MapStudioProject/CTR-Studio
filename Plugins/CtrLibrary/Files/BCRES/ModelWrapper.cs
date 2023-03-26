@@ -22,6 +22,8 @@ using Toolbox.Core;
 using CtrLibrary.Rendering;
 using CtrLibrary.Bch;
 using SPICA.PICA.Converters;
+using SPICA.Formats.CtrGfx.AnimGroup;
+using Toolbox.Core.Animations;
 
 namespace CtrLibrary.Bcres
 {
@@ -214,20 +216,43 @@ namespace CtrLibrary.Bcres
 
                 Model.Materials.Add(material.GfxMaterial);
             }
-            foreach (var mesh in Model.Meshes)
-            {
-                if (string.IsNullOrEmpty(mesh.MeshNodeName))
-                    continue;
 
-                //Check for meshes that are not present in the vis node list
-                if (!Model.MeshNodeVisibilities.Contains(mesh.MeshNodeName))
-                    Model.MeshNodeVisibilities.Add(new GfxMeshNodeVisibility() //Add them to the list.
-                    {
-                        Name = mesh.MeshNodeName,
-                        IsVisible = true,
-                    });
-                //Set the index of the vis item
-                mesh.MeshNodeIndex = (short)Model.MeshNodeVisibilities.Find(mesh.MeshNodeName);
+            //Generate material animation groups automatically
+            var anim = new GfxAnimGroup()
+            {
+                Name = "MaterialAnimation",
+                EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
+                MemberType = 2,
+                BlendOperationTypes = new int[4] { 3, 7, 5, 2 }
+            };
+            if (!Model.AnimationsGroup.Contains("MaterialAnimation"))
+                Model.AnimationsGroup.Add(anim);
+
+            var generatedAnimGroups = AnimGroupHelper.GenerateMatAnims(Model.Materials);
+            Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
+            foreach (var elem in generatedAnimGroups.Elements)
+                Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
+            
+
+            if (Model.MeshNodeVisibilities.Count > 0)
+            {
+                foreach (var mesh in Model.Meshes)
+                {
+                    mesh.MeshNodeIndex = -1;
+
+                    if (string.IsNullOrEmpty(mesh.MeshNodeName))
+                        continue;
+
+                    //Check for meshes that are not present in the vis node list
+                    if (!Model.MeshNodeVisibilities.Contains(mesh.MeshNodeName))
+                        Model.MeshNodeVisibilities.Add(new GfxMeshNodeVisibility() //Add them to the list.
+                        {
+                            Name = mesh.MeshNodeName,
+                            IsVisible = true,
+                        });
+                    //Set the index of the vis item
+                    mesh.MeshNodeIndex = (short)Model.MeshNodeVisibilities.Find(mesh.MeshNodeName);
+                }
             }
         }
 
@@ -286,9 +311,10 @@ namespace CtrLibrary.Bcres
                     {
                         if (o)
                         {
+                            ImportFile(dlg.FilePath, importerUI.Settings);
+
                             try
                             {
-                                ImportFile(dlg.FilePath, importerUI.Settings);
                             }
                             catch (Exception ex)
                             {
@@ -654,6 +680,16 @@ namespace CtrLibrary.Bcres
         {
             GfxMaterial = material;
             GfxModel = model;
+
+            ContextMenus.Add(new MenuItemModel("Export Debuggy", () =>
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = true;
+                dlg.FileName = $"{Header}";
+                dlg.AddFilter(".json", "json");
+                if (dlg.ShowDialog())
+                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(GfxMaterial, Formatting.Indented));
+            }));
         }
 
         public override void DeleteBatch()
