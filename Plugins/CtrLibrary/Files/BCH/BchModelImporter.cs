@@ -218,7 +218,7 @@ namespace CtrLibrary.Bch
                 if (boneList?.Count == 1)
                     singleBindBone = h3dModel.Skeleton.FirstOrDefault(x => x.Name == boneList[0]);
                 //Get bind matrix for single binds
-                if (singleBindBone != null)
+                if (singleBindBone != null && h3dModel.Skeleton.Find(singleBindBone.Name) != -1)
                     singleBindIndex = h3dModel.Skeleton.Find(singleBindBone.Name);
 
                 //Convert the positions into local space for single binds

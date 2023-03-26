@@ -324,7 +324,7 @@ namespace CtrLibrary.Bcres
                     if (boneList?.Count == 1)
                         singleBindBone = skeleton.Bones.FirstOrDefault(x => x.Name == boneList[0]);
                     //Get bind matrix for single binds
-                    if (singleBindBone != null)
+                    if (singleBindBone != null && skeleton.Bones.Find(singleBindBone.Name) != -1)
                         singleBindIndex = skeleton.Bones.Find(singleBindBone.Name);
 
                     //Convert the positions into local space for single binds
