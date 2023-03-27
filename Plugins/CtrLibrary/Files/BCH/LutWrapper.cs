@@ -68,7 +68,7 @@ namespace CtrLibrary.Bch
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
             dlg.FileName = $"{Header}.json";
-            dlg.AddFilter("json", "json");
+            dlg.AddFilter(".json", ".json");
 
             if (dlg.ShowDialog())
             {
@@ -193,13 +193,13 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}.blut";
-            dlg.AddFilter("blut", "blut");
-            dlg.AddFilter("json", "json");
+            dlg.FileName = $"{Header}";
+            dlg.AddFilter(".bch", ".bch");
+            dlg.AddFilter(".json", ".json");
 
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.ToLower().EndsWith(".blut"))
+                if (dlg.FilePath.ToLower().EndsWith(".bch"))
                     this.Section.Replace(dlg.FilePath);
                 else
                     Section = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
@@ -213,12 +213,12 @@ namespace CtrLibrary.Bch
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = true;
-            dlg.FileName = $"{Header}.blut";
-            dlg.AddFilter("blut", "blut");
-            dlg.AddFilter("json", "json");
+            dlg.FileName = $"{Header}";
+            dlg.AddFilter(".bch", ".bch");
+            dlg.AddFilter(".json", ".json");
             if (dlg.ShowDialog())
             {
-                if (dlg.FilePath.ToLower().EndsWith(".blut"))
+                if (dlg.FilePath.ToLower().EndsWith(".bch"))
                     this.Section.Export(dlg.FilePath);
                 else
                     File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));

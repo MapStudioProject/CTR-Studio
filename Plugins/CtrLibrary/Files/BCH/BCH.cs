@@ -26,6 +26,7 @@ using SPICA.Formats.CtrH3D.Light;
 using SPICA.Formats.CtrH3D.Fog;
 using SPICA.Formats.CtrH3D.LUT;
 using SPICA.Formats.Common;
+using static System.Collections.Specialized.BitVector32;
 
 namespace CtrLibrary.Bch
 {
@@ -242,7 +243,10 @@ namespace CtrLibrary.Bch
         {
             foreach (var item in subSections)
             {
-                folder.AddChild(new NodeSection<T>(subSections, item.Name, item));
+                if (typeof(T) == typeof(H3DShader))
+                    folder.AddChild(new ShaderNode<T>(subSections, item.Name, item));
+                else
+                    folder.AddChild(new NodeSection<T>(subSections, item.Name, item));
             }
             folder.AddNode += (string name) =>
             {
@@ -259,7 +263,7 @@ namespace CtrLibrary.Bch
                 folder.AddChild(node);
             };
 
-           // if (folder.Children.Count > 0)
+            if (folder.Children.Count > 0)
                 Root.AddChild(folder);
         }
 
@@ -335,9 +339,25 @@ namespace CtrLibrary.Bch
             }
         }
 
+        class ShaderNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            H3DShader Shader => (H3DShader)Section;
+
+            ShaderUI ShaderUI;
+
+            public ShaderNode(H3DDict<T> subSections, string name, object section) : base(subSections, name, section)
+            {
+                ShaderUI = new ShaderUI(Shader.ToBinary(), Shader.VtxShaderIndex, Shader.GeoShaderIndex);
+                this.TagUI.UIDrawer += delegate
+                {
+                    ShaderUI.Render();
+                };
+            }
+        }
+
         class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
-            private object Section;
+            internal object Section;
             private H3DDict<T> Dict;
 
             public NodeSection(H3DDict<T> subSections, string name, object section)
@@ -347,11 +367,14 @@ namespace CtrLibrary.Bch
                 Dict = subSections;
                 CanRename = true;
                 Icon = IconManager.FILE_ICON.ToString();
+                Tag = section;
 
                 this.ContextMenus.Add(new MenuItemModel("Export", Export));
                 this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Delete", Delete));
 
                 this.OnHeaderRenamed += delegate
                 {
@@ -375,12 +398,18 @@ namespace CtrLibrary.Bch
                 };
             }
 
+            void Delete()
+            {
+                Dict.Remove((T)Section);
+                this.Parent.Children.Remove(this);
+            }
+
             void Replace()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter(".raw", "raw");
+                dlg.AddFilter(".bch", "bch");
                 dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
@@ -390,7 +419,7 @@ namespace CtrLibrary.Bch
 
             public void Replace(string filePath)
             {
-                if (filePath.ToLower().EndsWith(".raw"))
+                if (filePath.ToLower().EndsWith(".bch"))
                 {
                     var type = ((H3DGroupNode)this.Parent).Type;
                     Dict[this.Header] = (T)ReplaceRaw(filePath, type);
@@ -408,15 +437,11 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter(".raw", "raw");
+                dlg.AddFilter(".bch", "bch");
                 dlg.AddFilter(".json", "json");
                 if (dlg.ShowDialog())
                 {
-                    if (Section is H3DShader)
-                    {
-                        var shader = (H3DShader)Section;
-                    }
-                    else if (dlg.FilePath.ToLower().EndsWith(".raw"))
+                    if (dlg.FilePath.ToLower().EndsWith(".bch"))
                     {
                         var type = ((H3DGroupNode)this.Parent).Type;
                         ExportRaw(dlg.FilePath, Section, type);

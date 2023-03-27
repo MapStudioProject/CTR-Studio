@@ -25,6 +25,7 @@ using SPICA.Formats.CtrH3D.Model.Mesh;
 using System.IO.Compression;
 using SPICA.PICA.Commands;
 using SPICA.PICA.Converters;
+using SPICA.Formats.CtrH3D.Shader;
 
 namespace CtrLibrary.Bch
 {
@@ -110,7 +111,7 @@ namespace CtrLibrary.Bch
 
     public class CMDL : NodeBase, IPropertyUI
     {
-        private H3D H3DFile;
+        internal H3D H3DFile;
 
         /// <summary>
         /// The model instance of the bcres file.
@@ -215,7 +216,7 @@ namespace CtrLibrary.Bch
                         Model.MeshNodesTree.Add(mesh.MeshVisName);
                     mesh.Mesh.NodeIndex = (ushort)Model.MeshNodesTree.Find(mesh.MeshVisName);
                 }
-               // mesh.Mesh.UpdateBoolUniforms(Model.Materials[mesh.Mesh.MaterialIndex]);
+                mesh.Mesh.UpdateBoolUniforms(Model.Materials[mesh.Mesh.MaterialIndex]);
             }
         }
 
@@ -495,6 +496,12 @@ namespace CtrLibrary.Bch
         public void OnRenderUI(object uiInstance)
         {
             ((BchMeshUI)uiInstance).Render();
+        }
+
+        public H3DShader TryGetShader()
+        {
+            var h3d = (this.Parent.Parent as CMDL).H3DFile;
+            return h3d.Shaders.FirstOrDefault(x => x.Name == Material.MaterialParams.ShaderReference);
         }
 
         public SOBJ(H3DModel model, H3DMesh mesh)
