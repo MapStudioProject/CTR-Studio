@@ -459,9 +459,12 @@ namespace CtrLibrary
                     if (texCoord.MappingType == H3DTextureMappingType.CameraSphereEnvMap)
                         texSourceID = 4;
 
+                    Material.MaterialParams.TextureSources[index] = texSourceID;
+                    Material.MaterialParams.TextureCoords[index] = texCoord;
+
                     updateUniforms = true;
-                    UpdateShaders();
                     UINode.UpdateUniformBooleans();
+                    UpdateShaders();
                 });
 
                 if (texCoord.MappingType == H3DTextureMappingType.UvCoordinateMap)
