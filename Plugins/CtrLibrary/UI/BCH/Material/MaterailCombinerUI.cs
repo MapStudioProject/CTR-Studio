@@ -353,7 +353,7 @@ namespace CtrLibrary
             {
                 ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.FrameBg);
 
-                if (ImGui.BeginChild($"texStage{index}ch{isAlpha}", new System.Numerics.Vector2(ImGui.GetWindowWidth() - 2, 140), true, ImGuiWindowFlags.HorizontalScrollbar))
+                if (ImGui.BeginChild($"texStage{index}ch{isAlpha}", new System.Numerics.Vector2(ImGui.GetWindowWidth() - 2, 160), true, ImGuiWindowFlags.HorizontalScrollbar))
                 {
                      RenderStage(index, isAlpha);
                 }
@@ -721,7 +721,7 @@ namespace CtrLibrary
 
         private void DrawCombinerFunc(string label, ref PICATextureCombinerMode mode, Action update)
         {
-            ImGui.PushItemWidth(ImGui.GetWindowWidth());
+            ImGui.PushItemWidth(ImGui.GetWindowWidth() - 25);
             if (ImGui.BeginCombo($"##Function{label}", $"Function:             {CombinerModeText[mode]}"))
             {
                 foreach (PICATextureCombinerMode val in Enum.GetValues(typeof(PICATextureCombinerMode)))
