@@ -11,6 +11,7 @@ using System.IO;
 using Toolbox.Core;
 using GLFrameworkEngine;
 using ImGuiNET;
+using OpenTK.Graphics.OpenGL;
 
 namespace CTRStudio
 {
@@ -604,13 +605,12 @@ namespace CTRStudio
             ProcessLoading.Instance.IsLoading = false;
             ForceFocus = true;
 
-            if (createNew)
-                OnWorkspaceChanged();
+            OnWorkspaceChanged();
         }
 
         private void OnWorkspaceChanged()
         {
-            bool canSave = Workspace.ActiveWorkspace != null;
+            bool canSave = Workspace.ActiveWorkspace != null && ((IFileFormat)Workspace.ActiveWorkspace.ActiveEditor).CanSave;
             SaveMenu.Enabled = canSave;
             SaveAsMenu.Enabled = canSave;
             // SaveProjectMenu.Enabled = canSave;

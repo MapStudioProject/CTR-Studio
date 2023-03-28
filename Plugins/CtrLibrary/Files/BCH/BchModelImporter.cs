@@ -126,6 +126,9 @@ namespace CtrLibrary.Bch
             {
                 //Set the world matrix as inverted
                 var bn = h3dModel.Skeleton[i];
+                //Important. Update the inverse matrix aswell so the calculated matrix has the same precision
+                bn.CalculateTransform(h3dModel.Skeleton);
+
                 var mat = bn.GetWorldTransform(h3dModel.Skeleton);
                 Matrix4x4.Invert(mat, out Matrix4x4 inverted);
                 skinningMatrices[i] = inverted;
