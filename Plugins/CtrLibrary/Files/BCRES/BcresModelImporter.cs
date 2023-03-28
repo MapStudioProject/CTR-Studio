@@ -178,6 +178,8 @@ namespace CtrLibrary.Bcres
                 {
                     //Set the world matrix as inverted
                     var bn = skeleton.Bones[i];
+                    bn.UpdateMatrices();
+
                     var mat = GetWorldTransform(skeleton.Bones, bn);
                     Matrix4x4.Invert(mat, out Matrix4x4 inverted);
                     skinningMatrices[i] = inverted;
