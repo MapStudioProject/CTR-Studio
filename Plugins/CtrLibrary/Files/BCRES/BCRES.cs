@@ -169,7 +169,7 @@ namespace CtrLibrary.Bcres
             AddNodeGroup(H3DGroupType.Cameras, BcresData.Cameras);
             AddNodeGroup(H3DGroupType.Fogs, BcresData.Fogs);
             AddNodeGroup(H3DGroupType.Lights, BcresData.Lights);
-           // AddNodeGroup(H3DGroupType.Scenes, BcresData.Scenes);
+            AddNodeGroup(H3DGroupType.Scenes, BcresData.Scenes);
             AddNodeGroup(H3DGroupType.SkeletalAnim, BcresData.SkeletalAnimations);
             AddNodeGroup(H3DGroupType.MaterialAnim, BcresData.MaterialAnimations);
             AddNodeGroup(H3DGroupType.VisibiltyAnim, BcresData.VisibilityAnimations);
@@ -247,7 +247,7 @@ namespace CtrLibrary.Bcres
             windows.Add(Workspace.ConsoleWindow);
             windows.Add(Workspace.ViewportWindow);
             windows.Add(Workspace.TimelineWindow);
-            windows.Add(Workspace.GraphWindow);
+         //   windows.Add(Workspace.GraphWindow);
 
             if (ShaderWindow != null)
                 windows.Add(ShaderWindow);
