@@ -20,6 +20,19 @@ using SPICA.Formats.CtrH3D.Animation;
 using SPICA.Formats.CtrGfx.Animation;
 using GLFrameworkEngine;
 using SPICA.Formats.Common;
+using SPICA.Formats.CtrH3D.Fog;
+using SPICA.Formats.CtrH3D.Light;
+using SPICA.Formats.CtrH3D.LUT;
+using SPICA.Formats.CtrH3D.Model;
+using SPICA.Formats.CtrH3D.Scene;
+using SPICA.Formats.CtrH3D.Shader;
+using SPICA.Formats.CtrH3D.Texture;
+using SPICA.Formats.CtrGfx.Model;
+using SPICA.Formats.CtrGfx.LUT;
+using SPICA.Formats.CtrGfx.Light;
+using SPICA.Formats.CtrGfx.Fog;
+using SPICA.Formats.CtrGfx.Scene;
+using SPICA.Formats.CtrGfx.Shader;
 
 namespace CtrLibrary.Bcres
 {
@@ -219,7 +232,7 @@ namespace CtrLibrary.Bcres
             }
             foreach (var lut in LUTFolder.GetLuts())
                 BcresData.LUTs.Add(SPICA.Formats.CtrGfx.LUT.GfxLUT.FromH3D(lut));
-
+            
             Gfx.Save(stream, BcresData);
         }
 
@@ -281,7 +294,7 @@ namespace CtrLibrary.Bcres
 
         class H3DGroupNode<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
-            H3DGroupType Type;
+            public H3DGroupType Type;
             GfxDict<T> SectionList;
 
             public H3DGroupNode(H3DGroupType type)
@@ -400,12 +413,21 @@ namespace CtrLibrary.Bcres
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter("json", "json");
+                dlg.AddFilter(".json", "json");
+                dlg.AddFilter(".bcres", "bcres");
                 if (dlg.ShowDialog())
                 {
-                    Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                    Dict[this.Header] = (T)Section;
-                    Dict[this.Header].Name = this.Header;
+                    if (dlg.FilePath.EndsWith(".json"))
+                    {
+                        Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
+                        Dict[this.Header] = (T)Section;
+                        Dict[this.Header].Name = this.Header;
+                    }
+                    else
+                    {
+                        var type = ((H3DGroupNode<T>)this.Parent).Type;
+                        Section = ReplaceRaw(dlg.FilePath, type);
+                    }
                 }
             }
 
@@ -414,11 +436,66 @@ namespace CtrLibrary.Bcres
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{Header}.json";
-                dlg.AddFilter("json", "json");
+                dlg.AddFilter(".json", "json");
+                dlg.AddFilter(".bcres", "bcres");
                 if (dlg.ShowDialog())
                 {
-                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    if (dlg.FilePath.EndsWith(".json"))
+                        File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    else
+                    {
+                        var type = ((H3DGroupNode<T>)this.Parent).Type;
+                        ExportRaw(dlg.FilePath, Section, type);
+                    }
                 }
+            }
+
+            public static object ReplaceRaw(string filePath, H3DGroupType type)
+            {
+                object Section = null;
+
+                Gfx gfx = Gfx.Open(filePath);
+                switch (type)
+                {
+                    case H3DGroupType.Models: Section = gfx.Models[0]; break;
+                    case H3DGroupType.Textures: Section = gfx.Textures[0]; break;
+                    case H3DGroupType.SkeletalAnim: Section = gfx.SkeletalAnimations[0]; break;
+                    case H3DGroupType.MaterialAnim: Section = gfx.MaterialAnimations[0]; break;
+                    case H3DGroupType.Lookups: Section = gfx.LUTs[0]; break;
+                    case H3DGroupType.Lights: Section = gfx.Lights[0]; break;
+                    case H3DGroupType.Fogs: Section = gfx.Fogs[0]; break;
+                    case H3DGroupType.Scenes: Section = gfx.Scenes[0]; break;
+                    case H3DGroupType.Shaders: Section = gfx.Shaders[0]; break;
+                    case H3DGroupType.VisibiltyAnim: Section = gfx.VisibilityAnimations[0]; break;
+                    case H3DGroupType.CameraAnim: Section = gfx.CameraAnimations[0]; break;
+                    case H3DGroupType.LightAnim: Section = gfx.LightAnimations[0]; break;
+                    default:
+                        throw new Exception($"Unsupported section! {type}");
+                }
+                return Section;
+            }
+
+            public static void ExportRaw(string filePath, object Section, H3DGroupType type)
+            {
+                Gfx gfx = new Gfx();
+                switch (type)
+                {
+                    case H3DGroupType.Models: gfx.Models.Add((GfxModel)Section); break;
+                    case H3DGroupType.Textures: gfx.Textures.Add((GfxTexture)Section); break;
+                    case H3DGroupType.SkeletalAnim: gfx.SkeletalAnimations.Add((GfxAnimation)Section); break;
+                    case H3DGroupType.MaterialAnim: gfx.MaterialAnimations.Add((GfxAnimation)Section); break;
+                    case H3DGroupType.VisibiltyAnim: gfx.VisibilityAnimations.Add((GfxAnimation)Section); break;
+                    case H3DGroupType.CameraAnim: gfx.CameraAnimations.Add((GfxAnimation)Section); break;
+                    case H3DGroupType.LightAnim: gfx.LightAnimations.Add((GfxAnimation)Section); break;
+                    case H3DGroupType.Lookups: gfx.LUTs.Add((GfxLUT)Section); break;
+                    case H3DGroupType.Lights: gfx.Lights.Add((GfxLight)Section); break;
+                    case H3DGroupType.Fogs: gfx.Fogs.Add((GfxFog)Section); break;
+                    case H3DGroupType.Scenes: gfx.Scenes.Add((GfxScene)Section); break;
+                    case H3DGroupType.Shaders: gfx.Shaders.Add((GfxShader)Section); break;
+                    default:
+                        throw new Exception($"Unsupported section! {type}");
+                }
+                Gfx.Save(filePath, gfx);
             }
         }
     }
