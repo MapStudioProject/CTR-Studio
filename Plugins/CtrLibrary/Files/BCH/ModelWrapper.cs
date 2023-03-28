@@ -216,7 +216,6 @@ namespace CtrLibrary.Bch
                         Model.MeshNodesTree.Add(mesh.MeshVisName);
                     mesh.Mesh.NodeIndex = (ushort)Model.MeshNodesTree.Find(mesh.MeshVisName);
                 }
-                mesh.Mesh.UpdateBoolUniforms(Model.Materials[mesh.Mesh.MaterialIndex]);
             }
         }
 
