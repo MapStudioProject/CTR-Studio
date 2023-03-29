@@ -24,7 +24,7 @@ namespace CtrLibrary
             }
         }
 
-        public bool CanCompress { get; } = false;
+        public bool CanCompress { get; } = true;
 
         public Stream Decompress(Stream data)
         {
