@@ -111,21 +111,21 @@ namespace CtrLibrary
 
                 transNode.AddChild(CreateTrack(anim, f.Translate.X));
                 transNode.AddChild(CreateTrack(anim, f.Translate.Y));
-                transNode.AddChild(CreateTrack(anim, f.Translate.Y));
+                transNode.AddChild(CreateTrack(anim, f.Translate.Z));
 
                 TreeNode scaleNode = new TreeNode("Scale");
                 scaleNode.Icon = '\uf6ff'.ToString();
 
                 scaleNode.AddChild(CreateTrack(anim, f.Scale.X));
                 scaleNode.AddChild(CreateTrack(anim, f.Scale.Y));
-                scaleNode.AddChild(CreateTrack(anim, f.Scale.Y));
+                scaleNode.AddChild(CreateTrack(anim, f.Scale.Z));
 
                 TreeNode rotNode = new TreeNode("Rotation");
                 rotNode.Icon = '\uf6ff'.ToString();
 
                 rotNode.AddChild(CreateTrack(anim, f.Rotation.X));
                 rotNode.AddChild(CreateTrack(anim, f.Rotation.Y));
-                rotNode.AddChild(CreateTrack(anim, f.Rotation.Y));
+                rotNode.AddChild(CreateTrack(anim, f.Rotation.Z));
                 rotNode.AddChild(CreateTrack(anim, f.Rotation.W));
 
                 elemNode.AddChild(transNode);

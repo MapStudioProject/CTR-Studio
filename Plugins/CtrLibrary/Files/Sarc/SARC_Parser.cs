@@ -95,6 +95,8 @@ namespace CtrLibrary
             else if (f.Matches("Yaz")) Ext = ".szs";
             else if (f.Matches("YB") || f.Matches("BY")) Ext = ".byaml";
             else if (f.Matches("FRES")) Ext = ".bfres";
+            else if (f.Matches("BCH")) Ext = ".bch";
+            else if (f.Matches("CGFX")) Ext = ".bcres";
             else if (f.Matches("Gfx2")) Ext = ".gtx";
             else if (f.Matches("FLYT")) Ext = ".bflyt";
             else if (f.Matches("CLAN")) Ext = ".bclan";
