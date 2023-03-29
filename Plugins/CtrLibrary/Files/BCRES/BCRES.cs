@@ -247,7 +247,7 @@ namespace CtrLibrary.Bcres
             windows.Add(Workspace.ConsoleWindow);
             windows.Add(Workspace.ViewportWindow);
             windows.Add(Workspace.TimelineWindow);
-         //   windows.Add(Workspace.GraphWindow);
+            windows.Add(Workspace.GraphWindow);
 
             if (ShaderWindow != null)
                 windows.Add(ShaderWindow);
