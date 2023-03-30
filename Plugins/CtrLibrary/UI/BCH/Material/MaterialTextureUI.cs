@@ -361,6 +361,9 @@ namespace CtrLibrary
                 if (ImGui.InputText("Name", ref texName, 0x200))
                 {   
                     name = texName;
+                    if (string.IsNullOrEmpty(name))
+                        OnTextureSlotRemoved(index);
+
                     UpdateUVViewerImage();
                     GLContext.ActiveContext.UpdateViewport = true;
                 }
@@ -424,6 +427,9 @@ namespace CtrLibrary
                     name = TextureDialog.OutputName;
                     UpdateUVViewerImage();
                     UINode.ReloadIcon();
+                    if (string.IsNullOrEmpty(name))
+                        OnTextureSlotRemoved(index);
+
                     GLContext.ActiveContext.UpdateViewport = true;
                 }
             }
@@ -548,6 +554,13 @@ namespace CtrLibrary
                     ReloadUVDisplay();
             }
             ImGui.EndChild();
+        }
+
+        void OnTextureSlotRemoved(int index)
+        {
+            //Reset source to 0 if removed
+            Material.MaterialParams.TextureSources[index] = 0;
+            Material.TextureMappers[index] = new H3DTextureMapper();
         }
 
         void UpdateUniforms()
