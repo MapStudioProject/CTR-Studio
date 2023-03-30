@@ -529,20 +529,22 @@ namespace CtrLibrary.Bcres
                     }
                     void UpdateVertex(int ind, ref PICAVertex[] vertices)
                     {
-                        if (float.IsNaN(vertices[ind].Normal.X) ||
-                            float.IsNaN(vertices[ind].Normal.Y) ||
-                            float.IsNaN(vertices[ind].Normal.Z))
+                        Vector4 GetNormalValues(Vector4 vec)
                         {
-                            vertices[ind].Normal = new Vector4(0, 1, 0, 0);
+                            return new Vector4(
+                                !float.IsNaN(vec.X) ? vec.X : 0,
+                                !float.IsNaN(vec.Y) ? vec.Y : 1,
+                                !float.IsNaN(vec.Z) ? vec.Z : 0,
+                                !float.IsNaN(vec.W) ? vec.W : 0);
                         }
 
                         //Create a new vertex instance, as we need to assign new vertices
                         var v = new PICAVertex()
                         {
                             Position = vertices[ind].Position,
-                            Normal = vertices[ind].Normal,
+                            Normal = GetNormalValues(vertices[ind].Normal),
                             Color = vertices[ind].Color,
-                            Tangent = vertices[ind].Tangent,
+                            Tangent = GetNormalValues(vertices[ind].Tangent),
                             TexCoord0 = vertices[ind].TexCoord0,
                             TexCoord1 = vertices[ind].TexCoord1,
                             TexCoord2 = vertices[ind].TexCoord2,

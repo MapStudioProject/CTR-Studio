@@ -437,15 +437,25 @@ namespace CtrLibrary.Bch
                             if (b0 != -1 && (!(Bones.Contains(b0) || TempBones.Contains(b0)))) TempBones.Add(b0);
                         }
                     }
+
+                    Vector4 GetNormalValues(Vector4 vec)
+                    {
+                        return new Vector4(
+                            !float.IsNaN(vec.X) ? vec.X : 0,
+                            !float.IsNaN(vec.Y) ? vec.Y : 1,
+                            !float.IsNaN(vec.Z) ? vec.Z : 0,
+                            !float.IsNaN(vec.W) ? vec.W : 0);
+                    }
+
                     void UpdateVertex(int ind, ref PICAVertex[] vertices)
                     {
                         //Create a new vertex instance, as we need to assign new vertices
                         var v = new PICAVertex()
                         {
                             Position = vertices[ind].Position,
-                            Normal = vertices[ind].Normal,
+                            Normal = GetNormalValues(vertices[ind].Normal),
                             Color = vertices[ind].Color,
-                            Tangent = vertices[ind].Tangent,
+                            Tangent = GetNormalValues(vertices[ind].Tangent),
                             TexCoord0 = vertices[ind].TexCoord0,
                             TexCoord1 = vertices[ind].TexCoord1,
                             TexCoord2 = vertices[ind].TexCoord2,
