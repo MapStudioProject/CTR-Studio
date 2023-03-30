@@ -244,6 +244,7 @@ namespace CtrLibrary
             { 
                 void CreateNewSlot()
                 {
+                    Material.MaterialParams.TextureSources[index] = 0;
                     Material.MaterialParams.TextureCoords[CoordIndex] = new H3DTextureCoord()
                     {
                         MappingType = H3DTextureMappingType.UvCoordinateMap,
