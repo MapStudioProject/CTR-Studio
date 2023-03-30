@@ -561,6 +561,7 @@ namespace CtrLibrary
             //Reset source to 0 if removed
             Material.MaterialParams.TextureSources[index] = 0;
             Material.TextureMappers[index] = new H3DTextureMapper();
+            Material.EnabledTextures[index] = false;
         }
 
         void UpdateUniforms()
