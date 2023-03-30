@@ -680,16 +680,6 @@ namespace CtrLibrary.Bcres
         {
             GfxMaterial = material;
             GfxModel = model;
-
-            ContextMenus.Add(new MenuItemModel("Export Debuggy", () =>
-            {
-                ImguiFileDialog dlg = new ImguiFileDialog();
-                dlg.SaveDialog = true;
-                dlg.FileName = $"{Header}";
-                dlg.AddFilter(".json", "json");
-                if (dlg.ShowDialog())
-                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(GfxMaterial, Formatting.Indented));
-            }));
         }
 
         public override void DeleteBatch()
