@@ -711,34 +711,6 @@ namespace CtrLibrary.Bch
 
         public void OnSave()
         {
-            UpdatePokeUserData();
-        }
-
-        public void UpdatePokeUserData()
-        {
-            //Pokemon specific data
-            //Here we check the shader name but not the shader data itself as that can be external
-            if (Material.MaterialParams.ShaderReference.Contains("PokePack"))
-            {
-                //Get the first sub mesh assigned by the mesh list
-                foreach (var mesh in Model.Meshes)
-                {
-                    //Mesh uses material
-                    if (Model.Materials[mesh.MaterialIndex] == Material)
-                    {
-                        //Apply to each sub mesh
-                        for (int i = 0; i < mesh.SubMeshes.Count; i++)
-                        {
-                            var sm = mesh.SubMeshes[i];
-                            //4 - 6 bits are used for custom vertex shader boolean settings
-                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsPhongEnabled, 3);
-                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsRimEnabled, 4);
-                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsInverseLightEnabled, 5);
-                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsLightEnabled, 6);
-                        }
-                    }
-                }
-            }
         }
 
         private void Copy()

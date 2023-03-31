@@ -326,7 +326,6 @@ namespace CtrLibrary
                     if (update)
                     {
                         //Update booleans to toggle the configured settings in shader
-                        UINode.UpdatePokeUserData();
                         UINode.UpdateUniformBooleans();
                         UpdateShaders();
                     }
