@@ -17,6 +17,7 @@ using Toolbox.Core.ViewModels;
 using SPICA.Formats.CtrH3D.Model.Mesh;
 using CtrLibrary.Rendering;
 using CtrLibrary.Bch;
+using SPICA.Formats.Common;
 
 namespace CtrLibrary
 {
@@ -122,7 +123,7 @@ namespace CtrLibrary
                     if (UINode is Bcres.MTOB)
                     {
                         var node = UINode as Bcres.MTOB;
-                        Bcres.UserDataInfoEditor.Render(node.GfxMaterial.MetaData);
+                        Bcres.UserDataInfoEditor.Render(Material.BcresUserData);
                     }
                     else
                         UserDataInfoEditor.Render(Material.MaterialParams.MetaData);
@@ -183,6 +184,8 @@ namespace CtrLibrary
                 }
 
                 DrawBcresShaderParams(Material.BcresShaderParams);
+
+                DrawCustomVertexUserData();
 
                 if (updateShaders)
                     UpdateShaders();
@@ -303,6 +306,28 @@ namespace CtrLibrary
                             float[] f2 = ((float[])Params[i].Value);
                             BcresUIHelper.DrawFloatArray($"##prmv{i}", ref f2);
                             break;
+                    }
+                }
+            }
+        }
+
+        void DrawCustomVertexUserData()
+        {
+            if (Material.MaterialParams.ShaderReference.Contains("PokePack"))
+            {
+                if (ImGui.CollapsingHeader("PokePack Vertex Shader User Data", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    bool update = false;
+                    //4 - 6 bits are used for custom vertex shader boolean settings
+                    update |= ImGui.Checkbox("Is Phong Enabled", ref Material.PokemonUserBooleans.IsPhongEnabled);
+                    update |= ImGui.Checkbox("Is Rim Enabled", ref Material.PokemonUserBooleans.IsRimEnabled);
+                    update |= ImGui.Checkbox("Is Inverse Light Enabled", ref Material.PokemonUserBooleans.IsInverseLightEnabled);
+                    update |= ImGui.Checkbox("Is Light Enabled", ref Material.PokemonUserBooleans.IsLightEnabled);
+                    if (update)
+                    {
+                        //Update booleans to toggle the configured settings in shader
+                        UINode.UpdateUniformBooleans();
+                        UpdateShaders();
                     }
                 }
             }

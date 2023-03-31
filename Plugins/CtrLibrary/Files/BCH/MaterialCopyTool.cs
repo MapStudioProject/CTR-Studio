@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SPICA.Formats.CtrGfx;
 using SPICA.Formats.CtrH3D;
 using SPICA.Formats.CtrH3D.Model.Material;
 using SPICA.Math3D;
@@ -37,7 +38,11 @@ namespace CtrLibrary
             if (CopyToggles["Copy LUTs"]) copied.LUTData = new LUTData(material);
             if (CopyToggles["Copy Polygon State"]) copied.MaterialRasterData = new MaterialRaster(material);
             if (CopyToggles["Copy Render State"]) copied.RenderState = new RenderState(material);
-            if (CopyToggles["Copy User Data"]) copied.MetaData = material.MaterialParams.MetaData;
+            if (CopyToggles["Copy User Data"])
+            {
+                copied.MetaData = material.MaterialParams.MetaData;
+                copied.GfxMetaData = material.BcresUserData;
+            }
 
             string json = JsonConvert.SerializeObject(copied, Formatting.Indented);
             ImGuiNET.ImGui.SetClipboardText(json);
@@ -71,7 +76,11 @@ namespace CtrLibrary
             if (copied.MaterialRasterData != null) copied.MaterialRasterData.Paste(material);
             if (copied.RenderState != null)        copied.RenderState.Paste(material);
             if (copied.MaterialInfo != null)       copied.MaterialInfo.Paste(material);
-            if (copied.MetaData != null) material.MaterialParams.MetaData = copied.MetaData;
+            if (copied.MetaData != null)
+            {
+                material.MaterialParams.MetaData = copied.MetaData;
+                material.BcresUserData = copied.GfxMetaData;
+            }
         }
 
         class CopyData
@@ -92,6 +101,7 @@ namespace CtrLibrary
             public RenderState RenderState;
 
             public H3DMetaData MetaData;
+            public GfxDict<GfxMetaData> GfxMetaData;
         }
 
         class MaterialInfo

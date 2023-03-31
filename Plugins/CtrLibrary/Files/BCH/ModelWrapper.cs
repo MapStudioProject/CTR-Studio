@@ -26,6 +26,8 @@ using System.IO.Compression;
 using SPICA.PICA.Commands;
 using SPICA.PICA.Converters;
 using SPICA.Formats.CtrH3D.Shader;
+using SPICA.Formats.Common;
+using SPICA.Rendering;
 
 namespace CtrLibrary.Bch
 {
@@ -678,10 +680,57 @@ namespace CtrLibrary.Bch
                     Material.MaterialParams.SelectionColor = new System.Numerics.Vector4(0);
             };
 
+            //Pokemon specific data
+            //Here we check the shader name but not the shader data itself as that can be external
+            if (Material.MaterialParams.ShaderReference.Contains("PokePack"))
+            {
+                //Get the first sub mesh assigned by the mesh list
+                foreach (var mesh in model.Meshes)
+                {
+                    //Mesh uses material
+                    if (model.Materials[mesh.MaterialIndex] == material)
+                    {
+                        //First sub mesh
+                        var sm = mesh.SubMeshes[0];
+                        //4 - 6 bits are used for custom vertex shader boolean settings
+                        material.PokemonUserBooleans.IsPhongEnabled = BitUtils.GetBit(sm.BoolUniforms, 3);
+                        material.PokemonUserBooleans.IsRimEnabled = BitUtils.GetBit(sm.BoolUniforms, 4);
+                        material.PokemonUserBooleans.IsInverseLightEnabled = BitUtils.GetBit(sm.BoolUniforms, 5);
+                        material.PokemonUserBooleans.IsLightEnabled = BitUtils.GetBit(sm.BoolUniforms, 6);
+                    }
+                }
+            }
+
             ReloadIcon();
 
             if (!IconManager.HasIcon(Icon))
                 IconManager.AddIcon(Icon, RenderIcon(21).ID);
+        }
+
+        public void OnSave()
+        {
+            //Pokemon specific data
+            //Here we check the shader name but not the shader data itself as that can be external
+            if (Material.MaterialParams.ShaderReference.Contains("PokePack"))
+            {
+                //Get the first sub mesh assigned by the mesh list
+                foreach (var mesh in Model.Meshes)
+                {
+                    //Mesh uses material
+                    if (Model.Materials[mesh.MaterialIndex] == Material)
+                    {
+                        //Apply to each sub mesh
+                        foreach (var sm in mesh.SubMeshes)
+                        {
+                            //4 - 6 bits are used for custom vertex shader boolean settings
+                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsPhongEnabled, 3);
+                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsRimEnabled, 4);
+                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsInverseLightEnabled, 5);
+                            sm.BoolUniforms = (ushort)BitUtils.SetBit(sm.BoolUniforms, Material.PokemonUserBooleans.IsLightEnabled, 6);
+                        }
+                    }
+                }
+            }
         }
 
         private void Copy()
