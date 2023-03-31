@@ -219,6 +219,8 @@ namespace CtrLibrary.Bch
                     mesh.Mesh.NodeIndex = (ushort)Model.MeshNodesTree.Find(mesh.MeshVisName);
                 }
             }
+            foreach (MaterialWrapper mat in _materialFolder.Children)
+                mat.OnSave();
         }
 
         private void Delete()
