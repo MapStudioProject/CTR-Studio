@@ -150,6 +150,7 @@ namespace CtrLibrary
             else if (f.Matches(1, "STM") /* *STM */ || f.Matches(1, "WAV") || f.Matches("FSTP")) return 0x20;
             else if (f.Matches("CTPK")) return 0x10;
             else if (f.Matches("CGFX")) return 0x80;
+            else if (f.Matches("BCH")) return 0x80;
             else if (f.Matches("AAMP")) return 8;
             else if (f.Matches("MsgStdBn") || f.Matches("MsgPrjBn")) return 0x80;
             else if (f.Matches((uint)(f.Length - 0x28), "FLIM")) return (uint)f.GetAlignment((uint)(f.Length - 8), typeof(ushort));
