@@ -46,7 +46,7 @@ namespace FirstPlugin
             return files.Remove((TFileInfo)archiveFileInfo);
         }
 
-        private string[] MAGIC = new string[] { "AD", "BB", "BM", "BS", "CM", "CP", "GR", "NA", "MM", "PC", "PT", "PF" };
+        private string[] MAGIC = new string[] { "AD", "BB", "BM", "BS", "CM", "CP", "GR", "NA", "MM", "PB", "PC", "PK", "PT", "PF" };
 
         public bool Identify(File_Info fileInfo, Stream stream)
         {

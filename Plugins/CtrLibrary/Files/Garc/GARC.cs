@@ -67,6 +67,10 @@ namespace FirstPlugin
             ["BCH"] = ".bch",
             ["PC"] = ".pc",
             ["PF"] = ".pf",
+            ["PF"] = ".pf",
+            ["PB"] = ".pb",
+            ["PT"] = ".pt",
+            ["PK"] = ".pk",
             ["CGFX"] = ".cgfx",
         };
 
