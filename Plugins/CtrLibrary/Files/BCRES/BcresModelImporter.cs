@@ -829,7 +829,7 @@ namespace CtrLibrary.Bcres
                 }
             }
             //Vertex colors
-            if (mesh.HasColorSet(0))
+            if (settings.ImportVertexColors && mesh.HasColorSet(0))
             {
                 var colorFormat = FormatList[settings.Colors.Format];
                 if (colorFormat == GfxGLDataType.GL_BYTE)

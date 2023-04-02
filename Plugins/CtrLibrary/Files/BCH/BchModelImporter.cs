@@ -583,8 +583,19 @@ namespace CtrLibrary.Bch
                     });
                 }
             }
+            //Tangents for lighting
+            if (settings.ImportTangents)
+            {
+                attributes.Add(new PICAAttribute()
+                {
+                    Elements = 3,
+                    Format = settings.Tangents.Format,
+                    Name = PICAAttributeName.Tangent,
+                    Scale = settings.Tangents.Scale,
+                });
+            }
             //Vertex colors
-            if (mesh.HasColorSet(0))
+            if (settings.ImportVertexColors && mesh.HasColorSet(0))
             {
                 var format = settings.BoneWeights.Format;
                 if (format == PICAAttributeFormat.Byte)
@@ -627,17 +638,6 @@ namespace CtrLibrary.Bch
                         Scale = settings.BoneWeights.Scale,
                     });
                 }
-            }
-            //Tangents for lighting
-            if (settings.ImportTangents)
-            {
-                attributes.Add(new PICAAttribute()
-                {
-                    Elements = 3,
-                    Format = settings.Tangents.Format,
-                    Name = PICAAttributeName.Tangent,
-                    Scale = settings.Tangents.Scale,
-                });
             }
             return attributes;
         }
