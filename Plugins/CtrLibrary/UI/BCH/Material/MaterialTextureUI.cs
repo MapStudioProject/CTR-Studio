@@ -263,6 +263,7 @@ namespace CtrLibrary
                         MagFilter = H3DTextureMagFilter.Linear,
                         MinFilter = H3DTextureMinFilter.Linear,
                         MinLOD = 0,
+                        SamplerType = (byte)index,
                     };
                     Material.EnabledTextures[index] = true;
                     UINode.UpdateUniformBooleans();
