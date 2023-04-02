@@ -48,7 +48,7 @@ namespace CTRStudio
             var asssemblyVersion = GetRepoCompileDate(Runtime.ExecutableDir);
 
             var wnd = new UIFramework.Framework(new MainWindow(argumentHandle), mode, asssemblyVersion, "CTR Studio");
-            wnd.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
+           // wnd.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
             wnd.VSync = OpenTK.VSyncMode.On;
             wnd.Run();
         }
