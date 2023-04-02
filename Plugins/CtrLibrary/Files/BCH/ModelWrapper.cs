@@ -28,6 +28,7 @@ using SPICA.PICA.Converters;
 using SPICA.Formats.CtrH3D.Shader;
 using SPICA.Formats.Common;
 using SPICA.Rendering;
+using SixLabors.ImageSharp;
 
 namespace CtrLibrary.Bch
 {
@@ -169,6 +170,13 @@ namespace CtrLibrary.Bch
             AddChild(_skeletonFolder);
 
             ReloadModel();
+        }
+
+        public override void OnDoubleClicked()
+        {
+            base.OnDoubleClicked();
+
+            GLContext.ActiveContext.Camera.TargetPosition = new OpenTK.Vector3();
         }
 
         public void ReloadRender()
@@ -903,7 +911,7 @@ namespace CtrLibrary.Bch
                     if (tex.Name != name)
                         continue;
 
-                    tex.ToBitmap().Save(Path.Combine(tempDir, $"{tex.Name}.png"));
+                    tex.ToBitmap().SaveAsPng(Path.Combine(tempDir, $"{tex.Name}.png"));
                     var json = JsonConvert.SerializeObject(new TextureMeta()
                     {
                         MipCount = tex.MipmapSize,

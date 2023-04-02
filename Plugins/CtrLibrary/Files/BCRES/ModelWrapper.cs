@@ -24,6 +24,7 @@ using CtrLibrary.Bch;
 using SPICA.PICA.Converters;
 using SPICA.Formats.CtrGfx.AnimGroup;
 using Toolbox.Core.Animations;
+using SixLabors.ImageSharp;
 
 namespace CtrLibrary.Bcres
 {
@@ -218,7 +219,7 @@ namespace CtrLibrary.Bcres
             }
 
             //Generate material animation groups automatically
-            var anim = new GfxAnimGroup()
+          /*  var anim = new GfxAnimGroup()
             {
                 Name = "MaterialAnimation",
                 EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
@@ -232,7 +233,7 @@ namespace CtrLibrary.Bcres
             Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
             foreach (var elem in generatedAnimGroups.Elements)
                 Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
-            
+            */
 
             if (Model.MeshNodeVisibilities.Count > 0)
             {
@@ -278,7 +279,7 @@ namespace CtrLibrary.Bcres
                     {
                         //Save image as png
                         var h3dTex = tex.ToH3D();
-                        h3dTex.ToBitmap().Save(Path.Combine(folder, $"{tex.Name}.png"));
+                        h3dTex.ToBitmap().SaveAsPng(Path.Combine(folder, $"{tex.Name}.png"));
                     }
                 }
                 if (dlg.FilePath.EndsWith(".json"))
