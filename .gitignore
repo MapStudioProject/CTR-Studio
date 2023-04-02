@@ -13,6 +13,7 @@
 GLFrameworkEngine
 MapStudio.UI
 Toolbox.Core
+IONET
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
