@@ -536,7 +536,7 @@ namespace CtrLibrary
                     MagFilter = magFilter,
                     MinFilter = MergeMinFilterMipmapMode(minFilter, mipmapFilter),
                     BorderColor = borderColor,
-                    SamplerType = texMap.SamplerType,
+                    SamplerType = (byte)index,
                 };
                 Material.MaterialParams.TextureCoords[index] = new H3DTextureCoord()
                 {
