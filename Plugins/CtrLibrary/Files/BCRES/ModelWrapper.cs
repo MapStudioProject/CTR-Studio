@@ -312,10 +312,9 @@ namespace CtrLibrary.Bcres
                     {
                         if (o)
                         {
-                            ImportFile(dlg.FilePath, importerUI.Settings);
-
                             try
                             {
+                                ImportFile(dlg.FilePath, importerUI.Settings);
                             }
                             catch (Exception ex)
                             {
