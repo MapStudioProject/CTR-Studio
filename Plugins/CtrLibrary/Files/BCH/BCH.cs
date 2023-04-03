@@ -27,6 +27,8 @@ using SPICA.Formats.CtrH3D.Fog;
 using SPICA.Formats.CtrH3D.LUT;
 using SPICA.Formats.Common;
 using static System.Collections.Specialized.BitVector32;
+using System.Runtime.ConstrainedExecution;
+using static CtrLibrary.Bch.BCH;
 
 namespace CtrLibrary.Bch
 {
@@ -82,6 +84,26 @@ namespace CtrLibrary.Bch
         #endregion
 
         /// <summary>
+        /// Creates a new bcres instance for the new file menu UI.
+        /// Returns false if not supported.
+        /// </summary>
+        /// <returns></returns>
+        public override bool CreateNew()
+        {
+            FileInfo = new File_Info();
+            FileInfo.FilePath = "NewFile";
+            FileInfo.FileName = "NewFile";
+
+            H3D h3d = new H3D();
+            Load(h3d);
+
+            this.Root.Header = "NewFile.bch";
+            this.Root.Tag = this;
+
+            return true;
+        }
+
+        /// <summary>
         /// The render instance used to display the model in 3D view.
         /// </summary>
         public H3DRender Render;
@@ -101,21 +123,23 @@ namespace CtrLibrary.Bch
         private ModelFolder ModelFolder;
 
         //Folder for texture data
-        private TextureFolder TextureFolder;
+        private TextureFolder<H3DTexture> TextureFolder;
 
         public override bool DisplayViewport => ModelFolder.Children.Count > 0;
 
         public void Load(Stream stream)
         {
-            H3DData = H3D.Open(new MemoryStream(stream.ToArray()));
+            Load(H3D.Open(new MemoryStream(stream.ToArray())));
+        }
+
+        public void Load(H3D h3d)
+        {
+            H3DData = h3d;
             if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
             {
                 ModelBinary = new MBn(FileInfo.FilePath.Replace(".bch", ".mbn"), H3DData);
                 H3DData = ModelBinary.ToH3D();
             }
-
-            ShaderWindow = new ShaderWindow(this.Workspace);
-                ShaderWindow.DockDirection = ImGuiNET.ImGuiDir.Down;
 
             Render = new H3DRender(H3DData, null);
             AddRender(Render);
@@ -146,23 +170,23 @@ namespace CtrLibrary.Bch
             }
 
             ModelFolder = new ModelFolder(this, H3DData);
-            TextureFolder = new TextureFolder(Render, H3DData.Textures.ToList());
+            TextureFolder = new TextureFolder<H3DTexture>(Render, H3DData.Textures);
 
             Root.AddChild(ModelFolder);
             Root.AddChild(TextureFolder);
             Root.AddChild(new LUTFolder(Render, H3DData));
 
-            AddNodeGroup(H3DData.Shaders, new H3DGroupNode(H3DGroupType.Shaders));
-            AddNodeGroup(H3DData.Cameras, new H3DGroupNode(H3DGroupType.Cameras));
-            AddNodeGroup(H3DData.Lights, new H3DGroupNode(H3DGroupType.Lights));
-            AddNodeGroup(H3DData.Fogs, new H3DGroupNode(H3DGroupType.Fogs));
-            AddNodeGroup(H3DData.Scenes, new H3DGroupNode(H3DGroupType.Scenes));
-            AddNodeGroup(H3DData.SkeletalAnimations, new H3DGroupNode(H3DGroupType.SkeletalAnim));
-            AddNodeGroup(H3DData.MaterialAnimations, new H3DGroupNode(H3DGroupType.MaterialAnim));
-            AddNodeGroup(H3DData.VisibilityAnimations, new H3DGroupNode(H3DGroupType.VisibiltyAnim));
-            AddNodeGroup(H3DData.CameraAnimations, new H3DGroupNode(H3DGroupType.CameraAnim));
-            AddNodeGroup(H3DData.LightAnimations, new H3DGroupNode(H3DGroupType.LightAnim));
-            AddNodeGroup(H3DData.FogAnimations, new H3DGroupNode(H3DGroupType.EmitterAnim));
+            AddNodeGroup(H3DData.Shaders, H3DGroupType.Shaders);
+            AddNodeGroup(H3DData.Cameras, H3DGroupType.Cameras);
+            AddNodeGroup(H3DData.Lights, H3DGroupType.Lights);
+            AddNodeGroup(H3DData.Fogs, H3DGroupType.Fogs);
+            AddNodeGroup(H3DData.Scenes, H3DGroupType.Scenes);
+            AddNodeGroup(H3DData.SkeletalAnimations, H3DGroupType.SkeletalAnim);
+            AddNodeGroup(H3DData.MaterialAnimations, H3DGroupType.MaterialAnim);
+            AddNodeGroup(H3DData.VisibilityAnimations, H3DGroupType.VisibiltyAnim);
+            AddNodeGroup(H3DData.CameraAnimations, H3DGroupType.CameraAnim);
+            AddNodeGroup(H3DData.LightAnimations, H3DGroupType.LightAnim);
+            AddNodeGroup(H3DData.FogAnimations, H3DGroupType.EmitterAnim);
         }
 
 
@@ -227,6 +251,12 @@ namespace CtrLibrary.Bch
         /// </summary>
         public override List<DockWindow> PrepareDocks()
         {
+            if (ShaderWindow == null)
+            {
+                ShaderWindow = new ShaderWindow(this.Workspace);
+                ShaderWindow.DockDirection = ImGuiNET.ImGuiDir.Down;
+            }
+
             List<DockWindow> windows = new List<DockWindow>();
             windows.Add(Workspace.Outliner);
             windows.Add(Workspace.PropertyWindow);
@@ -238,30 +268,18 @@ namespace CtrLibrary.Bch
         }
 
 
-        private void AddNodeGroup<T>(H3DDict<T> subSections, H3DGroupNode folder)
+        private void AddNodeGroup<T>(H3DDict<T> subSections, H3DGroupType type)
    where T : SPICA.Formats.Common.INamed
         {
+            var folder = new H3DGroupNode<T>(type, subSections);
+
             foreach (var item in subSections)
             {
                 if (typeof(T) == typeof(H3DShader))
-                    folder.AddChild(new ShaderNode<T>(subSections, item.Name, item));
+                    folder.AddChild(new ShaderNode<T>(subSections, item));
                 else
-                    folder.AddChild(new NodeSection<T>(subSections, item.Name, item));
+                    folder.AddChild(new NodeSection<T>(subSections, item));
             }
-            folder.AddNode += (string name) =>
-            {
-                var item = (T)Activator.CreateInstance(typeof(T));
-                item.Name = Path.GetFileNameWithoutExtension(name);
-                if (subSections.Contains(item.Name))
-                    return;
-
-                subSections.Add(item);
-
-                var node = new NodeSection<T>(subSections, item.Name, item);
-                node.Replace(name);
-
-                folder.AddChild(node);
-            };
 
             if (folder.Children.Count > 0)
                 Root.AddChild(folder);
@@ -287,20 +305,48 @@ namespace CtrLibrary.Bch
             Particles,
         }
 
-        class H3DGroupNode : NodeBase
+        public class H3DGroupNode<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
+            //Folder group type
             public H3DGroupType Type;
 
-            public Action<string> AddNode;
+            //Raw section list to load/save
+            internal H3DDict<T> SectionList;
 
-            public H3DGroupNode(H3DGroupType type)
+            //Tree node type to add when creating new UI nodes
+            public virtual Type ChildNodeType => typeof(NodeSection<T>);
+
+            public H3DGroupNode(H3DGroupType type, H3DDict<T> subSections)
             {
                 Type = type;
                 Header = GetName();
+                this.ContextMenus.Add(new MenuItemModel("Add", Add));
+                this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Import", Import));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Export All", ExportAll));
+                this.ContextMenus.Add(new MenuItemModel("Replace All", ReplaceAll));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Clear", Clear));
+                SectionList = subSections;
             }
 
-            private void Import()
+            public virtual void Add()
+            {
+                //Create section instance
+                var item = Activator.CreateInstance(typeof(T)) as SPICA.Formats.Common.INamed;
+                //Default name
+                item.Name = $"New{this.Type}";
+                //Auto rename possible dupes
+                item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                //Add section list
+                SectionList.Add((T)item);
+                //Add to UI
+                var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
+                AddChild(node);
+            }
+
+            public virtual void Import()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
@@ -309,10 +355,54 @@ namespace CtrLibrary.Bch
 
                 if (dlg.ShowDialog())
                 {
-                    AddNode(dlg.FilePath);
+                    //Create section instance
+                    var item = (T)Activator.CreateInstance(typeof(T));
+                    item.Name = Path.GetFileNameWithoutExtension(dlg.FilePath);
+                    //Auto rename possible dupes
+                    item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                    //Add section list
+                    SectionList.Add(item);
+                    //Add to UI
+                    var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
+                    this.AddChild(node);
                 }
             }
 
+            public virtual void ExportAll()
+            {
+                ImguiFolderDialog dlg = new ImguiFolderDialog();
+                if (dlg.ShowDialog())
+                {
+                    foreach (NodeSection<T> node in this.Children)
+                    {
+                        node.Export(Path.Combine(dlg.SelectedPath, $"{node.Header}.json"));
+                    }
+                }
+            }
+
+            public virtual void ReplaceAll()
+            {
+                ImguiFolderDialog dlg = new ImguiFolderDialog();
+                if (dlg.ShowDialog())
+                {
+                    foreach (var file in Directory.GetFiles(dlg.SelectedPath))
+                    {
+                        foreach (NodeSection<T> node in this.Children)
+                        {
+                            if (node.Header == Path.GetFileNameWithoutExtension(file))
+                                node.Replace(file);
+                        }
+                    }
+                }
+            }
+
+            public virtual void Clear()
+            {
+                SectionList.Clear();
+                this.Children.Clear();
+            }
+
+            //Get folder name via type
             private string GetName()
             {
                 switch (Type)
@@ -345,7 +435,7 @@ namespace CtrLibrary.Bch
 
             ShaderUI ShaderUI;
 
-            public ShaderNode(H3DDict<T> subSections, string name, object section) : base(subSections, name, section)
+            public ShaderNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
                 ShaderUI = new ShaderUI(Shader.ToBinary(), Shader.VtxShaderIndex, Shader.GeoShaderIndex);
                 this.TagUI.UIDrawer += delegate
@@ -355,33 +445,40 @@ namespace CtrLibrary.Bch
             }
         }
 
-        class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
+        public class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
             internal object Section;
             private H3DDict<T> Dict;
 
-            public NodeSection(H3DDict<T> subSections, string name, object section)
+            public virtual string DefaultExtension => ".json";
+
+            public virtual string[] ExportFilters => new string[] { ".bch", ".json" };
+            public virtual string[] ReplaceFilters => new string[] { ".bch", ".json" };
+
+            public virtual MenuItemModel[] ExtraMenuItems => new MenuItemModel[0];
+
+            public NodeSection(H3DDict<T> subSections,  object section)
             {
-                Header = name;
+                Header = ((T)section).Name;
                 Section = section;
                 Dict = subSections;
                 CanRename = true;
                 Icon = IconManager.FILE_ICON.ToString();
                 Tag = section;
 
-                this.ContextMenus.Add(new MenuItemModel("Export", Export));
-                this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
+                this.ContextMenus.Add(new MenuItemModel("Export", ExportDialog));
+                this.ContextMenus.Add(new MenuItemModel("Replace", ReplaceDialog));
                 this.ContextMenus.Add(new MenuItemModel(""));
+                if (ExtraMenuItems.Length > 0) 
+                {
+                    this.ContextMenus.AddRange(ExtraMenuItems);
+                    this.ContextMenus.Add(new MenuItemModel(""));
+                }
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
                 this.ContextMenus.Add(new MenuItemModel(""));
-                this.ContextMenus.Add(new MenuItemModel("Delete", Delete));
+                this.ContextMenus.Add(new MenuItemModel("Delete", () => Delete()));
 
-                this.OnHeaderRenamed += delegate
-                {
-                    ReloadName();
-                };
-
-
+                //Create an animation wrapper for animation playback if node is an animation type
                 if (section is H3DAnimation)
                 {
                     var wrapper = new AnimationWrapper((H3DAnimation)section);
@@ -389,39 +486,60 @@ namespace CtrLibrary.Bch
                 }
                 this.OnSelected += delegate
                 {
+                    //Check if the current node selected was an animation and apply playback
                     if (Tag is AnimationWrapper)
                         ((AnimationWrapper)Tag).AnimationSet();
                 };
                 this.OnHeaderRenamed += delegate
                 {
-                    ((INamed)Section).Name = this.Header;
+                    //Update binary name on tree node rename
+                    ReloadName();
                 };
             }
 
-            void Delete()
+            public virtual bool Delete()
             {
-                Dict.Remove((T)Section);
-                this.Parent.Children.Remove(this);
+                var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+
+                string msg = $"Are you sure you want to delete the ({selected.Count}) selected textures? This cannot be undone!";
+                if (selected.Count == 1)
+                    msg = $"Are you sure you want to delete {Header}? This cannot be undone!";
+
+                int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
+                if (result != 1)
+                    return false;
+
+                foreach (NodeSection<T> node in selected)
+                {
+                    //Remove from section
+                    Dict.Remove((T)node.Section);
+                    //Remove from UI
+                    this.Parent.Children.Remove(node);
+                }
+                return true;
             }
 
-            void Replace()
+            void ReplaceDialog()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
-                dlg.FileName = $"{Header}.json";
-                dlg.AddFilter(".bch", "bch");
-                dlg.AddFilter(".json", "json");
+                dlg.FileName = $"{Header}{DefaultExtension}";
+
+                foreach (var ext in ReplaceFilters)
+                    dlg.AddFilter(ext, ext);
+
                 if (dlg.ShowDialog())
                 {
                     Replace(dlg.FilePath);
                 }
             }
 
-            public void Replace(string filePath)
+            public virtual void Replace(string filePath)
             {
+                //Replace as raw binary or json text formats
                 if (filePath.ToLower().EndsWith(".bch"))
                 {
-                    var type = ((H3DGroupNode)this.Parent).Type;
+                    var type = ((H3DGroupNode<T>)this.Parent).Type;
                     Dict[this.Header] = (T)ReplaceRaw(filePath, type);
                 }
                 else
@@ -432,28 +550,52 @@ namespace CtrLibrary.Bch
                 ReloadName();
             }
 
-            void Export()
+            void ExportDialog()
             {
-                ImguiFileDialog dlg = new ImguiFileDialog();
-                dlg.SaveDialog = true;
-                dlg.FileName = $"{Header}.json";
-                dlg.AddFilter(".bch", "bch");
-                dlg.AddFilter(".json", "json");
-                if (dlg.ShowDialog())
+                var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+                //Batch export
+                if (selected.Count > 1)
                 {
-                    if (dlg.FilePath.ToLower().EndsWith(".bch"))
+                    ImguiFolderDialog dlg = new ImguiFolderDialog();
+                    if (dlg.ShowDialog())
                     {
-                        var type = ((H3DGroupNode)this.Parent).Type;
-                        ExportRaw(dlg.FilePath, Section, type);
+                        foreach (NodeSection<T> node in selected)
+                        {
+                            node.Export(Path.Combine(dlg.SelectedPath, $"{node.Header}{DefaultExtension}"));
+                        }
                     }
-                    else
+                }
+                else //Normal export
+                {
+                    ImguiFileDialog dlg = new ImguiFileDialog();
+                    dlg.SaveDialog = true;
+                    dlg.FileName = $"{Header}{DefaultExtension}";
+                    foreach (var ext in ExportFilters)
+                        dlg.AddFilter(ext, ext);
+
+                    if (dlg.ShowDialog())
                     {
-                        File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                        Export(dlg.FilePath);
                     }
                 }
             }
 
-            void ReloadName()
+            public virtual void Export(string filePath)
+            {
+                //Export as raw binary or json text formats
+                if (filePath.ToLower().EndsWith(".bch"))
+                {
+                    var type = ((H3DGroupNode<T>)this.Parent).Type;
+                    ExportRaw(filePath, Section, type);
+                }
+                else
+                {
+                    File.WriteAllText(filePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                }
+            }
+
+            //Applies the current UI tree node name to the section used by the binary file.
+            public virtual void ReloadName()
             {
                 ((SPICA.Formats.Common.INamed)Section).Name = this.Header;
             }

@@ -36,7 +36,7 @@ namespace CtrLibrary.Bch
             foreach (var lut in file.LUTs)
                 AddChild(new LUTWrapper(render, file, lut));
 
-            this.ContextMenus.Add(new MenuItemModel("Create", Create));
+            this.ContextMenus.Add(new MenuItemModel("Add", Create));
             this.ContextMenus.Add(new MenuItemModel("Import", Import));
         }
 

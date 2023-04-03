@@ -7,6 +7,7 @@ using Toolbox.Core;
 using MapStudio.UI;
 using GLFrameworkEngine;
 using CtrLibrary.Bcres;
+using CtrLibrary.Bch;
 
 namespace CtrLibrary
 {
@@ -24,6 +25,7 @@ namespace CtrLibrary
         {
             //Add File -> New Bcres option
             UIManager.Subscribe(UIManager.UI_TYPE.NEW_FILE, "Bcres File", typeof(BCRES));
+            UIManager.Subscribe(UIManager.UI_TYPE.NEW_FILE, "BCH File", typeof(BCH));
         }
     }
 }

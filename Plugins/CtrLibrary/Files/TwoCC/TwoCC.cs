@@ -87,9 +87,6 @@ namespace FirstPlugin
                     byte[] data = reader.ReadBytes((int)(endOffset - startOffset));
 
                     string ext = SARC_Parser.GuessFileExtension(data);
-
-                    Console.WriteLine($"startOffset {startOffset} endOffset {endOffset}");
-
                     files.Add(new TFileInfo(this)
                     {
                         FileName = $"File{i}{ext}",

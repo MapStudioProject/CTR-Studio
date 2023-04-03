@@ -33,6 +33,9 @@ using SPICA.Formats.CtrGfx.Light;
 using SPICA.Formats.CtrGfx.Fog;
 using SPICA.Formats.CtrGfx.Scene;
 using SPICA.Formats.CtrGfx.Shader;
+using Discord;
+using static System.Collections.Specialized.BitVector32;
+using SPICA.PICA.Shader;
 
 namespace CtrLibrary.Bcres
 {
@@ -104,7 +107,7 @@ namespace CtrLibrary.Bcres
         //Folder for model data
         private ModelFolder ModelFolder;
         //Folder for texture data
-        private Bch.TextureFolder TextureFolder;
+        private Bch.TextureFolder<H3DTexture> TextureFolder;
         private Bch.LUTFolder LUTFolder;
 
         //Shader window for debugging and viewing how shader code is generated
@@ -158,7 +161,7 @@ namespace CtrLibrary.Bcres
             }
 
             ModelFolder = new ModelFolder(this, BcresData, h3d);
-            TextureFolder = new Bch.TextureFolder(Render, h3d.Textures.ToList());
+            TextureFolder = new Bch.TextureFolder<H3DTexture>(Render, h3d.Textures);
             LUTFolder = new Bch.LUTFolder(Render, h3d);
 
             Root.AddChild(ModelFolder);
@@ -301,9 +304,14 @@ namespace CtrLibrary.Bcres
             {
                 Type = type;
                 Header = GetName();
-                this.ContextMenus.Add(new MenuItemModel("Export All", ExportAll));
+                this.ContextMenus.Add(new MenuItemModel("Add", Add));
+                this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Import", Import));
-
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Export All", ExportAll));
+                this.ContextMenus.Add(new MenuItemModel("Replace All", ReplaceAll));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Clear", Clear));
             }
 
             public void Load(GfxDict<T> subSections)
@@ -311,9 +319,25 @@ namespace CtrLibrary.Bcres
                 SectionList = subSections;
                 foreach (var item in subSections)
                 {
-                    var section = new NodeSection<T>(SectionList, item.Name, item);
-                    this.AddChild(section);
+                    if (item is GfxShader)
+                        this.AddChild(new ShaderNode<T>(SectionList, item));
+                    else
+                        this.AddChild(new NodeSection<T>(SectionList, item));
                 }
+            }
+
+            private void Add()
+            {
+                var item = Activator.CreateInstance(typeof(T)) as SPICA.Formats.Common.INamed;
+                //Default name
+                item.Name = $"New{this.Type}";
+                //Auto rename possible dupes
+                item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                //Add section list
+                SectionList.Add((T)item);
+                //Add to UI
+                var nodeFile = new NodeSection<T>(SectionList, item);
+                AddChild(nodeFile);
             }
 
             private void ExportAll()
@@ -326,6 +350,17 @@ namespace CtrLibrary.Bcres
                 }
             }
 
+            private void ReplaceAll()
+            {
+
+            }
+
+            private void Clear()
+            {
+                this.Children.Clear();
+                this.SectionList.Clear();
+            }
+
             private void Import()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
@@ -335,7 +370,7 @@ namespace CtrLibrary.Bcres
                 if (dlg.ShowDialog())
                 {
                     var item = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                    var nodeFile = new NodeSection<T>(SectionList, item.Name, item);
+                    var nodeFile = new NodeSection<T>(SectionList, item);
                     AddChild(nodeFile);
                     SectionList.Add(item);
                 }
@@ -368,14 +403,39 @@ namespace CtrLibrary.Bcres
             }
         }
 
+        class ShaderNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            GfxShader Shader => (GfxShader)Section;
+
+            ShaderBinary ShBin;
+
+            public ShaderNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                ShBin = Shader.ToBinary();
+
+                foreach (var prog in Shader.ShaderInfos)
+                {
+                    NodeBase proNode = new NodeBase($"Program {this.Children.Count}");
+
+                    var ShaderUI = new ShaderUI(ShBin, prog.VertexProgramIndex, prog.GeometryProgramIndex);
+                    proNode.TagUI.UIDrawer += delegate
+                    {
+                        ShaderUI.Render();
+                    };
+
+                    AddChild(proNode);
+                }
+            }
+        }
+
         class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
-            private object Section;
+            internal object Section;
             private GfxDict<T> Dict;
 
-            public NodeSection(GfxDict<T> subSections, string name, object section)
+            public NodeSection(GfxDict<T> subSections, object section)
             {
-                Header = name;
+                Header = ((INamed)section).Name;
                 Section = section;
                 Dict = subSections;
                 CanRename = true;
