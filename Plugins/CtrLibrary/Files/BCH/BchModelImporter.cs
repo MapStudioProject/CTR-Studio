@@ -296,7 +296,7 @@ namespace CtrLibrary.Bch
             if (!settings.IsSmash3DS)
             {
                 //Create a default color set if one is not present
-                if (!mesh.Attributes.Any(x => x.Name == PICAAttributeName.Color))
+                if (settings.ImportVertexColors && !mesh.Attributes.Any(x => x.Name == PICAAttributeName.Color))
                 {
                     mesh.FixedAttributes.Add(new PICAFixedAttribute()
                     {

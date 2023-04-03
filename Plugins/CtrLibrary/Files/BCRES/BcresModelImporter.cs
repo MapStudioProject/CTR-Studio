@@ -383,7 +383,7 @@ namespace CtrLibrary.Bcres
             CalculateBounding(ref gfxShape, iomesh);
 
             //Create a default color set if one is not present
-            if (!vertexBuffer.Attributes.Any(x => x.AttrName == PICAAttributeName.Color))
+            if (settings.ImportVertexColors && !vertexBuffer.Attributes.Any(x => x.AttrName == PICAAttributeName.Color))
             {
                 gfxShape.VertexBuffers.Add(new GfxVertexBufferFixed()
                 {
