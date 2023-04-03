@@ -336,6 +336,14 @@ namespace CtrLibrary.Bcres
 
         public void ImportFile(string filePath, CtrImportSettings settings)
         {
+            //Convert H3D materials first (used by gui and render) as gfx materials are applied in importer
+            Model.Materials.Clear();
+            foreach (MTOB material in _materialFolder.Children)
+            {
+                material.GfxMaterial.ConvertH3D(material.Material);
+                Model.Materials.Add(material.GfxMaterial);
+            }
+
             int modelIndex = BcresFile.Models.Find(Model.Name);
 
             BcresFile.Models.Remove(Model);
