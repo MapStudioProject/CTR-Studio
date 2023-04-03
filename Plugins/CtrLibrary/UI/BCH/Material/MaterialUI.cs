@@ -18,6 +18,7 @@ using SPICA.Formats.CtrH3D.Model.Mesh;
 using CtrLibrary.Rendering;
 using CtrLibrary.Bch;
 using SPICA.Formats.Common;
+using Toolbox.Core;
 
 namespace CtrLibrary
 {
@@ -158,10 +159,18 @@ namespace CtrLibrary
                 bool updateShaders = false;
 
                 updateShaders |= ImGuiHelper.InputFromBoolean("Enable Vertex Lighting", Material.MaterialParams, "IsVertexLightingEnabled");
-                updateShaders |= ImGuiHelper.InputFromBoolean("Enable Hemisphere Lighting", Material.MaterialParams, "IsHemiSphereLightingEnabled");
+                if (ImGuiHelper.InputFromBoolean("Enable Hemisphere Lighting", Material.MaterialParams, "IsHemiSphereLightingEnabled"))
+                {
+                    updateShaders = true;
+                    UINode.UpdateUniformBooleans();
+                }
                 if (Material.MaterialParams.IsHemiSphereLightingEnabled)
                 {
-                    updateShaders |= ImGuiHelper.InputFromBoolean("Enable Hemisphere Occlusion", Material.MaterialParams, "IsHemiSphereOcclusionEnabled");
+                    if (ImGuiHelper.InputFromBoolean("Enable Hemisphere Occlusion", Material.MaterialParams, "IsHemiSphereOcclusionEnabled"))
+                    {
+                        updateShaders = true;
+                        UINode.UpdateUniformBooleans();
+                    }
                 }
 
                 bool updateShaderName = false;
@@ -331,6 +340,23 @@ namespace CtrLibrary
                     }
                 }
             }
+
+            if (ImGui.CollapsingHeader("Vertex Uniforms", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Columns(2);
+                foreach (var vertexUniform in Material.MaterialParams.VtxShaderUniforms)
+                {
+                    var index = vertexUniform.Key;
+                    Vector4 vec = vertexUniform.Value;
+
+                    ImGui.Text(index.ToString());
+                    ImGui.NextColumn();
+
+                    ImGui.DragFloat4($"##uniformVtx{index}", ref vec);
+                    ImGui.NextColumn();
+                }
+                ImGui.Columns(1);
+            }
         }
 
         void UpdateShaders()
@@ -343,33 +369,29 @@ namespace CtrLibrary
         {
             if (ImGui.SliderFloat("Vertex Color Intensity", ref Material.MaterialParams.ColorScale, 0, 1))
             {
-                BatchParamsEditField("ColorScale", Material.MaterialParams.ColorScale);
                 UpdateShaders();
             }
 
             ImGui.Columns(3);
 
-            DrawColorUI("Diffuse", "DiffuseColor"); ImGui.NextColumn();
-            DrawColorUI("Emission", "EmissionColor"); ImGui.NextColumn();
-            DrawColorUI("Ambient", "AmbientColor"); ImGui.NextColumn();
-            DrawColorUI("Specular 0", "Specular0Color"); ImGui.NextColumn();
-            DrawColorUI("Specular 1", "Specular1Color"); ImGui.NextColumn();
-            DrawColorUI("Blend Color", "BlendColor"); ImGui.NextColumn();
-            DrawColorUI("Constant 0", "Constant0Color"); ImGui.NextColumn();
-            DrawColorUI("Constant 1", "Constant1Color"); ImGui.NextColumn();
-            DrawColorUI("Constant 2", "Constant2Color"); ImGui.NextColumn();
-            DrawColorUI("Constant 3", "Constant3Color"); ImGui.NextColumn();
-            DrawColorUI("Constant 4", "Constant4Color"); ImGui.NextColumn();
-            DrawColorUI("Constant 5", "Constant5Color"); ImGui.NextColumn();
+            DrawColorUI("Diffuse", ref Material.MaterialParams.DiffuseColor); ImGui.NextColumn();
+            DrawColorUI("Emission", ref Material.MaterialParams.EmissionColor); ImGui.NextColumn();
+            DrawColorUI("Ambient", ref Material.MaterialParams.AmbientColor); ImGui.NextColumn();
+            DrawColorUI("Specular 0", ref Material.MaterialParams.Specular0Color); ImGui.NextColumn();
+            DrawColorUI("Specular 1", ref Material.MaterialParams.Specular1Color); ImGui.NextColumn();
+            DrawColorUI("Blend Color", ref Material.MaterialParams.BlendColor); ImGui.NextColumn();
+            DrawColorUI("Constant 0", ref Material.MaterialParams.Constant0Color); ImGui.NextColumn();
+            DrawColorUI("Constant 1", ref Material.MaterialParams.Constant1Color); ImGui.NextColumn();
+            DrawColorUI("Constant 2", ref Material.MaterialParams.Constant2Color); ImGui.NextColumn();
+            DrawColorUI("Constant 3", ref Material.MaterialParams.Constant3Color); ImGui.NextColumn();
+            DrawColorUI("Constant 4", ref Material.MaterialParams.Constant4Color); ImGui.NextColumn();
+            DrawColorUI("Constant 5", ref Material.MaterialParams.Constant5Color); ImGui.NextColumn();
 
             ImGui.Columns(1);
         }
 
-        void DrawColorUI(string name, string fieldName)
+        void DrawColorUI(string name, ref RGBA rgba)
         {
-            var prop = Material.MaterialParams.GetType().GetField(fieldName);
-            var rgba = (RGBA)prop.GetValue(Material.MaterialParams);
-
             var color = new Vector4(
                 rgba.R / 255.0f,
                 rgba.G / 255.0f,
@@ -383,25 +405,8 @@ namespace CtrLibrary
                     (byte)(color.Y * 255),
                     (byte)(color.Z * 255),
                     (byte)(color.W * 255));
-                BatchParamsEditField(fieldName, rgba);
                 GLFrameworkEngine.GLContext.ActiveContext.UpdateViewport = true;
             }
-        }
-
-        void BatchParamsEditField(string fieldName, object value)
-        {
-            var parent = this.UINode.Parent;
-            foreach (MaterialWrapper selected in parent.Children.Where(x => x.IsSelected))
-            {
-                var prop = selected.Material.MaterialParams.GetType().GetField(fieldName);
-                prop.SetValue(selected.Material.MaterialParams, value);
-            }
-        }
-
-        void UpdateUniforms()
-        {
-            Material.UpdateShaderUniforms?.Invoke(Material, EventArgs.Empty);
-            GLFrameworkEngine.GLContext.ActiveContext.UpdateViewport = true;
         }
     }
 }
