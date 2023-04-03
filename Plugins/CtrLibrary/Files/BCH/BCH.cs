@@ -398,6 +398,12 @@ namespace CtrLibrary.Bch
 
             public virtual void Clear()
             {
+                string msg = $"Are you sure you want to clear ({this.Type})? This cannot be undone!";
+
+                int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
+                if (result != 1)
+                    return;
+
                 SectionList.Clear();
                 this.Children.Clear();
             }
