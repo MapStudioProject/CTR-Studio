@@ -114,6 +114,8 @@ namespace CtrLibrary.Bch
                 h3dModel.Flags &= ~H3DModelFlags.HasSkeleton;
             }
 
+            h3dModel.Flags &= ~H3DModelFlags.HasSubMeshCulling;
+
             //Todo maybe include sub mesh generating (need to figure out rest of the struct)
             h3dModel.SubMeshCullings = new List<H3DSubMeshCulling>();
             //Match the file name as the imported name
