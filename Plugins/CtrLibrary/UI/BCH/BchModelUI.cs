@@ -224,8 +224,14 @@ namespace CtrLibrary.Bch
             }
         }
 
+        private bool isReorder = false;
+
         private void ReorderMesh(H3DMesh mesh, int index, int n_next)
         {
+            if (isReorder) return;
+
+            isReorder = true;
+
             //Swap them out
             var srcMesh = H3DModel.Meshes[index];
             var dstMesh = H3DModel.Meshes[n_next];
@@ -233,9 +239,13 @@ namespace CtrLibrary.Bch
             H3DModel.Meshes[index] = dstMesh;
             H3DModel.Meshes[n_next] = srcMesh;
 
+            H3DModel.MeshesLayer0[index] = dstMesh;
+
             var meshList = H3DModel.Meshes.ToList();
-          //  H3DModel.ClearMeshes();
-         //   H3DModel.AddMeshes(meshList);
+            H3DModel.ClearMeshes();
+            H3DModel.AddMeshes(meshList);
+
+            isReorder = false;
         }
 
         string[] RenderLayer = new string[]
