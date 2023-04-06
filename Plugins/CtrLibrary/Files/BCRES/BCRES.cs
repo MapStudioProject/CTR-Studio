@@ -153,7 +153,7 @@ namespace CtrLibrary.Bcres
             };
 
             var light = Render.Renderer.Lights[0];
-            AddRender(new SceneLightingUI.LightPreview(light));
+           // AddRender(new SceneLightingUI.LightPreview(light));
 
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {

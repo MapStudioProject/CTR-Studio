@@ -76,12 +76,12 @@ namespace CtrLibrary.UI
                 {
                     bool update = false;
 
-                    if (ImGui.CollapsingHeader("Hemi Lighting"))
+                    if (ImGui.CollapsingHeader("Hemi Lighting", ImGuiTreeNodeFlags.DefaultOpen))
                     {
                         update |= ImGui.ColorEdit3("Sky Color", ref Renderer.GlobalHsLSCol);
                         update |= ImGui.ColorEdit3("Ground Color", ref Renderer.GlobalHsLGCol);
                     }
-                    if (ImGui.CollapsingHeader("Lighting"))
+                    if (ImGui.CollapsingHeader("Lighting", ImGuiTreeNodeFlags.DefaultOpen))
                     {
                         update |= ImGui.Checkbox("Enabled", ref light.Enabled);
                         update |= ImGui.Checkbox("TwoSidedDiffuse", ref light.TwoSidedDiffuse);
