@@ -124,7 +124,7 @@ namespace CtrLibrary.Rendering
                 {
                     Ambient = new Color4(0.1f, 0.1f, 0.1f, 1.0f),
                     Diffuse = new Color4(0.4f, 0.4f, 0.4f, 1.0f),
-                    Specular0 = new Color4(0.8f, 0.8f, 0.8f, 1.0f),
+                    Specular0 = new Color4(0.5f, 0.5f, 0.5f, 1.0f),
                     Specular1 = new Color4(0.4f, 0.4f, 0.4f, 1.0f),
                     TwoSidedDiffuse = true,
                     Position = new OpenTK.Vector3(0, 0, 0),
