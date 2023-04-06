@@ -135,9 +135,6 @@ namespace CTRStudio
                     ImGui.SetNextWindowSize(contentSize, ImGuiCond.Once);
                 }
 
-                if (workspace.IsFocused && Workspace.ActiveWorkspace != workspace)
-                    Workspace.UpdateActive(workspace);
-
                 workspace.Show();
 
                 if (!workspace.Opened)
@@ -569,6 +566,10 @@ namespace CTRStudio
                 Workspace workspace = Workspace.ActiveWorkspace;
                 if (createNew || workspace == null)
                 {
+                    //Unload current if not null
+                    if (workspace != null)
+                        workspace.OnWindowUnloaded();
+
                     workspace = new Workspace(this.GlobalSettings, GetWorkspaceID());
                     createNew = true;
                 }
