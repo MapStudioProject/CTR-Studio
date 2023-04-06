@@ -42,6 +42,7 @@ namespace CtrLibrary.Bcres
                 if (File.Exists(tex))
                     bcresWrapper.ImportTexture(tex);
             }
+
             //We currently always want to use bones for map editor purposes
             bool hasBones = true;
             //Copy model data into a new model for both static and normal bone types
@@ -235,6 +236,18 @@ namespace CtrLibrary.Bcres
                     }
                 }
             }
+
+            //Prepare mesh skinning settings
+            foreach (var iomesh in model.Meshes)
+            {
+                for (int v = 0; v < iomesh.Vertices.Count; v++)
+                {
+                    if (settings.LimitSkinCount || iomesh.Vertices[v].Envelope.Weights.Count > 4)
+                        iomesh.Vertices[v].Envelope.LimtSkinCount(settings.SkinCountLimit);
+                    iomesh.Vertices[v].Envelope.NormalizeByteType(settings.BoneWeights.Scale);
+                }
+            }
+
             //Import mesh data
             foreach (var mesh in model.Meshes)
                 ConvertMesh(scene, mesh, gfxModel, skinningMatrices, settings);
@@ -287,25 +300,8 @@ namespace CtrLibrary.Bcres
             int skinningCount = 0;
             int singleBindIndex = 0;
 
-            if (settings.BoneWeights.Format == PICAAttributeFormat.Ubyte)
-            {
-                for (int v = 0; v < iomesh.Vertices.Count; v++)
-                    iomesh.Vertices[v].Envelope.NormalizeByteType();
-            }
-
             //Calculate skinning amount from max amount of weights used
             skinningCount = iomesh.Vertices.Max(x => x.Envelope.Weights.Count);
-
-            if (skinningCount > 4)
-            {
-                //Remove extra weights if required
-                for (int v = 0; v < iomesh.Vertices.Count; v++)
-                {
-                    iomesh.Vertices[v].Envelope.LimtSkinCount(4);
-                    iomesh.Vertices[v].Envelope.NormalizeByteType();
-                }
-                skinningCount = 4;
-            }
 
             //Check how many bones are used total
             var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();

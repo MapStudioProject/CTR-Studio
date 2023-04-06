@@ -80,8 +80,11 @@ namespace CtrLibrary
 
                 ImGui.Checkbox("Flip UVs", ref Settings.FlipUVs);
                 ImGui.Checkbox("Optimize Vertices", ref Settings.Optimize);
-
-                
+                ImGui.Checkbox("Limit Skin Count", ref Settings.LimitSkinCount);
+                if (Settings.LimitSkinCount)
+                {
+                    ImGui.SliderInt("Skin Count Limit", ref Settings.SkinCountLimit, 0, 4);
+                }
 
                 ImGui.EndTabItem();
             }
@@ -147,7 +150,7 @@ namespace CtrLibrary
                     //Todo the game uses shorts but these are tricky to encode nicely
                     //Float will work but will increase file size
                     Settings.Position.Format = PICAAttributeFormat.Float;
-                    Settings.TexCoord.Scale = 1.0f;
+                    Settings.Position.Scale = 1.0f;
                     break;
             }
         }
@@ -352,6 +355,10 @@ namespace CtrLibrary
         /// </summary>
         public bool FlipUVs = false;
 
+        public bool LimitSkinCount = false;
+
+        public int SkinCountLimit = 4;
+
         /// <summary>
         /// The preset file to assign to all materials (if not using original material setting)
         /// </summary>
@@ -363,7 +370,7 @@ namespace CtrLibrary
         public AttributeSetting TexCoord = new AttributeSetting(PICAAttributeFormat.Float, 1.0f);
         public AttributeSetting BoneIndices = new AttributeSetting(PICAAttributeFormat.Byte, 1);
         public AttributeSetting Colors = new AttributeSetting(PICAAttributeFormat.Byte, 1.0f / 255f);
-        public AttributeSetting BoneWeights = new AttributeSetting(PICAAttributeFormat.Byte, 1.0f / 255f);
+        public AttributeSetting BoneWeights = new AttributeSetting(PICAAttributeFormat.Byte, 0.01f);
         public AttributeSetting Tangents = new AttributeSetting(PICAAttributeFormat.Float, 1.0f);
 
         /// <summary>

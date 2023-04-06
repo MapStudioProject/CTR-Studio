@@ -74,7 +74,7 @@ namespace CtrLibrary.Bch
                     dlg.FilePath.ToLower().EndsWith(".obj"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 400, () =>
+                    DialogHandler.Show("Importer", 400, 500, () =>
                     {
                         importerUI.Render();
                     }, (o) =>
@@ -300,7 +300,7 @@ namespace CtrLibrary.Bch
                              dlg.FilePath.ToLower().EndsWith(".obj"))
                 {
                     CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 400, () =>
+                    DialogHandler.Show("Importer", 400, 500, () =>
                     {
                         importerUI.Render();
                     }, (o) =>

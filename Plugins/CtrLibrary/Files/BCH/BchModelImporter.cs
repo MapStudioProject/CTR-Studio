@@ -173,6 +173,18 @@ namespace CtrLibrary.Bch
                 }
             }
 
+            //Prepare mesh skinning settings
+            foreach (var iomesh in model.Meshes)
+            {
+                for (int v = 0; v < iomesh.Vertices.Count; v++)
+                {
+                    if (settings.LimitSkinCount || iomesh.Vertices[v].Envelope.Weights.Count > 4)
+                        iomesh.Vertices[v].Envelope.LimtSkinCount(settings.SkinCountLimit);
+                    iomesh.Vertices[v].Envelope.NormalizeByteType(settings.BoneWeights.Scale);
+
+                    iomesh.Vertices[v].Envelope.Weights = iomesh.Vertices[v].Envelope.Weights.OrderByDescending(x => x.Weight).ToList();
+                }
+            }
 
             if (!settings.UseSingleAttributeBuffer)
             {
@@ -212,13 +224,6 @@ namespace CtrLibrary.Bch
                 {
                     h3dModel.MeshNodesTree.Add(meshName);
                     h3dModel.MeshNodesVisibility.Add(true);
-                }
-
-                for (int v = 0; v < iomesh.Vertices.Count; v++)
-                {
-                    iomesh.Vertices[v].Envelope.NormalizeByteType();
-                    //Also sort the weights largest to smallest
-                    iomesh.Vertices[v].Envelope.Weights = iomesh.Vertices[v].Envelope.Weights.OrderByDescending(x => x.Weight).ToList();
                 }
 
                 int singleBindIndex = 0;
@@ -321,18 +326,8 @@ namespace CtrLibrary.Bch
                 h3dModel.MeshNodesVisibility.Add(true);
             }
 
-            for (int v = 0; v < iomesh.Vertices.Count; v++)
-                iomesh.Vertices[v].Envelope.NormalizeByteType();
-
             int skinningCount = 0;
             int singleBindIndex = 0;
-
-            //Normalize the weights as byte weights if requried
-            if (settings.BoneWeights.Format == PICAAttributeFormat.Ubyte)
-            {
-                for (int v = 0; v < iomesh.Vertices.Count; v++)
-                    iomesh.Vertices[v].Envelope.NormalizeByteType();
-            }
 
             //Calculate skinning amount from max amount of weights used
             skinningCount = iomesh.Vertices.Max(x => x.Envelope.Weights.Count);

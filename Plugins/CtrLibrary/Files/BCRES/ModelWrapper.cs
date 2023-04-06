@@ -64,7 +64,7 @@ namespace CtrLibrary.Bcres
         public void Import(string filePath)
         {
             CtrModelImportUI importerUI = new CtrModelImportUI();
-            DialogHandler.Show("Importer", 400, 400, () =>
+            DialogHandler.Show("Importer", 400, 500, () =>
             {
                 importerUI.Render();
             }, (o) =>
@@ -305,7 +305,7 @@ namespace CtrLibrary.Bcres
                     CtrModelImportUI importerUI = new CtrModelImportUI();
                     importerUI.Settings.DisableSkeleton = !(this.Model is GfxModelSkeletal);
 
-                    DialogHandler.Show("Importer", 400, 400, () =>
+                    DialogHandler.Show("Importer", 400, 500, () =>
                     {
                         importerUI.Render();
                     }, (o) =>
