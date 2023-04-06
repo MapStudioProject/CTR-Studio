@@ -13,6 +13,11 @@ An editor for 3DS formats including BCH and BCRES.
     </a>
 </p>
 
+## Requirements
+
+Net6.0 runtime to run https://dotnet.microsoft.com/en-us/download/dotnet/6.0.
+
+C++ resdist x64 https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
 ## Features (BCRES/BCH)
 - Export/replacing for models with full rig support, custom bones, vertex colors and uv layers.
