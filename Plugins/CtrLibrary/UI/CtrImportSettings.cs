@@ -22,6 +22,16 @@ namespace CtrLibrary
         /// </summary>
         public CtrImportSettings Settings = new CtrImportSettings();
 
+        private ImportPreset ImportSettingsPreset = ImportPreset.Default;
+
+        public enum ImportPreset
+        {
+            Default,
+            Smash3DS,
+            AnimalCrossing,
+            Pokemon,
+        }
+
         //Preset selector to toggle the material to assign as.
         MaterialPresetSelectionDialog Preset = new MaterialPresetSelectionDialog();
 
@@ -40,6 +50,11 @@ namespace CtrLibrary
         {
             if (ImGui.Button("Save Settings"))
                 Settings.Save();
+
+            ImguiCustomWidgets.ComboScrollable("Settings Preset", ImportSettingsPreset.ToString(), ref ImportSettingsPreset, () =>
+            {
+                this.SetPreset();
+            });
 
             ImGui.BeginTabBar("importTabs");
             if (ImguiCustomWidgets.BeginTab("importTabs", "Info"))
@@ -103,6 +118,38 @@ namespace CtrLibrary
             ImGui.EndTabBar();
 
             DialogHandler.DrawCancelOk();
+        }
+
+        private void SetPreset()
+        {
+            Settings = CtrImportSettings.Load();
+            switch (ImportSettingsPreset)
+            {
+                case ImportPreset.Pokemon:
+                    Settings.IsPokemon = true; //Custom vertex shader settings and custom user data
+                    break;
+                case ImportPreset.AnimalCrossing: 
+                    Settings.ImportVertexColors = false; //Hemi light usage. No vertex colors
+                    break;
+                case ImportPreset.Smash3DS: 
+                    Settings.ImportVertexColors = false; //Hemi light usage. No vertex colors
+                    Settings.UseSingleAttributeBuffer = true; //Single buffer
+                    Settings.IsSmash3DS = true; //Custom vertex shader settings
+                    Settings.BoneWeights.Scale = 0.01f; //Required scale for vertex shader
+                    //Required formats for vertex shader
+                    Settings.BoneWeights.Format = PICAAttributeFormat.Byte;
+                    Settings.BoneIndices.Format = PICAAttributeFormat.Byte;
+                    Settings.BoneIndices.Scale = 1;
+                    Settings.Normal.Format = PICAAttributeFormat.Byte;
+                    Settings.Normal.Scale = 1.0f / sbyte.MaxValue;
+                    Settings.TexCoord.Format = PICAAttributeFormat.Short;
+                    Settings.TexCoord.Scale = 1.0f / short.MaxValue;
+                    //Todo the game uses shorts but these are tricky to encode nicely
+                    //Float will work but will increase file size
+                    Settings.Position.Format = PICAAttributeFormat.Float;
+                    Settings.TexCoord.Scale = 1.0f;
+                    break;
+            }
         }
 
         private void DrawMatPreset()
@@ -251,12 +298,19 @@ namespace CtrLibrary
         /// <summary>
         /// Determines to use Smash 3DS specific vertex shader adjustments on import.
         /// </summary>
-        public bool IsSmash3DS = false;
+        public bool IsSmash3DS = true;
 
         /// <summary>
         /// Determines to keep original materials during import.
         /// </summary>
         public bool UseOriginalMaterials = true;
+
+        /// <summary>
+        /// Determines to load the raw vertex data into one buffer.
+        /// Indices will index just this one buffer.
+        /// Used by Smash 3DS
+        /// </summary>
+        public bool UseSingleBuffer = false;
 
         /// <summary>
         /// Determines to remove culling for both back/front faces.

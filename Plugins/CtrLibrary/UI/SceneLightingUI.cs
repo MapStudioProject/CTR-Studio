@@ -76,18 +76,25 @@ namespace CtrLibrary.UI
                 {
                     bool update = false;
 
-                    update |= ImGui.Checkbox("Enabled", ref light.Enabled);
-                    update |= ImGui.Checkbox("TwoSidedDiffuse", ref light.TwoSidedDiffuse);
+                    if (ImGui.CollapsingHeader("Hemi Lighting"))
+                    {
+                        update |= ImGui.ColorEdit3("Sky Color", ref Renderer.GlobalHsLSCol);
+                        update |= ImGui.ColorEdit3("Ground Color", ref Renderer.GlobalHsLGCol);
+                    }
+                    if (ImGui.CollapsingHeader("Lighting"))
+                    {
+                        update |= ImGui.Checkbox("Enabled", ref light.Enabled);
+                        update |= ImGui.Checkbox("TwoSidedDiffuse", ref light.TwoSidedDiffuse);
 
-                    BcresUIHelper.DrawEnum("Type", ref light.Type, () => { update = true; });
-                    update |= EditVec3("Position", ref light.Position);
-                    update |= EditVec3("Direction", ref light.Direction);
+                        BcresUIHelper.DrawEnum("Type", ref light.Type, () => { update = true; });
+                        update |= EditVec3("Position", ref light.Position);
+                        update |= EditVec3("Direction", ref light.Direction);
 
-                    update |= EditColor("Diffuse", ref light.Diffuse); ImGui.SameLine();
-                    update |= EditColor("Specular0", ref light.Specular0); ImGui.SameLine();
-                    update |= EditColor("Specular1", ref light.Specular1);
-                    update |= EditColor("Ambient", ref light.Ambient);
-
+                        update |= EditColor("Diffuse", ref light.Diffuse); ImGui.SameLine();
+                        update |= EditColor("Specular0", ref light.Specular0); ImGui.SameLine();
+                        update |= EditColor("Specular1", ref light.Specular1);
+                        update |= EditColor("Ambient", ref light.Ambient);
+                    }
                     if (update)
                     {   
                         GLContext.ActiveContext.UpdateViewport = true;

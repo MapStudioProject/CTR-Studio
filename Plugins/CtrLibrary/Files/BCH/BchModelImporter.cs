@@ -136,7 +136,7 @@ namespace CtrLibrary.Bch
                 skinningMatrices[i] = inverted;
             }
             //Prepare and import materials 
-            var meshes = CleanupMeshes(model.Meshes);
+            var meshes = model.Meshes;
             foreach (var mat in scene.Materials)
             {
                 //A material does not exist in the file, import a default material to use.
@@ -172,17 +172,146 @@ namespace CtrLibrary.Bch
                     }
                 }
             }
-            //Import mesh data
-            foreach (var mesh in meshes)
+
+
+            if (!settings.UseSingleAttributeBuffer)
             {
-                ConvertMesh(scene, mesh, h3dModel, skinningMatrices, settings);
+                //Import mesh data
+                foreach (var mesh in meshes)
+                    ConvertMesh(scene, mesh, h3dModel, skinningMatrices, settings);
             }
+            else
+            {
+                //Setup meshes with vertices into one buffer
+                ConvertMeshesSingleBuffer(scene, meshes, h3dModel, skinningMatrices, settings);
+            }
+
             h3dModel.MeshNodesCount = h3dModel.MeshNodesTree.Count;
 
             return h3dModel;
         }
+
+        //Single buffer used by smash 3ds
+        private static void ConvertMeshesSingleBuffer(IONET.Core.IOScene scene, List<IOMesh> meshes,
+    H3DModel h3dModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings)
+        {
+            var skinningCount = GetMaxSkinCount(meshes);
+            var attributes = CreateSingleBufferAttributes(meshes, skinningCount, settings);
+
+            //Total vertex buffer in single list
+            List<PICAVertex> verts = new List<PICAVertex>();
+
+            var vertexStride = VerticesConverter.CalculateStride(attributes);
+            int vertexID = 0;
+
+            foreach (var iomesh in meshes)
+            {
+                string meshName = iomesh.Name;
+
+                if (!string.IsNullOrEmpty(meshName) && !h3dModel.MeshNodesTree.Contains(meshName))
+                {
+                    h3dModel.MeshNodesTree.Add(meshName);
+                    h3dModel.MeshNodesVisibility.Add(true);
+                }
+
+                for (int v = 0; v < iomesh.Vertices.Count; v++)
+                {
+                    iomesh.Vertices[v].Envelope.NormalizeByteType();
+                    //Also sort the weights largest to smallest
+                    iomesh.Vertices[v].Envelope.Weights = iomesh.Vertices[v].Envelope.Weights.OrderByDescending(x => x.Weight).ToList();
+                }
+
+                int singleBindIndex = 0;
+
+                //Check how many bones are used total
+                var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();
+
+                if (skinningCount == 0)
+                {
+                    //Bind bone node from mesh
+                    var singleBindBone = h3dModel.Skeleton.FirstOrDefault(x => x.Name == meshName);
+                    //Bind bone node from single skinned bone
+                    if (boneList?.Count == 1)
+                        singleBindBone = h3dModel.Skeleton.FirstOrDefault(x => x.Name == boneList[0]);
+                    //Get bind matrix for single binds
+                    if (singleBindBone != null && h3dModel.Skeleton.Find(singleBindBone.Name) != -1)
+                        singleBindIndex = h3dModel.Skeleton.Find(singleBindBone.Name);
+
+                    //Convert the positions into local space for single binds
+                    foreach (var vertex in iomesh.Vertices)
+                    {
+                        //Rigid binds to local space
+                        if (skinningMatrices.Length > singleBindIndex)
+                        {
+                            vertex.Position = Vector3.Transform(vertex.Position, skinningMatrices[singleBindIndex]);
+                            vertex.Normal = Vector3.TransformNormal(vertex.Normal, skinningMatrices[singleBindIndex]);
+                        }
+                    }
+                }
+
+                H3DMesh mesh = new H3DMesh()
+                {
+                    Type = H3DMeshType.Normal,
+                };
+                h3dModel.AddMesh(mesh);
+
+                //Skinning
+                mesh.Skinning = H3DMeshSkinning.Mixed;
+
+                //Attributes
+                mesh.Attributes = attributes;
+                mesh.Layer = 0;
+                mesh.MaterialIndex = 0;
+                mesh.VertexStride = vertexStride;
+
+                PICAVertex[] vertices = GetPICAVertices(iomesh.Vertices, skinningMatrices, h3dModel, skinningCount == 1).ToArray();
+
+                //Generate sub meshes.
+                //Very important that this is called before the raw buffer is created
+                foreach (var poly in iomesh.Polygons)
+                {
+                    //Generates the sub meshes representing the face data
+                    var subMeshes = GenerateSubMeshes(h3dModel, iomesh, poly, skinningCount, singleBindIndex, ref vertices, 16, vertexID);
+                    mesh.SubMeshes.AddRange(subMeshes);
+                    //Map the material if one matches from the .dae. 
+                    var mat = scene.Materials.FirstOrDefault(x => x.Name == poly.MaterialName);
+                    if (mat != null)
+                    {
+                        //Searh for the material. This should never be -1 as all the materials are added from the file if used.
+                        var index = h3dModel.Materials.Find(mat.Label);
+                        if (index != -1)
+                            mesh.MaterialIndex = (ushort)index;
+                    }
+                    else
+                        Console.WriteLine($"Cannot find material {poly.MaterialName}!");
+                }
+
+                verts.AddRange(vertices);
+
+                //Increase vertex ID used for the index buffer as it uses one global list
+                vertexID += vertices.Length;
+
+                //Check what material gets used and set the mesh layer to what is ideal
+                mesh.Layer = h3dModel.Materials[mesh.MaterialIndex].MaterialParams.RenderLayer;
+
+                mesh.NodeIndex = 0;
+                for (int i = 0; i < h3dModel.MeshNodesTree.Count; i++)
+                {
+                    if (h3dModel.MeshNodesTree.Find(i) == meshName)
+                        mesh.NodeIndex = (ushort)i;
+                }
+                mesh.MetaData = new H3DMetaData();
+                mesh.UpdateBoolUniforms(h3dModel.Materials[mesh.MaterialIndex], settings.IsPokemon, settings.IsSmash3DS);
+            }
+            //Lastly go through each mesh and make sure the indices use the single vertex list
+            var vertexBuffer = VerticesConverter.GetBuffer(verts, attributes, vertexStride);
+
+            for (int i = 0; i < h3dModel.Meshes.Count; i++)
+                h3dModel.Meshes[i].RawBuffer = vertexBuffer;
+        }
+
         private static void ConvertMesh(IONET.Core.IOScene scene, IOMesh iomesh, 
-            H3DModel h3dModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings)
+            H3DModel h3dModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings) 
         {
             string meshName = iomesh.Name;
 
@@ -248,7 +377,7 @@ namespace CtrLibrary.Bch
             var attributes = CreateAttributes(iomesh, skinningCount, settings);
 
             //Convert attributes into pica attributes for conversion into a buffer
-            var vertices = GetPICAVertices(iomesh.Vertices, skinningMatrices, h3dModel, skinningCount == 1).ToArray();
+            PICAVertex[] vertices = GetPICAVertices(iomesh.Vertices, skinningMatrices, h3dModel, skinningCount == 1).ToArray();
 
             //Skinning
             mesh.Skinning = H3DMeshSkinning.Mixed;
@@ -295,7 +424,7 @@ namespace CtrLibrary.Bch
                     mesh.NodeIndex = (ushort)i;
             }
 
-            if (!settings.IsSmash3DS)
+            if (!settings.IsSmash3DS) //Smash 3DS does not use fixed attributes
             {
                 //Create a default color set if one is not present
                 if (settings.ImportVertexColors && !mesh.Attributes.Any(x => x.Name == PICAAttributeName.Color))
@@ -400,7 +529,7 @@ namespace CtrLibrary.Bch
         }
 
         static List<H3DSubMesh> GenerateSubMeshes(H3DModel gfxModel, IOMesh mesh, IOPolygon poly,
-            int skinningCount, int singleBindIndex, ref PICAVertex[] vertices, int max_bones = 16)
+            int skinningCount, int singleBindIndex, ref PICAVertex[] vertices, int max_bones = 16, int indexStart = 0)
         {
             Dictionary<PICAVertex, ushort> remapVertex = new Dictionary<PICAVertex, ushort>();
             List<PICAVertex> newVertices = new List<PICAVertex>();
@@ -491,7 +620,7 @@ namespace CtrLibrary.Bch
                             newVertices.Add(v);
                         }
                         //Link the index with the remapped vertex placement
-                        Indices.Add(remapVertex[v]);
+                        Indices.Add((ushort)(indexStart + remapVertex[v]));
                     }
 
                     //Add each triangle index to the bone stack for checking if it reached the bone counter
@@ -525,8 +654,6 @@ namespace CtrLibrary.Bch
                     SM.Skinning = H3DSubMeshSkinning.Rigid;
                 if (skinningCount > 1)
                     SM.Skinning = H3DSubMeshSkinning.Smooth;
-                //Check what format to use indices. 255 > is larger than a byte
-                bool is16Bit = Indices.Any(x => x > 0xFF);
                 //Face data
                 SM.PrimitiveMode = PICAPrimitiveMode.Triangles;
                 SM.Indices = Indices.ToArray();
@@ -547,6 +674,109 @@ namespace CtrLibrary.Bch
             vertices = newVertices.ToArray();
 
             return subMeshes;
+        }
+
+        //Generates a single skin count for single buffer attributes
+        static int GetMaxSkinCount(List<IOMesh> meshes)
+        {
+            return meshes.Max(x => x.Vertices.Max(x => x.Envelope.Weights.Count));
+        }
+
+        //Generates a single list of attributes for all meshes
+        //This is required for smash 3ds with mbn generating
+        static List<PICAAttribute> CreateSingleBufferAttributes(List<IOMesh> meshes, int skinningCount, CtrImportSettings settings)
+        {
+            List<PICAAttribute> attributes = new List<PICAAttribute>();
+            //Vertex positions
+            attributes.Add(new PICAAttribute()
+            {
+                Elements = 3,
+                Format = settings.Position.Format,
+                Name = PICAAttributeName.Position,
+                Scale = settings.Position.Scale,
+            });
+            //Vertex normals
+            if (meshes.Any(x => x.HasNormals))
+            {
+                attributes.Add(new PICAAttribute()
+                {
+                    Elements = 3,
+                    Format = settings.Normal.Format,
+                    Name = PICAAttributeName.Normal,
+                    Scale = settings.Normal.Scale,
+                });
+            }
+            //Texture coordinates (supports up to 3)
+            for (int i = 0; i < 3; i++)
+            {
+                if (meshes.Any(x => x.HasUVSet(i)))
+                {
+                    attributes.Add(new PICAAttribute()
+                    {
+                        Elements = 2,
+                        Format = settings.TexCoord.Format,
+                        Name = (PICAAttributeName)((int)PICAAttributeName.TexCoord0 + i),
+                        Scale = settings.TexCoord.Scale,
+                    });
+                }
+            }
+            //Tangents for lighting
+            if (settings.ImportTangents)
+            {
+                attributes.Add(new PICAAttribute()
+                {
+                    Elements = 3,
+                    Format = settings.Tangents.Format,
+                    Name = PICAAttributeName.Tangent,
+                    Scale = settings.Tangents.Scale,
+                });
+            }
+            //Vertex colors
+            if (settings.ImportVertexColors && meshes.Any(x => x.HasColorSet(0)))
+            {
+                var format = settings.BoneWeights.Format;
+                if (format == PICAAttributeFormat.Byte)
+                    format = PICAAttributeFormat.Ubyte;
+
+                attributes.Add(new PICAAttribute()
+                {
+                    Elements = 4,
+                    Format = format,
+                    Name = PICAAttributeName.Color,
+                    Scale = settings.Colors.Scale,
+                });
+            }
+            //Use bone indices for rigging
+            if (meshes.Any(x => x.HasEnvelopes()) && skinningCount > 0)
+            {
+                var indformat = settings.BoneIndices.Format;
+                if (indformat == PICAAttributeFormat.Byte)
+                    indformat = PICAAttributeFormat.Ubyte;
+
+                attributes.Add(new PICAAttribute()
+                {
+                    Elements = skinningCount,
+                    Format = indformat,
+                    Name = PICAAttributeName.BoneIndex,
+                    Scale = settings.BoneIndices.Scale,
+                });
+                //Skinning over 1 uses weights for blending
+                if (skinningCount > 1)
+                {
+                    var format = settings.BoneWeights.Format;
+                    if (format == PICAAttributeFormat.Byte)
+                        format = PICAAttributeFormat.Ubyte;
+
+                    attributes.Add(new PICAAttribute()
+                    {
+                        Elements = skinningCount,
+                        Format = format,
+                        Name = PICAAttributeName.BoneWeight,
+                        Scale = settings.BoneWeights.Scale,
+                    });
+                }
+            }
+            return attributes;
         }
 
         static List<PICAAttribute> CreateAttributes(IOMesh mesh, int skinningCount, CtrImportSettings settings)
@@ -702,55 +932,6 @@ namespace CtrLibrary.Bch
                 index++;
             }
             return verts;
-        }
-
-        //Cleanups the many sub meshes SPICA creates on export by combining same material mapping
-        static List<IOMesh> CleanupMeshes(List<IOMesh> meshes)
-        {
-            return meshes;
-
-            List<string> input = new List<string>();
-
-            List<IOMesh> newList = new List<IOMesh>();
-            foreach (var mesh in meshes)
-            {
-                if (input.Contains(mesh.Polygons[0].MaterialName))
-                    continue;
-
-                input.Add(mesh.Polygons[0].MaterialName);
-                newList.Add(mesh);
-
-                //Combine meshes by polygons and vertices
-                var meshDupes = meshes.Where(x => x.Polygons[0].MaterialName == mesh.Polygons[0].MaterialName).ToList();
-                if (meshDupes.Count > 1)
-                {
-                    foreach (var msh in meshDupes)
-                    {
-                        if (msh == mesh)
-                            continue;
-
-                        //Combine indices and vertex data, remap indices
-                        IOPolygon poly = mesh.Polygons[0];
-                        foreach (var p in msh.Polygons)
-                        {
-                            Dictionary<IOVertex, int> remapVertex = new Dictionary<IOVertex, int>();
-                            for (int i = 0; i < p.Indicies.Count; i++)
-                            {
-                                var v = msh.Vertices[p.Indicies[i]];
-                                if (!remapVertex.ContainsKey(v))
-                                {
-                                    remapVertex.Add(v, mesh.Vertices.Count);
-                                    mesh.Vertices.Add(v);
-                                }
-                                poly.Indicies.Add(remapVertex[v]);
-                            }
-                            remapVertex.Clear();
-                        }
-                    }
-                    mesh.Optimize();
-                }
-            }
-            return newList;
         }
     }
 }
