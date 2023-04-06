@@ -1,5 +1,6 @@
 ﻿using SPICA.Formats.CtrH3D.Animation;
 using SPICA.Formats.CtrH3D.Model.Material;
+using SPICA.Rendering;
 using SPICA.Rendering.Animation;
 using SPICA.Rendering.SPICA_GL;
 using System;
@@ -13,12 +14,12 @@ namespace CtrLibrary
 {
     internal class MaterialAnimationHandler
     {
-        public static List<Tuple<MaterialState, H3DMaterial>> GetAnimationStates(Rendering.H3DRender render, string name)
+        public static List<Tuple<MaterialState, H3DMaterial>> GetAnimationStates(Renderer render, string name)
         {
             List<Tuple<MaterialState, H3DMaterial>> states = new List<Tuple<MaterialState, H3DMaterial>>();
             if (render == null) return states;
 
-            foreach (var model in render.Renderer.Models)
+            foreach (var model in render.Models)
             {
                 //Get the animation state and update it
                 var state = model.GetState(name);
@@ -32,6 +33,7 @@ namespace CtrLibrary
 
         public static void SetMaterialState(AnimationWrapper anim, MaterialState State, H3DMaterial mat, AnimationWrapper.ElementNode group)
         {
+            State.IsAnimated = true;
             var Params = mat.MaterialParams;
 
             H3DTextureCoord[] TC = new H3DTextureCoord[]

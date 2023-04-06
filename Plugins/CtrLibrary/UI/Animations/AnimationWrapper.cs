@@ -186,12 +186,29 @@ namespace CtrLibrary
 
         public override void Reset()
         {
-            foreach (var render in H3DRender.RenderCache)
+            if (H3DAnimation.AnimationType == H3DAnimationType.Skeletal)
             {
-                foreach (var model in render.Models)
+                foreach (var render in H3DRender.RenderCache)
                 {
-                    model.SkeletalAnim.SetAnimations(new List<H3DAnimation>());
-                    model.SkeletalAnim.Stop();
+                    foreach (var model in render.Models)
+                    {
+                        model.SkeletalAnim.SetAnimations(new List<H3DAnimation>());
+                        model.SkeletalAnim.Stop();
+                    }
+                }
+            }
+            if (H3DAnimation.AnimationType == H3DAnimationType.Material)
+            {
+                foreach (ElementNode group in this.AnimGroups)
+                {
+                    foreach (var render in H3DRender.RenderCache)
+                    {
+                        foreach (var state in MaterialAnimationHandler.GetAnimationStates(render, group.Name))
+                        {
+                            state.Item1.Reset(state.Item2);
+                            state.Item1.IsAnimated = false;
+                        }
+                    }
                 }
             }
             base.Reset();
@@ -238,8 +255,11 @@ namespace CtrLibrary
                 {
                     case H3DAnimationType.Material:
                         {
-                            foreach (var state in MaterialAnimationHandler.GetAnimationStates(Render, group.Name))
-                                MaterialAnimationHandler.SetMaterialState(this, state.Item1, state.Item2, group);
+                            foreach (var render in H3DRender.RenderCache)
+                            {
+                                foreach (var state in MaterialAnimationHandler.GetAnimationStates(render, group.Name))
+                                    MaterialAnimationHandler.SetMaterialState(this, state.Item1, state.Item2, group);
+                            }
                         }
                         break;
                     case H3DAnimationType.Skeletal:
