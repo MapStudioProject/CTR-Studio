@@ -363,7 +363,7 @@ namespace CtrLibrary
         public AttributeSetting TexCoord = new AttributeSetting(PICAAttributeFormat.Float, 1.0f);
         public AttributeSetting BoneIndices = new AttributeSetting(PICAAttributeFormat.Byte, 1);
         public AttributeSetting Colors = new AttributeSetting(PICAAttributeFormat.Byte, 1.0f / 255f);
-        public AttributeSetting BoneWeights = new AttributeSetting(PICAAttributeFormat.Byte, 1.0f / 255f);
+        public AttributeSetting BoneWeights = new AttributeSetting(PICAAttributeFormat.Byte, 0.01f);
         public AttributeSetting Tangents = new AttributeSetting(PICAAttributeFormat.Float, 1.0f);
 
         /// <summary>
