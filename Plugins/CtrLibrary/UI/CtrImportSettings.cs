@@ -298,7 +298,7 @@ namespace CtrLibrary
         /// <summary>
         /// Determines to use Smash 3DS specific vertex shader adjustments on import.
         /// </summary>
-        public bool IsSmash3DS = true;
+        public bool IsSmash3DS = false;
 
         /// <summary>
         /// Determines to keep original materials during import.
