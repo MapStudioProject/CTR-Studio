@@ -88,7 +88,7 @@ namespace CtrLibrary
                         g.Name = targetName;
                         g.Value.Load(v.Value);
                         elemNode.SubAnimGroups.Add(g);
-                    }
+                    } 
                     break;
                 case H3DPrimitiveType.Boolean:
                     {
@@ -224,6 +224,20 @@ namespace CtrLibrary
                     {
                         model.SkeletalAnim.SetAnimations(new List<H3DAnimation>() { H3DAnimation });
                         model.SkeletalAnim.Play();
+                    }
+                }
+            }
+            if (H3DAnimation.AnimationType == H3DAnimationType.Material)
+            {
+                foreach (ElementNode group in this.AnimGroups)
+                {
+                    foreach (var render in H3DRender.RenderCache)
+                    {
+                        foreach (var state in MaterialAnimationHandler.GetAnimationStates(render, group.Name))
+                        {
+                            state.Item1.Reset(state.Item2);
+                            state.Item1.IsAnimated = true;
+                        }
                     }
                 }
             }
