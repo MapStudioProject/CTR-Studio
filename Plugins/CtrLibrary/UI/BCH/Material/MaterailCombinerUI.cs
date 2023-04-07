@@ -829,7 +829,7 @@ namespace CtrLibrary
                     "Texture 0: Use First Texture.\n" +
                     "Texture 1: Use Second Texture.\n" +
                     "Texture 2: Use Third Texture.\n" +
-                    "Previous Buffer: Use the stage with update buffer enabled.\n" +
+                    "Previous Buffer: Use the previous stage with update buffer enabled or uses buffer color.\n" +
                     "Previous: Use the last stage before the current one.\n" +
                     "Constant: Use a specified color.");
 

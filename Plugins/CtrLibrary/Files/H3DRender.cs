@@ -124,7 +124,7 @@ namespace CtrLibrary.Rendering
                 {
                     Ambient = new Color4(0.1f, 0.1f, 0.1f, 1.0f),
                     Diffuse = new Color4(0.4f, 0.4f, 0.4f, 1.0f),
-                    Specular0 = new Color4(0.5f, 0.5f, 0.5f, 1.0f),
+                    Specular0 = new Color4(0.3f, 0.3f, 0.3f, 1.0f),
                     Specular1 = new Color4(0.4f, 0.4f, 0.4f, 1.0f),
                     TwoSidedDiffuse = true,
                     Position = new OpenTK.Vector3(0, 0, 0),
@@ -132,7 +132,7 @@ namespace CtrLibrary.Rendering
                     Type = LightType.PerFragment,
                 });
             }
-            Renderer.Merge(Scene);
+            Renderer.Merge(Scene);  
 
             //Load the render cache for loading globally renderable data (textures, luts)
             foreach (var tex in Renderer.Textures)
@@ -218,6 +218,9 @@ namespace CtrLibrary.Rendering
             Renderer.Camera.ProjectionMatrix = context.Camera.ProjectionMatrix;
             Renderer.Camera.ViewMatrix = context.Camera.ViewMatrix;
             Renderer.Camera.Translation = context.Camera.TargetPosition;
+
+            foreach (var model in Renderer.Models)
+                model.Transform = this.Transform.TransformMatrix;
 
             //Draw the models
             Renderer.Render();

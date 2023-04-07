@@ -386,6 +386,7 @@ namespace CtrLibrary
             DrawColorUI("Constant 3", ref Material.MaterialParams.Constant3Color); ImGui.NextColumn();
             DrawColorUI("Constant 4", ref Material.MaterialParams.Constant4Color); ImGui.NextColumn();
             DrawColorUI("Constant 5", ref Material.MaterialParams.Constant5Color); ImGui.NextColumn();
+            DrawColorUI("Buffer Color", ref Material.MaterialParams.TexEnvBufferColor); ImGui.NextColumn();
 
             ImGui.Columns(1);
         }
