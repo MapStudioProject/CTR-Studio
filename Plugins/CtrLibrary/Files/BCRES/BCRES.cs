@@ -108,7 +108,7 @@ namespace CtrLibrary.Bcres
         private ModelFolder ModelFolder;
         //Folder for texture data
         private Bch.TextureFolder<H3DTexture> TextureFolder;
-        private Bch.LUTFolder LUTFolder;
+        private Bch.LUTFolder<H3DLUT> LUTFolder;
 
         //Shader window for debugging and viewing how shader code is generated
         private ShaderWindow ShaderWindow;
@@ -162,7 +162,7 @@ namespace CtrLibrary.Bcres
 
             ModelFolder = new ModelFolder(this, BcresData, h3d);
             TextureFolder = new Bch.TextureFolder<H3DTexture>(Render, h3d.Textures);
-            LUTFolder = new Bch.LUTFolder(Render, h3d);
+            LUTFolder = new Bch.LUTFolder<H3DLUT>(Render, h3d.LUTs);
 
             Root.AddChild(ModelFolder);
             Root.AddChild(TextureFolder);
@@ -233,7 +233,7 @@ namespace CtrLibrary.Bcres
             {
                 BcresData.Textures.Add(GfxTexture.FromH3D(tex));
             }
-            foreach (var lut in LUTFolder.GetLuts())
+            foreach (var lut in LUTFolder.SectionList)
                 BcresData.LUTs.Add(SPICA.Formats.CtrGfx.LUT.GfxLUT.FromH3D(lut));
             
             Gfx.Save(stream, BcresData);

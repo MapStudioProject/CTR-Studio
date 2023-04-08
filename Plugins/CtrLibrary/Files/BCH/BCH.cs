@@ -120,7 +120,7 @@ namespace CtrLibrary.Bch
         private MBn ModelBinary;
 
         //Folder for model data
-        private ModelFolder ModelFolder;
+        private ModelFolder<H3DModel> ModelFolder;
 
         //Folder for texture data
         private TextureFolder<H3DTexture> TextureFolder;
@@ -135,17 +135,18 @@ namespace CtrLibrary.Bch
         public void Load(H3D h3d)
         {
             H3DData = h3d;
+
+            //Check for optional .mbn file binary which is used in Smash 3DS to store mesh buffers
             if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
             {
                 ModelBinary = new MBn(FileInfo.FilePath.Replace(".bch", ".mbn"), H3DData);
                 H3DData = ModelBinary.ToH3D();
             }
-
+            //Create a renderer and add to the editor
             Render = new H3DRender(H3DData, null);
             AddRender(Render);
 
-            Runtime.DisplayBones = true;
-
+            //Display for optional shader window, switch by selected material
             this.Workspace.Outliner.SelectionChanged += delegate
             {
                 var node = this.Workspace.Outliner.SelectedNode;
@@ -156,25 +157,21 @@ namespace CtrLibrary.Bch
                 }
             };
 
-            this.Workspace.Outliner.SelectionChanged += delegate
-            {
-                var node = this.Workspace.Outliner.SelectedNode;
-            };
-
+            //Prepare the global scene lighting to configure in the viewer
             var light = Render.Renderer.Lights[0];
            // AddRender(new SceneLightingUI.LightPreview(light));
-
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {
                 Root.AddChild(lightNode);
             }
 
-            ModelFolder = new ModelFolder(this, H3DData);
+            //Prepare tree nodes to visualize in the gui
+            ModelFolder = new ModelFolder<H3DModel>(this, H3DData, H3DData.Models);
             TextureFolder = new TextureFolder<H3DTexture>(Render, H3DData.Textures);
 
             Root.AddChild(ModelFolder);
             Root.AddChild(TextureFolder);
-            Root.AddChild(new LUTFolder(Render, H3DData));
+            Root.AddChild(new LUTFolder<H3DLUT>(Render, H3DData.LUTs));
 
             AddNodeGroup(H3DData.Shaders, H3DGroupType.Shaders);
             AddNodeGroup(H3DData.Cameras, H3DGroupType.Cameras);
@@ -211,7 +208,7 @@ namespace CtrLibrary.Bch
             if (ModelBinary != null)
                 SaveMbn();
 
-            foreach (CMDL model in ModelFolder.Children)
+            foreach (CMDL<H3DModel> model in ModelFolder.Children)
                 model.OnSave();
 
             H3DData.Textures = TextureFolder.GetTextures();
@@ -263,6 +260,7 @@ namespace CtrLibrary.Bch
             windows.Add(Workspace.ConsoleWindow);
             windows.Add(Workspace.ViewportWindow);
             windows.Add(Workspace.TimelineWindow);
+            windows.Add(Workspace.GraphWindow);
             windows.Add(ShaderWindow);
             return windows;
         }
@@ -374,9 +372,7 @@ namespace CtrLibrary.Bch
                 if (dlg.ShowDialog())
                 {
                     foreach (NodeSection<T> node in this.Children)
-                    {
                         node.Export(Path.Combine(dlg.SelectedPath, $"{node.Header}.json"));
-                    }
                 }
             }
 
@@ -603,7 +599,12 @@ namespace CtrLibrary.Bch
             //Applies the current UI tree node name to the section used by the binary file.
             public virtual void ReloadName()
             {
-                ((SPICA.Formats.Common.INamed)Section).Name = this.Header;
+                if (Dict.Contains(((INamed)Section).Name))
+                    Dict.Remove(((INamed)Section).Name);
+
+                ((INamed)Section).Name = this.Header;
+
+                Dict.Add((T)Section);
             }
         }
         public static object ReplaceRaw(string filePath, H3DGroupType type)

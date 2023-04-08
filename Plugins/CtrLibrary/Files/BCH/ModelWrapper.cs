@@ -29,10 +29,11 @@ using SPICA.Formats.CtrH3D.Shader;
 using SPICA.Formats.Common;
 using SPICA.Rendering;
 using SixLabors.ImageSharp;
+using static CtrLibrary.Bch.BCH;
 
 namespace CtrLibrary.Bch
 {
-    public class ModelFolder : NodeBase
+    public class ModelFolder<T> : BCH.H3DGroupNode<T> where T : SPICA.Formats.Common.INamed
     {
         private H3D H3DFile;
 
@@ -40,31 +41,46 @@ namespace CtrLibrary.Bch
 
         public override string Header => "Models";
 
-        public ModelFolder(BCH bch, H3D h3D)
+        public override Type ChildNodeType => typeof(CMDL<H3DModel>);
+
+        public ModelFolder(BCH bch, H3D h3D, H3DDict<T> subSections) : base(BCH.H3DGroupType.Models, subSections)
         {
             ParentBCHNode = bch;
             H3DFile = h3D;
-
-            ContextMenus.Add(new MenuItemModel("Import", Add));
-
-            foreach (var model in h3D.Models)
-                AddChild(new CMDL(bch, h3D, model));
+            for (int i = 0; i < subSections.Count; i++)
+                AddChild(new CMDL<T>(bch, h3D, subSections, subSections[i]));
         }
 
         public void OnSave()
         {
-            foreach (CMDL model in this.Children)
+            foreach (CMDL<H3DModel> model in this.Children)
                 model.OnSave();
         }
 
-        public void Add()
+        public override void Add()
+        {
+            //Create section instance
+            var item = Activator.CreateInstance(typeof(T)) as SPICA.Formats.Common.INamed;
+            //Default name
+            item.Name = $"New{this.Type}";
+            //Auto rename possible dupes
+            item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+            //Add section list
+            SectionList.Add((T)item);
+            //Add to UI
+            var node = new CMDL<T>(ParentBCHNode, H3DFile, SectionList, (T)item);
+            AddChild(node);
+            ParentBCHNode.Render.Renderer.Models.Add(new Model(ParentBCHNode.Render.Renderer, (H3DModel)item));
+        }
+
+        public override void Import()
         {
             ImguiFileDialog dlg = new ImguiFileDialog();
             dlg.SaveDialog = false;
             dlg.AddFilter(".dae", "dae");
             dlg.AddFilter(".fbx", "fbx");
             dlg.AddFilter(".smd", "smd");
-            dlg.AddFilter(".bcmdl", "bcmdl");
+            dlg.AddFilter(".bch", "bch");   
 
             if (dlg.ShowDialog())
             {
@@ -87,7 +103,7 @@ namespace CtrLibrary.Bch
                                 {
                                     Name = "NewModel",
                                 };
-                                var modelWrapper = new CMDL(ParentBCHNode, H3DFile, model);
+                                var modelWrapper = new CMDL<H3DModel>(ParentBCHNode, H3DFile, H3DFile.Models, model);
                                 modelWrapper.ImportFile(dlg.FilePath, importerUI.Settings);
                                 AddChild(modelWrapper);
                             }
@@ -104,7 +120,7 @@ namespace CtrLibrary.Bch
                     {
                         Name = "NewModel",
                     };
-                    var modelWrapper = new CMDL(ParentBCHNode, H3DFile, model);
+                    var modelWrapper = new CMDL<H3DModel>(ParentBCHNode, H3DFile, H3DFile.Models, model);
                     modelWrapper.ImportFile(dlg.FilePath, new CtrImportSettings());
                     AddChild(modelWrapper);
                 }
@@ -112,14 +128,21 @@ namespace CtrLibrary.Bch
         }
     }
 
-    public class CMDL : NodeBase, IPropertyUI
+    public class CMDL<T> : NodeSection<T>, IPropertyUI where T : SPICA.Formats.Common.INamed
     {
         internal H3D H3DFile;
 
         /// <summary>
         /// The model instance of the bcres file.
         /// </summary>
-        public H3DModel Model { get; set; }
+        public H3DModel Model
+        {
+            get { return (H3DModel)this.Section; }
+            set
+            {
+                Section = value;
+            }
+        }
 
         public BCH ParentBCHNode;
 
@@ -133,6 +156,12 @@ namespace CtrLibrary.Bch
 
         public Type GetTypeUI() => typeof(BchModelUI);
 
+        public override string[] ExportFilters => new string[] { ".dae", ".fbx", ".smd", ".bcmdl" };
+
+        public override string[] ReplaceFilters => new string[] { ".dae", ".fbx", ".smd", ".bcmdl" };
+
+        public override string DefaultExtension => ".dae";
+
         public void OnLoadUI(object uiInstance)
         {
             ((BchModelUI)uiInstance).Init(this, Model);
@@ -143,21 +172,13 @@ namespace CtrLibrary.Bch
             ((BchModelUI)uiInstance).Render();
         }
 
-        public CMDL(BCH bch, H3D h3dFile, H3DModel model)
+        public CMDL(BCH bch, H3D h3dFile, H3DDict<T> modelList, T model) : base(modelList, model)
         {
             ParentBCHNode = bch;
             H3DFile = h3dFile;
-            Model = model;
             Header = model.Name;
             Icon = MapStudio.UI.IconManager.MODEL_ICON.ToString();
             Tag = Model;
-            this.CanRename = true;
-            ContextMenus.Add(new MenuItemModel("Export", Export));
-            ContextMenus.Add(new MenuItemModel("Replace", Replace));
-            ContextMenus.Add(new MenuItemModel(""));
-            ContextMenus.Add(new MenuItemModel("Rename", () => { this.ActivateRename = true; }));
-            ContextMenus.Add(new MenuItemModel(""));
-            ContextMenus.Add(new MenuItemModel("Delete", Delete));
 
             HasCheckBox = true;
             OnChecked += delegate
@@ -231,11 +252,11 @@ namespace CtrLibrary.Bch
                 mat.OnSave();
         }
 
-        private void Delete()
+        public override bool Delete()
         {
             int result = TinyFileDialog.MessageBoxInfoYesNo(String.Format("Are you sure you want to remove {0}? This cannot be undone.", this.Header));
             if (result != 1)
-                return;
+                return false;
 
             //Index of current model
             int modelIndex = H3DFile.Models.Find(Model.Name);
@@ -246,88 +267,69 @@ namespace CtrLibrary.Bch
             H3DFile.Models.Remove(Model.Name);
             //Remove from gui
             Parent.Children.Remove(this);
+
+            return true;
         }
 
-        private void Export()
+        public override void Export(string filePath)
         {
-            ImguiFileDialog dlg = new ImguiFileDialog();
-            dlg.SaveDialog = true;
-            dlg.FileName = $"{Header}";
-            dlg.AddFilter(".dae", "dae");
-            dlg.AddFilter(".json", "json");
-            dlg.AddFilter(".bcmdl", "bcmdl");
-
-            if (dlg.ShowDialog())
+            if (filePath.EndsWith(".dae"))
             {
-                if (dlg.FilePath.EndsWith(".dae"))
-                {
-                    int modelIndex = H3DFile.Models.Find(Model.Name);
-                    var collada = new SPICA.Formats.Generic.COLLADA.DAE(H3DFile, modelIndex);
-                    collada.Save(dlg.FilePath);
+                int modelIndex = H3DFile.Models.Find(Model.Name);
+                var collada = new SPICA.Formats.Generic.COLLADA.DAE(H3DFile, modelIndex);
+                collada.Save(filePath);
 
-                    string folder = Path.GetDirectoryName(dlg.FilePath);
+                string folder = Path.GetDirectoryName(filePath);
 
-                    foreach (var h3dTex in H3DFile.Textures)
-                    {
-                        //Save image as png
-                        h3dTex.ToBitmap().Save(Path.Combine(folder, $"{h3dTex.Name}.png"));
-                    }
-                }
-                else if (dlg.FilePath.EndsWith(".json"))
-                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Model, Formatting.Indented));
-                else if (dlg.FilePath.EndsWith(".bcmdl"))
+                foreach (var h3dTex in H3DFile.Textures)
                 {
-                    BCH.ExportRaw(dlg.FilePath, Model, BCH.H3DGroupType.Models);
+                    //Save image as png
+                    h3dTex.ToBitmap().Save(Path.Combine(folder, $"{h3dTex.Name}.png"));
                 }
+            }
+            else if (filePath.EndsWith(".json"))
+                File.WriteAllText(filePath, JsonConvert.SerializeObject(Model, Formatting.Indented));
+            else if (filePath.EndsWith(".bcmdl"))
+            {
+                BCH.ExportRaw(filePath, Model, BCH.H3DGroupType.Models);
             }
         }
 
-        private void Replace()
+        public override void Replace(string filePath)
         {
-            ImguiFileDialog dlg = new ImguiFileDialog();
-            dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}";
-            dlg.AddFilter(".dae", "dae");
-            dlg.AddFilter(".fbx", "fbx");
-            dlg.AddFilter(".smd", "smd");
-            dlg.AddFilter(".bcmdl", "bcmdl");
-
-            if (dlg.ShowDialog())
+            if (filePath.ToLower().EndsWith(".dae") ||
+                filePath.ToLower().EndsWith(".fbx") ||
+                filePath.ToLower().EndsWith(".smd") ||
+                filePath.ToLower().EndsWith(".obj"))
             {
-                if (dlg.FilePath.ToLower().EndsWith(".dae") ||
-                             dlg.FilePath.ToLower().EndsWith(".fbx") ||
-                             dlg.FilePath.ToLower().EndsWith(".smd") ||
-                             dlg.FilePath.ToLower().EndsWith(".obj"))
+                CtrModelImportUI importerUI = new CtrModelImportUI();
+                DialogHandler.Show("Importer", 400, 500, () =>
                 {
-                    CtrModelImportUI importerUI = new CtrModelImportUI();
-                    DialogHandler.Show("Importer", 400, 500, () =>
+                    importerUI.Render();
+                }, (o) =>
+                {
+                    if (o)
                     {
-                        importerUI.Render();
-                    }, (o) =>
-                    {
-                        if (o)
+                        try
                         {
-                            try
-                            {
-                                ImportFile(dlg.FilePath, importerUI.Settings);
-                            }
-                            catch (Exception ex)
-                            {
-                                DialogHandler.ShowException(ex);
-                            }
+                            ImportFile(filePath, importerUI.Settings);
                         }
-                    });
-                }
-                else if (dlg.FilePath.ToLower().EndsWith(".bcmdl"))
+                        catch (Exception ex)
+                        {
+                            DialogHandler.ShowException(ex);
+                        }
+                    }
+                });
+            }
+            else if (filePath.ToLower().EndsWith(".bcmdl"))
+            {
+                try
                 {
-                    try
-                    {
-                        ImportFile(dlg.FilePath, new CtrImportSettings());
-                    }
-                    catch (Exception ex)
-                    {
-                        DialogHandler.ShowException(ex);
-                    }
+                    ImportFile(filePath, new CtrImportSettings());
+                }
+                catch (Exception ex)
+                {
+                    DialogHandler.ShowException(ex);
                 }
             }
         }
@@ -511,7 +513,7 @@ namespace CtrLibrary.Bch
 
         public H3DShader TryGetShader()
         {
-            var h3d = (this.Parent.Parent as CMDL).H3DFile;
+            var h3d = (this.Parent.Parent as CMDL<H3DModel>).H3DFile;
             return h3d.Shaders.FirstOrDefault(x => x.Name == Material.MaterialParams.ShaderReference);
         }
 
@@ -607,7 +609,7 @@ namespace CtrLibrary.Bch
                 meshes[i].VertexStride = stride;
             }
 
-            var cmdl = this.Parent.Parent as CMDL;
+            var cmdl = this.Parent.Parent as CMDL<H3DModel>;
             cmdl.ReloadRender();
         }
 

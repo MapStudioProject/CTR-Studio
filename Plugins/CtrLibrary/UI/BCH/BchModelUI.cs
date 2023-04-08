@@ -11,6 +11,7 @@ using MapStudio.UI;
 using OpenTK;
 using SPICA.Formats.CtrH3D.Model;
 using SPICA.Formats.CtrH3D.Model.Mesh;
+using Toolbox.Core.ViewModels;
 
 namespace CtrLibrary.Bch
 {
@@ -24,7 +25,7 @@ namespace CtrLibrary.Bch
         private int selectedMeshID = 0;
         private int hoveredMeshID = -1;
 
-        public void Init(CMDL modelNode, H3DModel model)
+        public void Init(NodeBase modelNode, H3DModel model)
         {
             H3DModel = model;
         }

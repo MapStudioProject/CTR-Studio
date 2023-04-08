@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Toolbox.Core.ViewModels;
 using Toolbox.Core;
+using static CtrLibrary.Bch.BCH;
+using SPICA.Rendering;
 
 namespace CtrLibrary.Bch
 {
@@ -21,138 +23,68 @@ namespace CtrLibrary.Bch
 
     }
 
-    internal class LUTFolder : NodeBase
+    internal class LUTFolder<T> : BCH.H3DGroupNode<T> where T : SPICA.Formats.Common.INamed
     {
         public override string Header => "Look Ups";
 
-        H3DRender H3DRender;
+        internal H3DRender H3DRender;
         H3D H3DFile;
 
-        public LUTFolder(H3DRender render, H3D file)
+        public override Type ChildNodeType => typeof(LUTWrapper<T>);
+
+        public LUTFolder(H3DRender render, H3DDict<T> subSections) : base(BCH.H3DGroupType.Lookups, subSections)
         {
-            H3DFile = file;
             H3DRender = render;
 
-            foreach (var lut in file.LUTs)
-                AddChild(new LUTWrapper(render, file, lut));
-
-            this.ContextMenus.Add(new MenuItemModel("Add", Create));
-            this.ContextMenus.Add(new MenuItemModel("Import", Import));
+            foreach (var lut in subSections)
+                AddChild(new LUTWrapper<T>(subSections, lut));
         }
 
-        public H3DDict<H3DLUT> GetLuts()
+        public H3DDict<T> GetLuts()
         {
-            H3DDict<H3DLUT> luts = new H3DDict<H3DLUT>();
-            foreach (LUTWrapper lut in this.Children)
-                luts.Add(lut.Section);
+            H3DDict<T> luts = new H3DDict<T>();
+            foreach (LUTWrapper<T> lut in this.Children)
+                luts.Add((T)lut.Section);
 
             return luts;
         }
-
-        private void Create()
-        {
-            var lut = new H3DLUT()
-            {
-                Name = "LUT_Table",
-            };
-            lut.Name = Utils.RenameDuplicateString(lut.Name, this.Children.Select(x => x.Header).ToList());
-
-            AddChild(new LUTWrapper(H3DRender, H3DFile, lut));
-
-            H3DFile.LUTs.Add(lut);
-            H3DRender.LUTCache.Add(lut.Name, lut);
-        }
-
-        private void Import()
-        {
-            ImguiFileDialog dlg = new ImguiFileDialog();
-            dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}.json";
-            dlg.AddFilter(".json", ".json");
-
-            if (dlg.ShowDialog())
-            {
-                var lut = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
-                lut.Name = Utils.RenameDuplicateString(lut.Name, this.Children.Select(x => x.Header).ToList());
-
-                AddChild(new LUTWrapper(H3DRender, H3DFile, lut));
-                H3DFile.LUTs.Add(lut);
-            }
-        }
-
-        internal void RemoveLUT(LUTWrapper wrapper)
-        {
-            this.Children.Remove(wrapper);
-            H3DFile.LUTs.Remove(wrapper.Section);
-            //Remove from cache
-            if (SPICA.Rendering.Renderer.LUTCache.ContainsKey(wrapper.Header))
-                SPICA.Rendering.Renderer.LUTCache.Remove(wrapper.Header);
-            if (H3DRender.LUTCache.ContainsKey(wrapper.Header))
-                H3DRender.LUTCache.Remove(wrapper.Header);
-
-            //Remove from current render
-            if (H3DRender.Renderer.LUTs.ContainsKey(wrapper.Header))
-                H3DRender.Renderer.LUTs.Remove(wrapper.Header);
-        }
     }
 
-    internal class LUTWrapper : NodeBase
+    internal class LUTWrapper<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
     {
-        internal H3DLUT Section;
-        H3D H3D;
-        H3DRender H3DRender;
+        internal H3DLUT LUT => (H3DLUT)this.Section;
+        H3DRender H3DRender => ((LUTFolder<T>)Parent).H3DRender;
 
-        public LUTWrapper(H3DRender render, H3D h3d, H3DLUT lut)
+        public LUTWrapper(H3DDict<T> subSections, object section) : base(subSections, section)
         {
-            H3DRender = render;
-            H3D = h3d;
-            Section = lut;
-            Header = lut.Name;
             Icon = '\uf0ce'.ToString();
-            CanRename = true;
-            OnHeaderRenamed += delegate
-            {
-                Section.Name = this.Header;
-            };
 
-            this.ContextMenus.Add(new MenuItemModel("Create Sampler", CreateSampler));
-            this.ContextMenus.Add(new MenuItemModel("Import Sampler", ImportSampler));
-            this.ContextMenus.Add(new MenuItemModel(""));
-            this.ContextMenus.Add(new MenuItemModel("Export", Export));
-            this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
-            this.ContextMenus.Add(new MenuItemModel(""));
-            this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
-            this.ContextMenus.Add(new MenuItemModel(""));
-            this.ContextMenus.Add(new MenuItemModel("Remove", RemoveBatch));
-
-            
-
-            foreach (var sampler in lut.Samplers)
+            foreach (var sampler in LUT.Samplers)
                 AddChild(new LUTSamplerWrapper(sampler));
         }
 
-        private void RemoveBatch()
+        public override MenuItemModel[] ExtraMenuItems => new MenuItemModel[2]
         {
-            var selected = this.Parent.Children.Where(x => x.IsSelected).ToList();
+            new MenuItemModel("Create Sampler", CreateSampler),
+            new MenuItemModel("Import Sampler", ImportSampler),
+        };
 
-            string msg = $"Are you sure you want to delete the ({selected.Count}) selected nodes? This cannot be undone!";
-            if (selected.Count == 1)
-                msg = $"Are you sure you want to delete {Header}? This cannot be undone!";
-
-            int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
-            if (result != 1)
-                return;
-
-            var folder = (LUTFolder)this.Parent;
-
-            foreach (LUTWrapper lut in selected)
-                folder.RemoveLUT(lut);
+        public override bool Delete()
+        {
+            if (base.Delete())
+            {
+                var selected = Parent.Children.Where(x => x.IsSelected);
+                foreach (LUTWrapper<T> lut in selected)
+                    lut.RemoveLUT();
+                return true;
+            }
+            return false;
         }
 
         internal void RemoveSampler(LUTSamplerWrapper wrapper)
         {
             this.Children.Remove(wrapper);
-            Section.Samplers.Remove(wrapper.Sampler);
+            LUT.Samplers.Remove(wrapper.Sampler);
             ReloadRender();
         }
 
@@ -164,7 +96,7 @@ namespace CtrLibrary.Bch
             };
             samp.Name = Utils.RenameDuplicateString(samp.Name, this.Children.Select(x => x.Header).ToList());
 
-            Section.Samplers.Add(samp);
+            LUT.Samplers.Add(samp);
             AddChild(new LUTSamplerWrapper(samp));
             ReloadRender();
         }
@@ -173,7 +105,7 @@ namespace CtrLibrary.Bch
         {
             var wrapper = LUTSamplerWrapper.Import();
             AddChild(wrapper);
-            Section.Samplers.Add(wrapper.Sampler);
+            LUT.Samplers.Add(wrapper.Sampler);
 
             ReloadRender();
         }
@@ -186,43 +118,19 @@ namespace CtrLibrary.Bch
             //Remove from current render
             if (H3DRender.Renderer.LUTs.ContainsKey(this.Header))
                 H3DRender.Renderer.LUTs.Remove(this.Header);
-            H3DRender.Renderer.LUTs.Add(this.Header, new SPICA.Rendering.LUT(Section));
+            H3DRender.Renderer.LUTs.Add(this.Header, new SPICA.Rendering.LUT(LUT));
         }
 
-        void Replace()
+        internal void RemoveLUT()
         {
-            ImguiFileDialog dlg = new ImguiFileDialog();
-            dlg.SaveDialog = false;
-            dlg.FileName = $"{Header}";
-            dlg.AddFilter(".bch", ".bch");
-            dlg.AddFilter(".json", ".json");
-
-            if (dlg.ShowDialog())
-            {
-                if (dlg.FilePath.ToLower().EndsWith(".bch"))
-                    this.Section.Replace(dlg.FilePath);
-                else
-                    Section = JsonConvert.DeserializeObject<H3DLUT>(File.ReadAllText(dlg.FilePath));
-
-                Section.Name = this.Header;
-                H3D.LUTs[this.Header] = Section;
-            }
-        }
-
-        void Export()
-        {
-            ImguiFileDialog dlg = new ImguiFileDialog();
-            dlg.SaveDialog = true;
-            dlg.FileName = $"{Header}";
-            dlg.AddFilter(".bch", ".bch");
-            dlg.AddFilter(".json", ".json");
-            if (dlg.ShowDialog())
-            {
-                if (dlg.FilePath.ToLower().EndsWith(".bch"))
-                    this.Section.Export(dlg.FilePath);
-                else
-                    File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
-            }
+            //Remove from cache
+            if (SPICA.Rendering.Renderer.LUTCache.ContainsKey(Header))
+                SPICA.Rendering.Renderer.LUTCache.Remove(Header);
+            if (H3DRender.LUTCache.ContainsKey(Header))
+                H3DRender.LUTCache.Remove(Header);
+            //Remove from current render
+            if (H3DRender.Renderer.LUTs.ContainsKey(Header))
+                H3DRender.Renderer.LUTs.Remove(Header);
         }
 
         internal class LUTSamplerWrapper : NodeBase, IPropertyUI
@@ -261,7 +169,7 @@ namespace CtrLibrary.Bch
                 if (result != 1)
                     return;
 
-                var folder = (LUTWrapper)this.Parent;
+                var folder = (LUTWrapper<T>)this.Parent;
 
                 foreach (LUTSamplerWrapper lut in selected)
                     folder.RemoveSampler(lut);
@@ -327,7 +235,7 @@ namespace CtrLibrary.Bch
             private void ReloadRender()
             {
                 if (Parent != null)
-                    ((LUTWrapper)this.Parent).ReloadRender();
+                    ((LUTWrapper<H3DLUT>)this.Parent).ReloadRender();
             }
 
             private float[] FromRGBA(byte[] rgba, int height)
