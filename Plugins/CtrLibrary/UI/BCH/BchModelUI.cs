@@ -63,55 +63,58 @@ namespace CtrLibrary.Bch
             }
             if (ImGui.CollapsingHeader("Mesh Rendering", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                var mesh = H3DModel.Meshes[selectedMeshID];
-                var mat = H3DModel.Materials[mesh.MaterialIndex];
-
-                var transparentLayer = mesh.Layer.ToString();
-                if (ImguiCustomWidgets.ComboScrollable("Render Layer", RenderLayer[mesh.Layer], ref transparentLayer, RenderLayer))
+                if (H3DModel.Meshes.Count > 0)
                 {
-                    mesh.Layer = int.Parse(transparentLayer[0].ToString());
+                    var mesh = H3DModel.Meshes[selectedMeshID];
+                    var mat = H3DModel.Materials[mesh.MaterialIndex];
 
-                    var meshList = H3DModel.Meshes.ToList();
-                    H3DModel.ClearMeshes();
-                    H3DModel.AddMeshes(meshList);
-                }
+                    var transparentLayer = mesh.Layer.ToString();
+                    if (ImguiCustomWidgets.ComboScrollable("Render Layer", RenderLayer[mesh.Layer], ref transparentLayer, RenderLayer))
+                    {
+                        mesh.Layer = int.Parse(transparentLayer[0].ToString());
 
-                var renderPriority = H3DModel.Meshes[selectedMeshID].Priority;
-                if (ImGui.SliderInt("Priority", ref renderPriority, 0, 255))
-                    H3DModel.Meshes[selectedMeshID].Priority = renderPriority;
+                        var meshList = H3DModel.Meshes.ToList();
+                        H3DModel.ClearMeshes();
+                        H3DModel.AddMeshes(meshList);
+                    }
 
-                ImGui.BeginColumns("meshListHeader", 4);
+                    var renderPriority = H3DModel.Meshes[selectedMeshID].Priority;
+                    if (ImGui.SliderInt("Priority", ref renderPriority, 0, 255))
+                        H3DModel.Meshes[selectedMeshID].Priority = renderPriority;
 
-                ImGuiHelper.BoldText("Mesh");
-                ImGui.NextColumn();
-                ImGuiHelper.BoldText("Material");
-                ImGui.NextColumn();
-                ImGuiHelper.BoldText("Layer");
-                ImGui.NextColumn();
-                ImGuiHelper.BoldText("Priority");
-                ImGui.NextColumn();
-
-                ImGui.EndColumns();
-
-                ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.FrameBg);
-                if (ImGui.BeginChild("modelList", new System.Numerics.Vector2(ImGui.GetWindowWidth() - 2, 400)))
-                {
                     ImGui.BeginColumns("meshListHeader", 4);
 
-                    //Set the same header colors as hovered and active. This makes nav scrolling more seamless looking
-                    var active = ImGui.GetStyle().Colors[(int)ImGuiCol.Header];
-                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, active);
-                    ImGui.PushStyleColor(ImGuiCol.NavHighlight, new System.Numerics.Vector4(0));
-
-                    for (int i = 0; i < H3DModel.Meshes.Count; i++)
-                        DrawMeshItem(H3DModel.Meshes[i], i);
-
-                    ImGui.PopStyleColor(2);
+                    ImGuiHelper.BoldText("Mesh");
+                    ImGui.NextColumn();
+                    ImGuiHelper.BoldText("Material");
+                    ImGui.NextColumn();
+                    ImGuiHelper.BoldText("Layer");
+                    ImGui.NextColumn();
+                    ImGuiHelper.BoldText("Priority");
+                    ImGui.NextColumn();
 
                     ImGui.EndColumns();
-                    ImGui.EndChild();
+
+                    ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.FrameBg);
+                    if (ImGui.BeginChild("modelList", new System.Numerics.Vector2(ImGui.GetWindowWidth() - 2, 400)))
+                    {
+                        ImGui.BeginColumns("meshListHeader", 4);
+
+                        //Set the same header colors as hovered and active. This makes nav scrolling more seamless looking
+                        var active = ImGui.GetStyle().Colors[(int)ImGuiCol.Header];
+                        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, active);
+                        ImGui.PushStyleColor(ImGuiCol.NavHighlight, new System.Numerics.Vector4(0));
+
+                        for (int i = 0; i < H3DModel.Meshes.Count; i++)
+                            DrawMeshItem(H3DModel.Meshes[i], i);
+
+                        ImGui.PopStyleColor(2);
+
+                        ImGui.EndColumns();
+                        ImGui.EndChild();
+                    }
+                    ImGui.PopStyleColor();
                 }
-                ImGui.PopStyleColor();
             }
 
             if (ImGui.CollapsingHeader("Vis Nodes", ImGuiTreeNodeFlags.DefaultOpen))
