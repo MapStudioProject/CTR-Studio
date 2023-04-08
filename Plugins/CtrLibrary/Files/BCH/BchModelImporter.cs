@@ -142,7 +142,16 @@ namespace CtrLibrary.Bch
                 //A material does not exist in the file, import a default material to use.
                 if (!h3dModel.Materials.Contains(mat.Label))
                 {
-                    var bcmdlMat = H3DMaterial.GetSimpleMaterial(h3dModel.Name, mat.Label, "");
+                    //Assign texture to new material if used
+                    string texture = "";
+                    if (!string.IsNullOrEmpty(mat.DiffuseMap?.FilePath))
+                    {
+                        string ext = mat.DiffuseMap.FilePath.Split(".").LastOrDefault();
+                        //Map out the texture. Swap out the extension, files can have multiple dots which GetFileWithoutExtension can break.
+                         texture = Path.GetFileName(mat.DiffuseMap.FilePath).Replace($".{ext}", texture);
+                    }
+
+                    var bcmdlMat = H3DMaterial.GetSimpleMaterial(h3dModel.Name, mat.Label, texture);
                     bcmdlMat.Name = mat.Label;
                     h3dModel.Materials.Add(bcmdlMat);
                 }
