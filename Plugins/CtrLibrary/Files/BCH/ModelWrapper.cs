@@ -268,6 +268,9 @@ namespace CtrLibrary.Bch
             //Remove from gui
             Parent.Children.Remove(this);
 
+            //Update viewport
+            GLContext.ActiveContext.UpdateViewport = true;
+
             return true;
         }
 
