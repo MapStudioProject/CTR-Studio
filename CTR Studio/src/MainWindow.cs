@@ -651,6 +651,8 @@ namespace CTRStudio
             }
             if (Workspaces.Count == 0)
                 Workspace.ActiveWorkspace = null;
+            else
+                Workspace.ActiveWorkspace = Workspaces.Last();
 
             OnWorkspaceChanged();
         }
