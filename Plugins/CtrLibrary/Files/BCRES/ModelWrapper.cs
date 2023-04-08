@@ -219,7 +219,7 @@ namespace CtrLibrary.Bcres
             }
 
             //Generate material animation groups automatically
-          /*  var anim = new GfxAnimGroup()
+            var anim = new GfxAnimGroup()
             {
                 Name = "MaterialAnimation",
                 EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
@@ -233,7 +233,7 @@ namespace CtrLibrary.Bcres
             Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
             foreach (var elem in generatedAnimGroups.Elements)
                 Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
-            */
+            
 
             if (Model.MeshNodeVisibilities.Count > 0)
             {
