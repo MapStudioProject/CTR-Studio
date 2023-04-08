@@ -60,7 +60,9 @@ namespace CtrLibrary
             var width = ImGui.GetWindowWidth();
             var mparams = Material.MaterialParams;
 
-            ImGuiHelper.ComboFromEnum<H3DTexCoordConfig>("Tex Coord IDs", mparams, "TexCoordConfig");
+            if (ImGuiHelper.ComboFromEnum<H3DTexCoordConfig>("Tex Coord IDs", mparams, "TexCoordConfig"))
+                UpdateShaders();
+
 
             ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.FrameBg);
             if (ImGui.BeginChild("textureList", new Vector2(width, 62)))
