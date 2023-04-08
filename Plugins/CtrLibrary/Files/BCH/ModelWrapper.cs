@@ -57,6 +57,22 @@ namespace CtrLibrary.Bch
                 model.OnSave();
         }
 
+        public override void Clear()
+        {
+            string msg = $"Are you sure you want to clear ({this.Type})? This cannot be undone!";
+
+            int result = TinyFileDialog.MessageBoxInfoYesNo(msg);
+            if (result != 1)
+                return;
+
+            var modelList = this.Children.ToList();
+            foreach (CMDL<T> model in modelList)
+                model.RemoveModel();
+
+            SectionList.Clear();
+            this.Children.Clear();
+        }
+
         public override void Add()
         {
             //Create section instance
@@ -258,6 +274,12 @@ namespace CtrLibrary.Bch
             if (result != 1)
                 return false;
 
+            RemoveModel();
+            return true;
+        }
+
+        public void RemoveModel()
+        {
             //Index of current model
             int modelIndex = H3DFile.Models.Find(Model.Name);
 
@@ -271,7 +293,6 @@ namespace CtrLibrary.Bch
             //Update viewport
             GLContext.ActiveContext.UpdateViewport = true;
 
-            return true;
         }
 
         public override void Export(string filePath)
