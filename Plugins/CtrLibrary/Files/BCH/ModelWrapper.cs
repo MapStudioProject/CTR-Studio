@@ -156,9 +156,9 @@ namespace CtrLibrary.Bch
 
         public Type GetTypeUI() => typeof(BchModelUI);
 
-        public override string[] ExportFilters => new string[] { ".dae", ".fbx", ".smd", ".bcmdl" };
+        public override string[] ExportFilters => new string[] { ".dae", ".fbx", ".smd", ".bch" };
 
-        public override string[] ReplaceFilters => new string[] { ".dae", ".fbx", ".smd", ".bcmdl" };
+        public override string[] ReplaceFilters => new string[] { ".dae", ".fbx", ".smd", ".bch" };
 
         public override string DefaultExtension => ".dae";
 
