@@ -290,6 +290,10 @@ namespace CtrLibrary.Bch
             //Remove from gui
             Parent.Children.Remove(this);
 
+            if (this.SkeletonRenderer != null && ParentBCHNode.Render.Skeletons.Contains(this.SkeletonRenderer))
+                ParentBCHNode.Render.Skeletons.Remove(this.SkeletonRenderer);
+
+
             //Update viewport
             GLContext.ActiveContext.UpdateViewport = true;
 
