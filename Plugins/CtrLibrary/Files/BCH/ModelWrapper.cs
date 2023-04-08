@@ -114,7 +114,7 @@ namespace CtrLibrary.Bch
                         }
                     });
                 }
-                else if (dlg.FilePath.ToLower().EndsWith(".bcmdl"))
+                else if (dlg.FilePath.ToLower().EndsWith(".bch"))
                 {
                     H3DModel model = new H3DModel()
                     {
@@ -342,7 +342,7 @@ namespace CtrLibrary.Bch
             //Index of current model
             int modelIndex = H3DFile.Models.Find(Model.Name);
 
-            if (filePath.EndsWith(".bcmdl"))
+            if (filePath.EndsWith(".bch"))
                 Model = (H3DModel)BCH.ReplaceRaw(filePath, BCH.H3DGroupType.Models);
             else
                 Model = BchModelImporter.Import(filePath, ParentBCHNode, Model, settings);
