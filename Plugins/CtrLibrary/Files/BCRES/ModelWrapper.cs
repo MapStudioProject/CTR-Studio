@@ -86,6 +86,8 @@ namespace CtrLibrary.Bcres
                         var modelWrapper = new CMDL(ParentBCRESNode, BcresFile, model);
                         modelWrapper.ImportFile(filePath, importerUI.Settings);
                         AddChild(modelWrapper);
+                        modelWrapper.GenerateAnimGroups();
+
                         GLContext.ActiveContext.UpdateViewport = true;
                     }
                     catch (Exception ex)
@@ -218,22 +220,6 @@ namespace CtrLibrary.Bcres
                 Model.Materials.Add(material.GfxMaterial);
             }
 
-            //Generate material animation groups automatically
-            var anim = new GfxAnimGroup()
-            {
-                Name = "MaterialAnimation",
-                EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
-                MemberType = 2,
-                BlendOperationTypes = new int[4] { 3, 7, 5, 2 }
-            };
-            if (!Model.AnimationsGroup.Contains("MaterialAnimation"))
-                Model.AnimationsGroup.Add(anim);
-
-            var generatedAnimGroups = AnimGroupHelper.GenerateMatAnims(Model.Materials);
-            Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
-            foreach (var elem in generatedAnimGroups.Elements)
-                Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
-            
 
             if (Model.MeshNodeVisibilities.Count > 0)
             {
@@ -255,6 +241,25 @@ namespace CtrLibrary.Bcres
                     mesh.MeshNodeIndex = (short)Model.MeshNodeVisibilities.Find(mesh.MeshNodeName);
                 }
             }
+        }
+
+        public void GenerateAnimGroups()
+        {
+            //Generate material animation groups automatically
+            var anim = new GfxAnimGroup()
+            {
+                Name = "MaterialAnimation",
+                EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
+                MemberType = 2,
+                BlendOperationTypes = new int[4] { 3, 7, 5, 2 }
+            };
+            if (!Model.AnimationsGroup.Contains("MaterialAnimation"))
+                Model.AnimationsGroup.Add(anim);
+
+            var generatedAnimGroups = AnimGroupHelper.GenerateMatAnims(Model.Materials);
+            Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
+            foreach (var elem in generatedAnimGroups.Elements)
+                Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
         }
 
         private void Export()

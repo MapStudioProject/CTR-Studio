@@ -117,7 +117,7 @@ namespace CtrLibrary.Bch
                             {
                                 H3DModel model = new H3DModel()
                                 {
-                                    Name = "NewModel",
+                                    Name = Path.GetFileNameWithoutExtension(dlg.FilePath),
                                 };
                                 var modelWrapper = new CMDL<H3DModel>(ParentBCHNode, H3DFile, H3DFile.Models, model);
                                 modelWrapper.ImportFile(dlg.FilePath, importerUI.Settings);
@@ -134,7 +134,7 @@ namespace CtrLibrary.Bch
                 {
                     H3DModel model = new H3DModel()
                     {
-                        Name = "NewModel",
+                        Name = Path.GetFileNameWithoutExtension(dlg.FilePath),
                     };
                     var modelWrapper = new CMDL<H3DModel>(ParentBCHNode, H3DFile, H3DFile.Models, model);
                     modelWrapper.ImportFile(dlg.FilePath, new CtrImportSettings());
