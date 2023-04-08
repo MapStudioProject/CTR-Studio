@@ -217,6 +217,14 @@ namespace CtrLibrary
             UVViewport.ActiveTextureMap.MagFilter = GetMagFilter(texMap.MagFilter);
             UVViewport.ActiveTextureMap.MinFilter = GetMinFilter(texMap.MinFilter);
 
+            if (CoordIndex == 2 && (
+            Material.MaterialParams.TexCoordConfig == H3DTexCoordConfig.Config0110 ||
+            Material.MaterialParams.TexCoordConfig == H3DTexCoordConfig.Config0111 ||
+            Material.MaterialParams.TexCoordConfig == H3DTexCoordConfig.Config0112))
+            {
+                CoordIndex = 1;
+            }
+
             var minLOD = (int)texMap.MinLOD;
             UVViewport.ActiveTextureMap.MinLOD = texMap.MinLOD;
             UVViewport.ActiveTextureMap.LODBias = texMap.LODBias;
@@ -263,7 +271,7 @@ namespace CtrLibrary
                         MagFilter = H3DTextureMagFilter.Linear,
                         MinFilter = H3DTextureMinFilter.Linear,
                         MinLOD = 0,
-                        SamplerType = (byte)index,
+                        SamplerType = (byte)CoordIndex,
                     };
                     Material.EnabledTextures[index] = true;
                     UINode.UpdateUniformBooleans();
@@ -468,7 +476,7 @@ namespace CtrLibrary
                         texSourceID = 4;
 
                     Material.MaterialParams.TextureSources[index] = texSourceID;
-                    Material.MaterialParams.TextureCoords[index] = texCoord;
+                    Material.MaterialParams.TextureCoords[CoordIndex] = texCoord;
 
                     updateUniforms = true;
                     UINode.UpdateUniformBooleans();
@@ -539,7 +547,7 @@ namespace CtrLibrary
                     BorderColor = borderColor,
                     SamplerType = (byte)index,
                 };
-                Material.MaterialParams.TextureCoords[index] = new H3DTextureCoord()
+                Material.MaterialParams.TextureCoords[CoordIndex] = new H3DTextureCoord()
                 {
                     Scale = scale,
                     Translation = translation,
