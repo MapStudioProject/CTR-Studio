@@ -99,6 +99,7 @@ namespace CTRStudio
                 LoadFileFormat(file);
 
             PluginSettingsUI = Toolbox.Core.FileManager.GetPluginSettings();
+
         }
 
         public override void Render()
@@ -535,6 +536,7 @@ namespace CTRStudio
         private void OpenFileWithDialog()
         {
             ImguiFileDialog ofd = new ImguiFileDialog();
+            ofd.MultiSelect = true;
             if (ofd.ShowDialog("OPEN_FILE"))
             {
                 foreach (var file in ofd.FilePaths)
