@@ -16,6 +16,7 @@ using SPICA.Formats.CtrH3D.Model;
 using SPICA.Formats.CtrH3D.LUT ;
 using SPICA.PICA.Shader;
 using Newtonsoft.Json;
+using CtrLibrary.UI;
 
 namespace CtrLibrary.Rendering
 {
@@ -28,11 +29,6 @@ namespace CtrLibrary.Rendering
         /// The texture cache of globally loaded textures. This cache is only used for UI purposes to get the H3D instances for viewing.
         /// </summary>
         public static Dictionary<string, H3DTexture> TextureCache = new Dictionary<string, H3DTexture>();
-
-        /// <summary>
-        /// The texture cache of globally loaded LUTs. This cache is only used for UI purposes to get the H3D instances for viewing.
-        /// </summary>v
-        public static Dictionary<string, H3DLUT> LUTCache = new Dictionary<string, H3DLUT>();
 
         public static List<Renderer> RenderCache = new List<Renderer>();
 
@@ -101,8 +97,8 @@ namespace CtrLibrary.Rendering
             }
             foreach (var lut in h3d.LUTs)
             {
-                if (!LUTCache.ContainsKey(lut.Name))
-                    LUTCache.Add(lut.Name, lut);
+                if (!LUTCacheManager.Cache.ContainsKey(lut.Name))
+                    LUTCacheManager.Cache.Add(lut.Name, lut);
             }
 
             Scene = h3d;
@@ -145,26 +141,7 @@ namespace CtrLibrary.Rendering
 
             //Caches are used to search up globally loaded data within the UI and renders
             //So a file can access the data externally from other files
-
-            string lutDir = Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "LUTS");
-            string shaderDir = Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "Shaders");
-
-            if (Directory.Exists(lutDir))
-            {
-                foreach (var lut in Directory.GetFiles(lutDir))
-                {
-                    var luts = Gfx.Open(lut).ToH3D();
-                    foreach (var l in luts.LUTs)
-                    {
-                        if (!LUTCache.ContainsKey(l.Name))
-                            LUTCache.Add(l.Name, l);
-                    }
-                    if (luts.LUTs.Any(x => Renderer.LUTs.ContainsKey(x.Name)))
-                        continue;
-
-                    Renderer.Merge(luts);
-                }
-            }
+            LUTCacheManager.Setup(Renderer);
         }
 
         public override void Dispose()
@@ -180,8 +157,8 @@ namespace CtrLibrary.Rendering
                     TextureCache.Remove(tex.Key);
             //Remove from global lut cache
             foreach (var lut in Renderer.LUTs)
-                if (LUTCache.ContainsKey(lut.Key))
-                    LUTCache.Remove(lut.Key);
+                if (LUTCacheManager.Cache.ContainsKey(lut.Key))
+                    LUTCacheManager.Cache.Remove(lut.Key);
 
             Renderer.DeleteAll();
             RenderCache.Remove(this.Renderer);

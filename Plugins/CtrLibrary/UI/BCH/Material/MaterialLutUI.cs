@@ -12,6 +12,7 @@ using CtrLibrary.Bch;
 using System.Numerics;
 using GLFrameworkEngine;
 using SPICA.Formats.CtrH3D.LUT;
+using CtrLibrary.UI;
 
 namespace CtrLibrary
 {
@@ -178,7 +179,7 @@ namespace CtrLibrary
 
                 ImGui.Spacing();
 
-                foreach (var lut in H3DRender.LUTCache)
+                foreach (var lut in LUTCacheManager.Cache)
                 {
                     if (ImGui.Selectable($"   {'\uf0ce'}    {lut.Key}"))
                     {
@@ -272,11 +273,11 @@ namespace CtrLibrary
             //ImGuiHelper.BoldText($"{label}:");
             //ImGui.NextColumn();
 
-            if (H3DRender.LUTCache.ContainsKey(TableName))
+            if (LUTCacheManager.Cache.ContainsKey(TableName))
             {
                 string sampler = name;
 
-                var lutTable = H3DRender.LUTCache[TableName];
+                var lutTable = LUTCacheManager.Cache[TableName];
                 var samp = lutTable.Samplers.FirstOrDefault(x => x.Name == sampler);
                 if (samp != null)
                 {
@@ -385,9 +386,9 @@ namespace CtrLibrary
             ImGui.PushItemWidth(ImGui.GetColumnWidth() - 2);
 
             //Draw as a drop down for selecting samplers in a lut table if one exists
-            if (H3DRender.LUTCache.ContainsKey(table))
+            if (LUTCacheManager.Cache.ContainsKey(table))
             {
-                var lutTable = H3DRender.LUTCache[table];
+                var lutTable = LUTCacheManager.Cache[table];
                 if (ImGui.BeginCombo($"##sampler{label}", $"{sampler}", ImGuiComboFlags.HeightLargest))
                 {
                     //Removable option

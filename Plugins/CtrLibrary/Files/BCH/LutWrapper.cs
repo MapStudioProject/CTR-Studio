@@ -15,6 +15,8 @@ using Toolbox.Core.ViewModels;
 using Toolbox.Core;
 using static CtrLibrary.Bch.BCH;
 using SPICA.Rendering;
+using CtrLibrary.UI;
+using SPICA.Formats.Common;
 
 namespace CtrLibrary.Bch
 {
@@ -59,6 +61,15 @@ namespace CtrLibrary.Bch
         {
             Icon = '\uf0ce'.ToString();
 
+            foreach (var sampler in LUT.Samplers)
+                AddChild(new LUTSamplerWrapper(sampler));
+        }
+
+        public override void Replace(string filePath)
+        {
+            base.Replace(filePath);
+
+            this.Children.Clear();
             foreach (var sampler in LUT.Samplers)
                 AddChild(new LUTSamplerWrapper(sampler));
         }
@@ -126,11 +137,25 @@ namespace CtrLibrary.Bch
             //Remove from cache
             if (SPICA.Rendering.Renderer.LUTCache.ContainsKey(Header))
                 SPICA.Rendering.Renderer.LUTCache.Remove(Header);
-            if (H3DRender.LUTCache.ContainsKey(Header))
-                H3DRender.LUTCache.Remove(Header);
+            if (LUTCacheManager.Cache.ContainsKey(Header))
+                LUTCacheManager.Cache.Remove(Header);
             //Remove from current render
             if (H3DRender.Renderer.LUTs.ContainsKey(Header))
                 H3DRender.Renderer.LUTs.Remove(Header);
+        }
+
+        public override void ReloadName()
+        {
+            string originalName = ((INamed)Section).Name;
+
+            if (LUTCacheManager.Cache.ContainsKey(originalName))
+            {
+                LUTCacheManager.Cache.Remove(originalName);
+                LUTCacheManager.Cache.Add(Header, LUT);
+            }
+
+            base.ReloadName();
+
         }
 
         internal class LUTSamplerWrapper : NodeBase, IPropertyUI
