@@ -39,21 +39,12 @@ namespace CtrLibrary.Bch
                 DrawModelInfo();
                 ImGui.EndTabItem();
             }
-            if (ImguiCustomWidgets.BeginTab("modelTabbar", "Animation Binds"))
-            {
-                DrawAnimInfo();
-                ImGui.EndTabItem();
-            }
             if (ImguiCustomWidgets.BeginTab("modelTabbar", "User Data"))
             {
                 UserDataInfoEditor.Render(H3DModel.MetaData);
                 ImGui.EndTabItem();
             }
             ImGui.EndTabBar();
-        }
-
-        private void DrawAnimInfo()
-        {
         }
 
         private void DrawModelInfo()
