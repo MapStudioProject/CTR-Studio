@@ -25,17 +25,23 @@ namespace CtrLibrary.Bcres
         public class AnimationSettings
         {
             /// <summary>
-            /// 
+            /// A list of material anim element types that can be generated.
             /// </summary>
             public Dictionary<string, bool> MaterialTypes = new Dictionary<string, bool>();
 
             public AnimationSettings()
             {
+                //Prepare default settings
                 foreach (var item in MaterialAnimElements)
                     MaterialTypes.Add(item.Key, true);
             }
         }
 
+        /// <summary>
+        /// Generates settings provided by the GfxModel anim group data.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public static AnimationSettings SetupMaterialSettings(GfxModel model)
         {
             AnimationSettings setting = new AnimationSettings();

@@ -86,7 +86,6 @@ namespace CtrLibrary.Bcres
                         var modelWrapper = new CMDL(ParentBCRESNode, BcresFile, model);
                         modelWrapper.ImportFile(filePath, importerUI.Settings);
                         AddChild(modelWrapper);
-                        modelWrapper.GenerateAnimGroups();
 
                         GLContext.ActiveContext.UpdateViewport = true;
                     }
@@ -360,6 +359,9 @@ namespace CtrLibrary.Bcres
 
             Model = BcresModelImporter.Import(filePath, ParentBCRESNode, Model, settings);
             Model.Name = this.Header;
+
+            //Generate animation groups with import as there may be additional materials to insert
+            GenerateAnimGroups();
 
             if (modelIndex != -1)
                 BcresFile.Models.Insert(modelIndex, Model);
