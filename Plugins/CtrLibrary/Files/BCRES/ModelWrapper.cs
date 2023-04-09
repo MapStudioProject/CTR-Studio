@@ -114,6 +114,9 @@ namespace CtrLibrary.Bcres
         private readonly NodeBase _materialFolder = new NodeBase("Materials");
         private readonly NodeBase _skeletonFolder = new NodeBase("Skeleton");
 
+        //Settings to configure what groups to generate
+        public AnimGroupHelper.AnimationSettings AnimGroupSettings = new AnimGroupHelper.AnimationSettings();
+
         public Type GetTypeUI() => typeof(BcresModelUI);
 
         public SkeletonRenderer SkeletonRenderer;
@@ -207,6 +210,8 @@ namespace CtrLibrary.Bcres
                     if (bone.Parent == null)
                         _skeletonFolder.AddChild(bone.UINode);
             }
+            //Settings to toggle what animation groups to use. Checks which values are present
+            AnimGroupSettings = AnimGroupHelper.SetupMaterialSettings(Model);
         }
 
         public void OnSave()
@@ -256,7 +261,7 @@ namespace CtrLibrary.Bcres
             if (!Model.AnimationsGroup.Contains("MaterialAnimation"))
                 Model.AnimationsGroup.Add(anim);
 
-            var generatedAnimGroups = AnimGroupHelper.GenerateMatAnims(Model.Materials);
+            var generatedAnimGroups = AnimGroupHelper.GenerateMatAnims(Model.Materials, AnimGroupSettings);
             Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
             foreach (var elem in generatedAnimGroups.Elements)
                 Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);

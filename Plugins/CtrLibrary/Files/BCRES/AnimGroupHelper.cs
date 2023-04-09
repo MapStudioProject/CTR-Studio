@@ -8,17 +8,49 @@ using SPICA.Formats.CtrGfx.Model.Material;
 using SPICA.Formats.CtrGfx.Model.Mesh;
 using SPICA.Formats.CtrGfx.Model;
 using SPICA.Formats.CtrGfx;
+using ImGuiNET;
 
 namespace CtrLibrary.Bcres
 {
     /// <summary>
     /// An animation helper for generating groups used for binding data to animations used by BCRES files.
     /// </summary>
-    internal class AnimGroupHelper
+    public class AnimGroupHelper
     {
+        /// <summary>
+        /// Settings to configure what type to generate on save.
+        /// </summary>
         public class AnimationSettings
         {
+            /// <summary>
+            /// 
+            /// </summary>
+            public Dictionary<string, bool> MaterialTypes = new Dictionary<string, bool>();
+        }
 
+        public static AnimationSettings SetupMaterialSettings(GfxModel model)
+        {
+            AnimationSettings setting = new AnimationSettings();
+
+            if (model.AnimationsGroup.Contains("MaterialAnimation"))
+            {
+                var anim = model.AnimationsGroup["MaterialAnimation"];
+                //All mat animation types
+                var animTypes = AnimGroupHelper.MaterialAnimElements;
+                var mat = model.Materials[0];
+
+                int index = 0;
+                foreach (var item in animTypes)
+                {
+                    //Name of element to display in UI
+                    string name = AnimGroupHelper.MatAnimTypes[index];
+                    //Check if the first material has the binded set of data
+                    bool hasType = anim.Elements.Any(x => x.Name == string.Format(item.Key, mat.Name, "0"));
+                    setting.MaterialTypes.Add(item.Key, hasType);
+                    index++;
+                }
+            }
+            return setting;
         }
 
         /// <summary>
@@ -121,15 +153,15 @@ namespace CtrLibrary.Bcres
             return meshNodeVis;
         }
 
-        public static List<GfxAnimGroup> GenerateAnimGroups(GfxModel model)
+        public static List<GfxAnimGroup> GenerateAnimGroups(GfxModel model, AnimationSettings settings)
         {
             List<GfxAnimGroup> animations = new List<GfxAnimGroup>();
-            animations.Add(GenerateMatAnims(model.Materials));
+            animations.Add(GenerateMatAnims(model.Materials, settings));
             animations.Add(GenerateVisAnims(model, model.Meshes));
             return animations;
         }
 
-        public static GfxAnimGroup GenerateMatAnims(GfxDict<GfxMaterial> materials)
+        public static GfxAnimGroup GenerateMatAnims(GfxDict<GfxMaterial> materials, AnimationSettings settings)
         {
             var anim = new GfxAnimGroup()
             {
@@ -141,6 +173,9 @@ namespace CtrLibrary.Bcres
 
             foreach (var elem in MaterialAnimElements)
             {
+                if (settings.MaterialTypes.ContainsKey(elem.Key) && !settings.MaterialTypes[elem.Key])
+                    continue;
+
                 foreach (var mat in materials)
                 {
                     //The element name (with included material name)
