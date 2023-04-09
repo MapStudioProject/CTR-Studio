@@ -314,7 +314,6 @@ namespace CtrLibrary.Bch
                 {
                     //Save image as png
                     var image = h3dTex.ToBitmap();
-                    image.Mutate(x => x.Flip(FlipMode.Vertical));
                     image.SaveAsPng(Path.Combine(folder, $"{h3dTex.Name}.png"));
                     image.Dispose();
                 }

@@ -290,7 +290,6 @@ namespace CtrLibrary.Bcres
                         //Save image as png
                         var h3dTex = tex.ToH3D();
                         var image = h3dTex.ToBitmap();
-                        image.Mutate(x => x.Flip(FlipMode.Vertical));
                         image.SaveAsPng(Path.Combine(folder, $"{tex.Name}.png"));
                         image.Dispose();
                     }
