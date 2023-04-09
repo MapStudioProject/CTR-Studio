@@ -25,6 +25,7 @@ using SPICA.PICA.Converters;
 using SPICA.Formats.CtrGfx.AnimGroup;
 using Toolbox.Core.Animations;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace CtrLibrary.Bcres
 {
@@ -288,7 +289,10 @@ namespace CtrLibrary.Bcres
                     {
                         //Save image as png
                         var h3dTex = tex.ToH3D();
-                        h3dTex.ToBitmap().SaveAsPng(Path.Combine(folder, $"{tex.Name}.png"));
+                        var image = h3dTex.ToBitmap();
+                        image.Mutate(x => x.Flip(FlipMode.Vertical));
+                        image.SaveAsPng(Path.Combine(folder, $"{tex.Name}.png"));
+                        image.Dispose();
                     }
                 }
                 if (dlg.FilePath.EndsWith(".json"))

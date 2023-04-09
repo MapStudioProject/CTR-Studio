@@ -30,6 +30,7 @@ using SPICA.Formats.Common;
 using SPICA.Rendering;
 using SixLabors.ImageSharp;
 using static CtrLibrary.Bch.BCH;
+using SixLabors.ImageSharp.Processing;
 
 namespace CtrLibrary.Bch
 {
@@ -312,7 +313,10 @@ namespace CtrLibrary.Bch
                 foreach (var h3dTex in H3DFile.Textures)
                 {
                     //Save image as png
-                    h3dTex.ToBitmap().Save(Path.Combine(folder, $"{h3dTex.Name}.png"));
+                    var image = h3dTex.ToBitmap();
+                    image.Mutate(x => x.Flip(FlipMode.Vertical));
+                    image.SaveAsPng(Path.Combine(folder, $"{h3dTex.Name}.png"));
+                    image.Dispose();
                 }
             }
             else if (filePath.EndsWith(".json"))
