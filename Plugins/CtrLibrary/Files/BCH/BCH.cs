@@ -349,6 +349,7 @@ namespace CtrLibrary.Bch
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.json";
+                dlg.MultiSelect = true;
                 dlg.AddFilter("json", "json");
 
                 if (dlg.ShowDialog())
