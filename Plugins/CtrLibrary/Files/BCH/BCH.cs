@@ -354,16 +354,20 @@ namespace CtrLibrary.Bch
 
                 if (dlg.ShowDialog())
                 {
-                    //Create section instance
-                    var item = (T)Activator.CreateInstance(typeof(T));
-                    item.Name = Path.GetFileNameWithoutExtension(dlg.FilePath);
-                    //Auto rename possible dupes
-                    item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
-                    //Add section list
-                    SectionList.Add(item);
-                    //Add to UI
-                    var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
-                    this.AddChild(node);
+                    foreach (var f in dlg.FilePaths)
+                    {
+                        //Create section instance
+                        var item = (T)Activator.CreateInstance(typeof(T));
+                        item.Name = Path.GetFileNameWithoutExtension(f);
+                        //Auto rename possible dupes
+                        item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                        //Add section list
+                        SectionList.Add(item);
+                        //Add to UI
+                        var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
+                        node.Replace(f);
+                        this.AddChild(node);
+                    }
                 }
             }
 
