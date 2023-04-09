@@ -9,6 +9,8 @@ using SPICA.Formats.CtrGfx.Model.Mesh;
 using SPICA.Formats.CtrGfx.Model;
 using SPICA.Formats.CtrGfx;
 using ImGuiNET;
+using Discord;
+using static Toolbox.Core.IO.STFileLoader;
 
 namespace CtrLibrary.Bcres
 {
@@ -26,6 +28,12 @@ namespace CtrLibrary.Bcres
             /// 
             /// </summary>
             public Dictionary<string, bool> MaterialTypes = new Dictionary<string, bool>();
+
+            public AnimationSettings()
+            {
+                foreach (var item in MaterialAnimElements)
+                    MaterialTypes.Add(item.Key, true);
+            }
         }
 
         public static AnimationSettings SetupMaterialSettings(GfxModel model)
@@ -39,6 +47,7 @@ namespace CtrLibrary.Bcres
                 var animTypes = AnimGroupHelper.MaterialAnimElements;
                 var mat = model.Materials[0];
 
+                setting.MaterialTypes.Clear();
                 int index = 0;
                 foreach (var item in animTypes)
                 {
