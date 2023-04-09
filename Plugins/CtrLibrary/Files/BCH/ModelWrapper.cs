@@ -321,7 +321,7 @@ namespace CtrLibrary.Bch
             }
             else if (filePath.EndsWith(".json"))
                 File.WriteAllText(filePath, JsonConvert.SerializeObject(Model, Formatting.Indented));
-            else if (filePath.EndsWith(".bcmdl"))
+            else if (filePath.EndsWith(".bch"))
             {
                 BCH.ExportRaw(filePath, Model, BCH.H3DGroupType.Models);
             }
@@ -353,7 +353,7 @@ namespace CtrLibrary.Bch
                     }
                 });
             }
-            else if (filePath.ToLower().EndsWith(".bcmdl"))
+            else if (filePath.ToLower().EndsWith(".bch"))
             {
                 try
                 {
