@@ -221,10 +221,10 @@ namespace CtrLibrary.Bcres
             Model.Materials.Clear();
             foreach (MTOB material in _materialFolder.Children) {
                 material.GfxMaterial.ConvertH3D(material.Material);
-
                 Model.Materials.Add(material.GfxMaterial);
             }
 
+            GenerateAnimGroups();
 
             if (Model.MeshNodeVisibilities.Count > 0)
             {

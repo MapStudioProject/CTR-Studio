@@ -9,6 +9,10 @@ using ImGuiNET;
 using GLFrameworkEngine;
 using MapStudio.UI;
 using OpenTK;
+using Newtonsoft.Json;
+using SPICA.Formats.CtrGfx;
+using SPICA.Formats.CtrGfx.AnimGroup;
+using Discord;
 
 namespace CtrLibrary.Bcres
 {
@@ -20,8 +24,11 @@ namespace CtrLibrary.Bcres
         private int selectedMeshID = 0;
         private int hoveredMeshID = -1;
 
+        private CMDL ModelNode;
+
         public void Init(CMDL modelNode, GfxModel model)
         {
+            ModelNode = modelNode;
             GfxModel = model;
         }
 
@@ -54,23 +61,23 @@ namespace CtrLibrary.Bcres
 
         private void DrawAnimInfo()
         {
-            if (GfxModel.AnimationsGroup.Contains("MaterialAnimation"))
+            bool checkAll = ModelNode.AnimGroupSettings.MaterialTypes.All(x => x.Value == true);
+            if (ImGui.Checkbox("Toggle All", ref checkAll))
             {
-                var anim = GfxModel.AnimationsGroup["MaterialAnimation"];
-                //All mat animation types
-                var animTypes = AnimGroupHelper.MaterialAnimElements;
-                var mat = GfxModel.Materials[0];
+                foreach (var item in ModelNode.AnimGroupSettings.MaterialTypes)
+                    ModelNode.AnimGroupSettings.MaterialTypes[item.Key] = checkAll;
+            }
 
-                int index = 0;
-                foreach (var item in animTypes)
+            int index = 0;
+            foreach (var item in ModelNode.AnimGroupSettings.MaterialTypes)
+            {
+                string name = AnimGroupHelper.MatAnimTypes[index++];
+
+                bool hasType = item.Value;
+                if (ImGui.Checkbox($"Animate {name}", ref hasType))
                 {
-                    //Name of element to display in UI
-                    string name = AnimGroupHelper.MatAnimTypes[index];
-                    //Check if the first material has the binded set of data
-                    bool hasType = anim.Elements.Any(x => x.Name == string.Format(item.Key, mat.Name, "0"));
-                    ImGui.Checkbox($"Animate {name}", ref hasType);
-
-                    index++;
+                    ModelNode.AnimGroupSettings.MaterialTypes[item.Key] = hasType;
+                    ModelNode.GenerateAnimGroups();
                 }
             }
         }
