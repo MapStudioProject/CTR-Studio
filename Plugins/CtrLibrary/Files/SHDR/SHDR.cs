@@ -59,7 +59,7 @@ namespace CtrLibrary
                 var geomIndex = prog.IsGeometryShader ? programIndex : -1;
                 //If geometry use last vertex ID and assume it is used in combination
 
-                var ShaderUI = new ShaderUI(ShaderBinary, !prog.IsGeometryShader ? programIndex : vertexIndex, geomIndex);
+                var ShaderUI = new ShaderUI(ShaderBinary, !prog.IsGeometryShader ? programIndex : vertexIndex - 1, geomIndex);
                 proNode.TagUI.UIDrawer += delegate
                 {
                     ShaderUI.Render();
