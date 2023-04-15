@@ -205,8 +205,8 @@ namespace CtrLibrary.Bch
 
         public override string DefaultExtension => ".png";
 
-        public override string[] ExportFilters => TextureDialog.SupportedExtensions;
-        public override string[] ReplaceFilters => TextureDialog.SupportedExtensions;
+        public override string[] ExportFilters => new string[] { ".png", ".bctex", ".jpeg",".jpg",".bmp",".gif",".tga", ".tif", ".tiff", };
+        public override string[] ReplaceFilters => new string[] { ".png", ".bctex", ".jpeg", ".jpg", ".bmp", ".gif", ".tga", ".tif", ".tiff", };
 
         public override MenuItemModel[] ExtraMenuItems
         {
