@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ImGuiNET;
 using GLFrameworkEngine;
 using MapStudio.UI;
+using SPICA.Rendering;
 
 namespace CtrLibrary.Bcres
 {
@@ -48,8 +49,19 @@ namespace CtrLibrary.Bcres
             int materialIdx = GfxMesh.MaterialIndex;
             bool isVisible = GfxMesh.IsVisible;
 
-            ImGuiHelper.InputFromText("Name", GfxMesh, "Name", 0x200);
-            ImGuiHelper.InputFromText("Vis Node Name", GfxMesh, "MeshNodeName", 0x200);
+            void UpdateUIMeshName()
+            {
+                MeshNode.Header = string.IsNullOrEmpty(GfxMesh.Name) ? GfxMesh.MeshNodeName : GfxMesh.Name;
+                if (string.IsNullOrEmpty(MeshNode.Header))
+                    MeshNode.Header = $"Mesh{GfxModel.Meshes.IndexOf(GfxMesh)}";
+            }
+
+            if (ImGuiHelper.InputFromText("Name", GfxMesh, "Name", 0x200))
+                UpdateUIMeshName();
+
+            if (ImGuiHelper.InputFromText("Vis Node Name", GfxMesh, "MeshNodeName", 0x200))
+                UpdateUIMeshName();
+
             if (ImGui.Checkbox("Is Visible", ref isVisible))
             {
                 var selected = MeshNode.Parent.Children.Where(x => x.IsSelected);
