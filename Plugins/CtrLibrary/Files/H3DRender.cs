@@ -172,8 +172,11 @@ namespace CtrLibrary.Rendering
             //Setup the debug render data
             PrepareDebugShading();
 
-            /*for (int i = 0; i < Skeletons.Count; i++)
+            for (int i = 0; i < Skeletons.Count; i++)
             {
+                if (Renderer.Models.Count <= i)
+                    break;
+
                 var skel = Skeletons[i];
                 if (Renderer.Models[i].SkeletalAnim != null)
                 {
@@ -189,7 +192,7 @@ namespace CtrLibrary.Rendering
                     }
                     skel.Update();
                 }
-            }*/
+            }
 
             //Setup the camera
             Renderer.Camera.ProjectionMatrix = context.Camera.ProjectionMatrix;
