@@ -36,6 +36,8 @@ using SPICA.Formats.CtrGfx.Shader;
 using Discord;
 using static System.Collections.Specialized.BitVector32;
 using SPICA.PICA.Shader;
+using static CtrLibrary.Bch.BCH;
+using Toolbox.Core.Animations;
 
 namespace CtrLibrary.Bcres
 {
@@ -180,10 +182,6 @@ namespace CtrLibrary.Bcres
             AddNodeGroup(H3DGroupType.LightAnim, BcresData.LightAnimations);
             AddNodeGroup(H3DGroupType.FogAnim, BcresData.FogAnimations);
             AddNodeGroup(H3DGroupType.Emitter, BcresData.Emitters);
-
-            foreach (CMDL model in ModelFolder.Children)
-                if (model.SkeletonRenderer != null)
-                    Render.Skeletons.Add(model.SkeletonRenderer);
         }
 
         /// <summary>
@@ -236,6 +234,19 @@ namespace CtrLibrary.Bcres
             foreach (var lut in LUTFolder.SectionList)
                 BcresData.LUTs.Add(SPICA.Formats.CtrGfx.LUT.GfxLUT.FromH3D(lut));
             
+          /*  foreach (var folder in this.Root.Children)
+            {
+                if (folder is H3DGroupNode<GfxAnimation>)
+                {
+                    var animNode = (H3DGroupNode<GfxAnimation>)folder;
+                    if (animNode.Type == H3DGroupType.MaterialAnim)
+                    {
+                        foreach (AnimationNode<GfxAnimation> anim in animNode.Children)
+                            anim.OnSave();
+                    }
+                }
+            }*/
+
             Gfx.Save(stream, BcresData);
         }
 
@@ -298,7 +309,7 @@ namespace CtrLibrary.Bcres
         class H3DGroupNode<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
             public H3DGroupType Type;
-            GfxDict<T> SectionList;
+            public GfxDict<T> SectionList;
 
             public H3DGroupNode(H3DGroupType type)
             {
@@ -321,6 +332,8 @@ namespace CtrLibrary.Bcres
                 {
                     if (item is GfxShader)
                         this.AddChild(new ShaderNode<T>(SectionList, item));
+                    else if (item is GfxAnimation)
+                        this.AddChild(new AnimationNode<T>(SectionList, item));
                     else
                         this.AddChild(new NodeSection<T>(SectionList, item));
                 }
@@ -367,12 +380,29 @@ namespace CtrLibrary.Bcres
                 dlg.SaveDialog = false;
                 dlg.FileName = $"{Header}.json";
                 dlg.AddFilter("json", "json");
+                dlg.AddFilter("bcres", "bcres");
+
                 if (dlg.ShowDialog())
                 {
-                    var item = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                    var nodeFile = new NodeSection<T>(SectionList, item);
-                    AddChild(nodeFile);
-                    SectionList.Add(item);
+                    //Replace as raw binary or json text formats
+                    if (dlg.FilePath.ToLower().EndsWith(".bcres"))
+                    {
+                        var item = Activator.CreateInstance(typeof(T)) as SPICA.Formats.Common.INamed;
+                        item.Name = Path.GetFileNameWithoutExtension(dlg.FilePath);
+
+                        var nodeFile = new NodeSection<T>(SectionList, item);
+                        item = (T)NodeSection<T>.ReplaceRaw(dlg.FilePath, Type);
+
+                        AddChild(nodeFile);
+                        SectionList.Add((T)item);
+                    }
+                    else
+                    {
+                        var item = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
+                        var nodeFile = new NodeSection<T>(SectionList, item);
+                        AddChild(nodeFile);
+                        SectionList.Add(item);
+                    }
                 }
             }
 
@@ -428,6 +458,52 @@ namespace CtrLibrary.Bcres
             }
         }
 
+        class AnimationNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            public H3DAnimation H3DAnimation;
+
+            public AnimationNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                H3DAnimation = ((GfxAnimation)section).ToH3DAnimation();
+                var wrapper = new AnimationWrapper(H3DAnimation);
+                Tag = wrapper;
+
+                this.OnSelected += delegate
+                {
+                    ((AnimationWrapper)Tag).AnimationSet();
+                };
+            }
+
+            public override void Export()
+            {
+               // OnSave();
+
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = true;
+                dlg.FileName = $"{Header}.json";
+                dlg.AddFilter(".json", "json");
+                dlg.AddFilter(".bcres", "bcres");
+                if (dlg.ShowDialog())
+                {
+                    if (dlg.FilePath.EndsWith(".json"))
+                    {
+                        File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    }
+                    else
+                    {
+                        var type = ((H3DGroupNode<T>)this.Parent).Type;
+                        ExportRaw(dlg.FilePath, Section, type);
+                    }
+                }
+            }
+
+            public void OnSave()
+            {
+                ((AnimationWrapper)Tag).ToH3D(H3DAnimation);
+               ((GfxAnimation)Section).FromH3D(H3DAnimation);
+            }
+        }
+
         class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
             internal object Section;
@@ -446,17 +522,6 @@ namespace CtrLibrary.Bcres
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
 
-                if (section is GfxAnimation)
-                {
-                    var anim = ((GfxAnimation)section).ToH3DAnimation();
-                    var wrapper = new AnimationWrapper((H3DAnimation)anim);
-                    Tag = wrapper;
-                }
-                this.OnSelected += delegate
-                {
-                    if (Tag is AnimationWrapper)
-                        ((AnimationWrapper)Tag).AnimationSet();
-                };
                 this.OnHeaderRenamed += delegate
                 {
                     ((INamed)Section).Name = this.Header;
@@ -468,7 +533,7 @@ namespace CtrLibrary.Bcres
                 File.WriteAllText(filePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
             }
 
-            void Replace()
+            public virtual void Replace()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
@@ -491,7 +556,7 @@ namespace CtrLibrary.Bcres
                 }
             }
 
-            void Export()   
+            public virtual void Export()   
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;

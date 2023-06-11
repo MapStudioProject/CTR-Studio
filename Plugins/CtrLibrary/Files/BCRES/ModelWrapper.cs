@@ -203,7 +203,11 @@ namespace CtrLibrary.Bcres
                 var skeleton = ((GfxModelSkeletal)Model).Skeleton;
                 this.Skeleton = new FSKL(skeleton);
 
+                if (SkeletonRenderer != null)
+                    ParentBCRESNode.Render.Skeletons.Remove(SkeletonRenderer);
+
                 SkeletonRenderer = new SkeletonRenderer(Skeleton);
+                ParentBCRESNode.Render.Skeletons.Add(SkeletonRenderer);
 
                 _skeletonFolder.Children.Clear();
                 foreach (var bone in SkeletonRenderer.Bones)
@@ -224,7 +228,7 @@ namespace CtrLibrary.Bcres
                 Model.Materials.Add(material.GfxMaterial);
             }
 
-            GenerateAnimGroups();
+         //   GenerateAnimGroups();
 
             if (Model.MeshNodeVisibilities.Count > 0)
             {
@@ -625,6 +629,7 @@ namespace CtrLibrary.Bcres
                 if (Mesh.H3DMesh != null)
                     Mesh.H3DMesh.IsSelected =  this.IsSelected;
             };
+
 
             HasCheckBox = true;
             OnChecked += delegate
