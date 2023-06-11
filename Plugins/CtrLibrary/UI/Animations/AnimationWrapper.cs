@@ -13,6 +13,7 @@ using Toolbox.Core.Animations;
 using UIFramework;
 using SPICA.Rendering.SPICA_GL;
 using SPICA.Math3D;
+using SPICA.Formats.Common;
 
 namespace CtrLibrary
 {
@@ -40,6 +41,7 @@ namespace CtrLibrary
             Root.Header = Name;
             Root.Icon = '\uf0e7'.ToString();
 
+            this.Loop = false;
             if (animation.AnimationFlags.HasFlag(H3DAnimationFlags.IsLooping))
                 this.Loop = true;
 
@@ -47,6 +49,50 @@ namespace CtrLibrary
                 AddElement(Elem);
 
             MaterialAnimUI.ReloadTree(Root, this, animation);
+        }
+
+        public void ToH3D(H3DAnimation animation)
+        {
+            //Save generic in tool animation format back into H3D animation data
+            animation.FramesCount = FrameCount;
+            if (Loop)
+                animation.AnimationFlags |= H3DAnimationFlags.IsLooping;
+            else
+                animation.AnimationFlags &= ~H3DAnimationFlags.IsLooping;
+
+            foreach (ElementNode elementNode in this.AnimGroups)
+            {
+                foreach (var group in elementNode.SubAnimGroups)
+                {
+                    //Apply animation group data
+                    if (group is Vector2Group)
+                    {
+                        ((Vector2Group)group).X.Save();
+                        ((Vector2Group)group).Y.Save();
+                    }
+                    else if (group is Vector3Group)
+                    {
+                        ((Vector3Group)group).X.Save();
+                        ((Vector3Group)group).Y.Save();
+                        ((Vector3Group)group).Z.Save();
+                    }
+                    else if (group is FloatGroup)
+                    {
+                        ((FloatGroup)group).Value.Save();
+                    }
+                    else if (group is RGBAGroup)
+                    {
+                        ((RGBAGroup)group).R.Save();
+                        ((RGBAGroup)group).G.Save();
+                        ((RGBAGroup)group).B.Save();
+                        ((RGBAGroup)group).A.Save();
+                    }
+                    else if (group is TextureGroup)
+                    {
+                        ((TextureGroup)group).Value.Save();
+                    }
+                }
+            }
         }
 
         public ElementNode AddElement(H3DAnimationElement Elem)
@@ -303,6 +349,18 @@ namespace CtrLibrary
                 Element = element;
                 Name = element.Name;
             }
+
+            public void Save()
+            {
+                if (Element is H3DFloatKeyFrameGroup)
+                {
+
+                }
+
+                foreach (var group in this.SubAnimGroups)
+                { 
+                }
+            }
         }
 
         public class BoolGroup : STAnimGroup
@@ -318,8 +376,6 @@ namespace CtrLibrary
         public class TextureGroup : STAnimGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
-
-            public List<string> Textures;
         }
 
         public class Vector2Group : STAnimGroup
@@ -375,6 +431,8 @@ namespace CtrLibrary
             H3DFloatKeyFrameGroup KeyData;
             H3DAnimBoolean KeyBoolData;
 
+            private int Hash;
+
             public H3DTrack(string name) { Name = name; }
 
             public void Load(int frame, float value)
@@ -420,6 +478,7 @@ namespace CtrLibrary
                         Value = 0,
                     });
                 }
+                Hash = CalculateHash();
             }
 
             public void Load(H3DFloatKeyFrameGroup group)
@@ -459,6 +518,48 @@ namespace CtrLibrary
                                 Value = key.Value,
                             });
                             break;
+                    }
+                }
+                Hash = CalculateHash();
+            }
+
+            private int CalculateHash()
+            {
+                int hash = 0;
+                hash += this.InterpolationType.GetHashCode();
+                for (int i = 0; i < KeyFrames.Count; i++)
+                {
+                    hash += KeyFrames[i].Frame.GetHashCode();
+                    hash += KeyFrames[i].Value.GetHashCode();
+                }
+                return hash;
+            }
+
+            //Convert data back into H3D key data
+            public void Save() 
+            {
+                //Check if keys have been edited or not
+                int hash = CalculateHash();
+                if (Hash == hash)
+                    return;
+
+                //Update hash with resave
+                Hash = hash;
+
+                //Set expected end frame.
+                KeyData.EndFrame = this.KeyFrames.Max(x => x.Frame);
+
+                //Convert key data back
+                KeyData.KeyFrames.Clear();
+                foreach (var key in this.KeyFrames)
+                {
+                    KeyFrame kf = new KeyFrame() { Frame = key.Frame, Value = key.Value, };
+                    KeyData.KeyFrames.Add(kf);
+
+                    if (key is STHermiteKeyFrame)
+                    {
+                        kf.InSlope = ((STHermiteKeyFrame)key).TangentIn;
+                        kf.OutSlope = ((STHermiteKeyFrame)key).TangentOut;
                     }
                 }
             }
