@@ -281,8 +281,7 @@ namespace CtrLibrary.Bcres
             H3DGroupNode<T> folder = new H3DGroupNode<T>(type);
             folder.Load(section);
 
-            if (folder.Children.Count > 0)
-                Root.AddChild(folder);
+            Root.AddChild(folder);
         }
 
         public enum H3DGroupType
