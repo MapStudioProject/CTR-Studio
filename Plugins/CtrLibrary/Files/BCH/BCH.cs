@@ -279,8 +279,7 @@ namespace CtrLibrary.Bch
                     folder.AddChild(new NodeSection<T>(subSections, item));
             }
 
-            if (folder.Children.Count > 0)
-                Root.AddChild(folder);
+            Root.AddChild(folder);
         }
 
         public enum H3DGroupType
