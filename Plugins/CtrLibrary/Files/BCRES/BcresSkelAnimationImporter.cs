@@ -19,17 +19,25 @@ namespace CtrLibrary
     {
         public static GfxAnimation Import(string filePath)
         {
+            var gfxAnimation = new GfxAnimation();
+            gfxAnimation.Name = Path.GetFileNameWithoutExtension(filePath);
+            gfxAnimation.LoopMode = GfxLoopMode.Loop;
+            gfxAnimation.MetaData = new GfxDict<GfxMetaData>();
+
+            Import(filePath, gfxAnimation);
+
+            return gfxAnimation;
+        }
+
+        public static void Import(string filePath, GfxAnimation gfxAnimation)
+        {
             var scene = IOManager.LoadScene(filePath, new ImportSettings());
             var ioanim = scene.Animations.FirstOrDefault();
             if (ioanim == null)
                 throw new Exception($"Failed to find animation in file!");
 
-            var gfxAnimation = new GfxAnimation();
-            gfxAnimation.Name = Path.GetFileNameWithoutExtension(filePath);
-            gfxAnimation.LoopMode = GfxLoopMode.Loop;
             gfxAnimation.TargetAnimGroupName = "SkeletalAnimation";
             gfxAnimation.FramesCount = ioanim.EndFrame != 0 ? ioanim.EndFrame : ioanim.GetFrameCount();
-            gfxAnimation.MetaData = new GfxDict<GfxMetaData>();
 
             void LoadGroups(IOAnimation animation)
             {
@@ -76,8 +84,6 @@ namespace CtrLibrary
 
             foreach (var anim in ioanim.Groups)
                 LoadGroups(anim);
-
-            return gfxAnimation;
         }
 
         private static GfxAnimMtxTransform ImportMtxTransform(IOAnimation animation)
