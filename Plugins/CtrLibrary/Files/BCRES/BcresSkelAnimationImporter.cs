@@ -1,10 +1,16 @@
 ﻿using CtrLibrary.Bcres;
 using IONET;
+using IONET.Core;
 using IONET.Core.Animation;
+using IONET.Core.Model;
+using IONET.Core.Skeleton;
 using SPICA.Formats.Common;
 using SPICA.Formats.CtrGfx;
 using SPICA.Formats.CtrGfx.Animation;
 using SPICA.Formats.CtrGfx.Model;
+using SPICA.Formats.CtrH3D.Animation;
+using SPICA.Formats.CtrH3D.Model;
+using SPICA.Rendering.SPICA_GL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,24 +18,337 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Toolbox.Core;
+using static GLFrameworkEngine.CameraFrame;
 
 namespace CtrLibrary
 {
     public class BcresSkelAnimationImporter
     {
-        public static GfxAnimation Import(string filePath)
+        public class ExportSettings
+        {
+            public bool ExportMatrices = false;
+        }
+
+        public static void Export(GfxAnimation gfxAnimation, H3DModel model, string filePath)
+        {
+            IOAnimation anm = new IOAnimation();
+            anm.Name = Path.GetFileNameWithoutExtension(filePath);
+            anm.StartFrame = 0;
+            anm.EndFrame = (float)gfxAnimation.FramesCount;
+
+            ExportSettings settings = new ExportSettings();
+
+            foreach (var element in gfxAnimation.Elements)
+            {
+                IOAnimation group = new IOAnimation();
+                group.Name = element.Name;
+                anm.Groups.Add(group);
+
+                Vector3 InvScale = Vector3.One;
+                H3DBone parent = null;
+
+                if (model != null && model.Skeleton.Contains(element.Name))
+                {
+                    var bone = model.Skeleton[element.Name];
+                    if ((bone.Flags & H3DBoneFlags.IsSegmentScaleCompensate) != 0)
+                        parent = bone.ParentIndex != -1 ? model.Skeleton[bone.ParentIndex] : null;
+                }
+
+                switch (element.PrimitiveType)
+                {
+                    case GfxPrimitiveType.QuatTransform:
+                        ConvertQuatTransform(group, (GfxAnimQuatTransform)element.Content, settings);
+                        break;
+                    case GfxPrimitiveType.MtxTransform:
+                        ConvertMtxTransform(group, (GfxAnimMtxTransform)element.Content, settings);
+                        break;
+                    case GfxPrimitiveType.Transform:
+                        ConvertSRTTransform(group, (GfxAnimTransform)element.Content, parent);
+                        break;
+                    default:
+                        throw new Exception($"Unsupported primitive type! {element.PrimitiveType}");
+                }
+            }
+
+            IOModel iomodel = new IOModel();
+            iomodel.Name = model.Name;
+
+
+            //Convert skeleton
+            List<IOBone> bones = new List<IOBone>();
+            foreach (var bone in model.Skeleton)
+            {
+                IOBone iobone = new IOBone();
+                iobone.Name = bone.Name;
+                iobone.Scale = new Vector3(bone.Scale.X, bone.Scale.Y, bone.Scale.Z);
+                iobone.RotationEuler = new Vector3(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
+                iobone.Translation = new Vector3(bone.Translation.X, bone.Translation.Y, bone.Translation.Z);
+                bones.Add(iobone);
+            }
+            //setup children and root
+            for (int i = 0; i < bones.Count; i++)
+            {
+                var bone = bones[i];
+                var parentIdx = model.Skeleton[i].ParentIndex;
+                if (parentIdx == -1)
+                    iomodel.Skeleton.RootBones.Add(bone);
+                else
+                    bones[parentIdx].AddChild(bone);
+            }
+
+            IOScene scene = new IOScene();
+            scene.Animations.Add(anm);
+            scene.Models.Add(iomodel);
+            scene.Name = anm.Name;
+
+            IOManager.ExportScene(scene, filePath);
+        }
+
+        static void ConvertSRTTransform(IOAnimation group, GfxAnimTransform transform, H3DBone parent)
+        {
+            //SRT keyed
+            if (transform.ScaleExists)
+            {
+                if (transform.ScaleX.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.ScaleX, IOAnimationTrackType.ScaleX));
+                if (transform.ScaleY.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.ScaleY, IOAnimationTrackType.ScaleY));
+                if (transform.ScaleZ.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.ScaleZ, IOAnimationTrackType.ScaleZ));
+            }
+            if (transform.RotationExists)
+            {
+                if (transform.RotationX.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.RotationX, IOAnimationTrackType.RotationEulerX));
+                if (transform.RotationY.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.RotationY, IOAnimationTrackType.RotationEulerY));
+                if (transform.RotationZ.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.RotationZ, IOAnimationTrackType.RotationEulerZ));
+            }
+            if (transform.TranslationExists)
+            {
+                if (transform.TranslationX.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.TranslationX, IOAnimationTrackType.PositionX));
+                if (transform.TranslationY.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.TranslationY, IOAnimationTrackType.PositionY));
+                if (transform.TranslationZ.KeyFrames.Count > 0)
+                    group.Tracks.Add(ConvertTrack(transform.TranslationZ, IOAnimationTrackType.PositionZ));
+            }
+        }
+
+        static IOAnimationTrack ConvertTrack(GfxFloatKeyFrameGroup keyFrameGroup, IOAnimationTrackType type)
+        {
+            IOAnimationTrack track = new IOAnimationTrack();
+            track.PreWrap = ConvertLoop(keyFrameGroup.PreRepeat);
+            track.PostWrap = ConvertLoop(keyFrameGroup.PostRepeat);
+            track.ChannelType = type;
+
+            foreach (var key in keyFrameGroup.KeyFrames)
+            {
+                if (!keyFrameGroup.IsLinear)
+                {
+                    track.KeyFrames.Add(new IOKeyFrameHermite()
+                    {
+                        Frame = key.Frame,
+                        Value = key.Value,
+                        TangentSlopeInput = key.InSlope,
+                        TangentSlopeOutput = key.OutSlope,
+                    });
+                }
+                else
+                {
+                    track.KeyFrames.Add(new IOKeyFrame()
+                    {
+                        Frame = key.Frame,
+                        Value = key.Value,
+                    });
+                }
+            }
+            return track;
+        }
+
+        static void ConvertQuatTransform(IOAnimation group, GfxAnimQuatTransform transform, ExportSettings settings)
+        {
+            //baked with quats
+            if (settings.ExportMatrices) //convert data to matrices
+            {
+                int count = transform.HasTranslation ? transform.Translations.Count : 0;
+                if (transform.HasRotation)
+                    count = transform.Rotations.Count;
+                if (transform.HasScale)
+                    count = transform.Scales.Count;
+
+                IOAnimationTrack track = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.TransformMatrix4x4 };
+                group.Tracks.Add(track);
+
+                for (int i = 0; i < count; i++)
+                {
+                    var quat = transform.HasRotation ? transform.Rotations[i] : Quaternion.Identity;
+                    var sca = transform.HasScale ? transform.Scales[i] : Vector3.One;
+                    var pos = transform.HasTranslation ? transform.Translations[i] : Vector3.Zero;
+
+                    var mtxScale = OpenTK.Matrix4.CreateScale(sca.X, sca.Y, sca.Z);
+                    var mtxRot = OpenTK.Matrix4.CreateFromQuaternion(new OpenTK.Quaternion(quat.X, quat.Y, quat.Z, quat.W));
+                    var mtxTrans = OpenTK.Matrix4.CreateTranslation(pos.X, pos.Y, pos.Z);
+                    var matrix = mtxScale * mtxRot * mtxTrans;
+
+                    track.KeyFrames.Add(new IOKeyFrame()
+                    {
+                        Frame = i,
+                        Value = new float[16]
+                        {
+                            matrix.M11, matrix.M21, matrix.M31, matrix.M41,
+                            matrix.M12, matrix.M22, matrix.M32, matrix.M42,
+                            matrix.M13, matrix.M23, matrix.M33, matrix.M43,
+                            0, 0, 0, 1,
+                        }
+                    });
+                }
+            }
+            else //else key the data and convert quat to euler. Don't use quat directly as most formats do not support them
+            {
+                if (transform.HasTranslation)
+                {
+                    IOAnimationTrack x = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionX };
+                    IOAnimationTrack y = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionX };
+                    IOAnimationTrack z = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionX };
+                    group.Tracks.Add(x);
+                    group.Tracks.Add(y);
+                    group.Tracks.Add(z);
+
+                    for (int i = 0; i < transform.Translations.Count; i++)
+                    {
+                        x.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Translations[i].X });
+                        y.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Translations[i].Y });
+                        z.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Translations[i].Z });
+                    }
+                }
+                if (transform.HasRotation)
+                {
+                    IOAnimationTrack x = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerX };
+                    IOAnimationTrack y = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerY };
+                    IOAnimationTrack z = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerZ };
+                    group.Tracks.Add(x);
+                    group.Tracks.Add(y);
+                    group.Tracks.Add(z);
+
+                    for (int i = 0; i < transform.Rotations.Count; i++)
+                    {
+                        var rot = ToEuler(transform.Rotations[i]);
+
+                        x.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.X });
+                        y.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.Y });
+                        z.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.Z });
+                    }
+                }
+                if (transform.HasScale)
+                {
+                    IOAnimationTrack x = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleX };
+                    IOAnimationTrack y = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleY };
+                    IOAnimationTrack z = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleZ };
+                    group.Tracks.Add(x);
+                    group.Tracks.Add(y);
+                    group.Tracks.Add(z);
+
+                    for (int i = 0; i < transform.Scales.Count; i++)
+                    {
+                        x.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Scales[i].X });
+                        y.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Scales[i].Y });
+                        z.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = transform.Scales[i].Z });
+                    }
+                }
+            }
+        }
+
+        static Vector3 ToEuler(Quaternion q)
+        {
+            return new Vector3(
+                (float)Math.Atan2(2 * (q.X * q.W + q.Y * q.Z), 1 - 2 * (q.X * q.X + q.Y * q.Y)),
+                -(float)Math.Asin(2 * (q.X * q.Z - q.W * q.Y)),
+                (float)Math.Atan2(2 * (q.X * q.Y + q.Z * q.W), 1 - 2 * (q.Y * q.Y + q.Z * q.Z)));
+        }
+
+        static void ConvertMtxTransform(IOAnimation group, GfxAnimMtxTransform transform, ExportSettings settings)
+        {
+            //baked matrices
+            if (settings.ExportMatrices)
+            {
+                IOAnimationTrack track = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.TransformMatrix4x4 };
+                group.Tracks.Add(track);
+
+                for (int i = 0; i < transform.Frames.Count; i++)
+                {
+                    var matrix = transform.Frames[i];
+                    track.KeyFrames.Add(new IOKeyFrame()
+                    {
+                        Frame = i,
+                        Value = new float[16] 
+                        {
+                            matrix.M11, matrix.M21, matrix.M31, matrix.M41,
+                            matrix.M12, matrix.M22, matrix.M32, matrix.M42,
+                            matrix.M13, matrix.M23, matrix.M33, matrix.M43,
+                            0, 0, 0, 1,
+                        }
+                    });
+                }
+            }
+            else //compose data from the matrices
+            {
+                IOAnimationTrack px = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionX };
+                IOAnimationTrack py = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionY };
+                IOAnimationTrack pz = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.PositionZ };
+                IOAnimationTrack rx = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerX };
+                IOAnimationTrack ry = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerY };
+                IOAnimationTrack rz = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.RotationEulerZ };
+                IOAnimationTrack sx = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleX };
+                IOAnimationTrack sy = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleY };
+                IOAnimationTrack sz = new IOAnimationTrack() { ChannelType = IOAnimationTrackType.ScaleZ };
+
+                group.Tracks.Add(px);
+                group.Tracks.Add(py);
+                group.Tracks.Add(pz);
+                group.Tracks.Add(rx);
+                group.Tracks.Add(ry);
+                group.Tracks.Add(rz);
+                group.Tracks.Add(sx);
+                group.Tracks.Add(sy);
+                group.Tracks.Add(sz);
+
+                for (int i = 0; i < transform.Frames.Count; i++)
+                {
+                    var matrix = transform.Frames[i];
+                    var mat4 = matrix.ToMatrix4x4().ToMatrix4();
+
+                    var rot = mat4.ExtractRotation();
+                    var sca = mat4.ExtractScale();
+                    var pos = mat4.ExtractTranslation();
+
+                    px.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = pos.X });
+                    py.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = pos.Y });
+                    pz.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = pos.Z });
+                    sx.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = sca.X });
+                    sy.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = sca.Y });
+                    sz.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = sca.Z });
+                    rx.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.X });
+                    ry.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.Y });
+                    rz.KeyFrames.Add(new IOKeyFrame() { Frame = i, Value = rot.Z });
+                }
+            }
+        }
+
+        public static GfxAnimation Import(string filePath, H3DModel model)
         {
             var gfxAnimation = new GfxAnimation();
             gfxAnimation.Name = Path.GetFileNameWithoutExtension(filePath);
             gfxAnimation.LoopMode = GfxLoopMode.Loop;
             gfxAnimation.MetaData = new GfxDict<GfxMetaData>();
 
-            Import(filePath, gfxAnimation);
+            Import(filePath, gfxAnimation, model);
 
             return gfxAnimation;
         }
 
-        public static void Import(string filePath, GfxAnimation gfxAnimation)
+        public static void Import(string filePath, GfxAnimation gfxAnimation, H3DModel model)
         {
             var scene = IOManager.LoadScene(filePath, new ImportSettings());
             var ioanim = scene.Animations.FirstOrDefault();
@@ -38,6 +357,7 @@ namespace CtrLibrary
 
             gfxAnimation.TargetAnimGroupName = "SkeletalAnimation";
             gfxAnimation.FramesCount = ioanim.EndFrame != 0 ? ioanim.EndFrame : ioanim.GetFrameCount();
+            gfxAnimation.Elements.Clear();
 
             void LoadGroups(IOAnimation animation)
             {
@@ -51,6 +371,7 @@ namespace CtrLibrary
                 //create a bone anim element
                 GfxAnimationElement element = new GfxAnimationElement();
                 element.Name = animation.Name;
+                gfxAnimation.Elements.Add(element);
 
                 //Normal keyed SRT
                 var type = GfxPrimitiveType.Transform;
@@ -261,6 +582,18 @@ namespace CtrLibrary
                 case IOCurveWrapMode.Oscillate: return GfxLoopType.MirroredRepeat; //back and forth
                 default:
                     return GfxLoopType.None;
+            }
+        }
+
+        static IOCurveWrapMode ConvertLoop(GfxLoopType wrap)
+        {
+            switch (wrap)
+            {
+                case GfxLoopType.Repeat: return IOCurveWrapMode.Cycle;
+                case GfxLoopType.RelativeRepeat: return IOCurveWrapMode.CycleRelative;
+                case GfxLoopType.MirroredRepeat: return IOCurveWrapMode.Oscillate; //back and forth
+                default:
+                    return IOCurveWrapMode.Linear;
             }
         }
     }

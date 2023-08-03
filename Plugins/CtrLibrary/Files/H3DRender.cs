@@ -30,6 +30,9 @@ namespace CtrLibrary.Rendering
         /// </summary>
         public static Dictionary<string, H3DTexture> TextureCache = new Dictionary<string, H3DTexture>();
 
+        //For accessing H3D instances for bones
+        private static List<H3DRender> H3DRenderCache = new List<H3DRender>();
+
         public static List<Renderer> RenderCache = new List<Renderer>();
 
         //The H3D scene instance
@@ -51,6 +54,22 @@ namespace CtrLibrary.Rendering
 
         public H3DRender(H3D h3d, NodeBase parent) : base(parent) {
             Load(h3d);
+        }
+
+        public static H3DModel GetFirstVisibleModel()
+        {
+            foreach (var render in H3DRenderCache)
+            {
+                if (render.IsVisible)
+                {
+                    foreach (var model in render.Scene.Models)
+                    {
+                        if (model.IsVisible)
+                            return model;
+                    }
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -107,6 +126,8 @@ namespace CtrLibrary.Rendering
             Renderer = new Renderer(1, 1);
             RenderCache.Add(Renderer);
 
+            H3DRenderCache.Add(this);
+
             //Configurable scene lighting
             if (File.Exists("CtrScene.json"))
             {
@@ -162,6 +183,8 @@ namespace CtrLibrary.Rendering
 
             Renderer.DeleteAll();
             RenderCache.Remove(this.Renderer);
+
+            H3DRenderCache.Remove(this);
         }
 
         public override void DrawModel(GLContext context, Pass pass)

@@ -51,6 +51,29 @@ namespace CtrLibrary
             MaterialAnimUI.ReloadTree(Root, this, animation);
         }
 
+        public void Reload(H3DAnimation animation)
+        {
+            Name = animation.Name;
+            H3DAnimation = animation;
+            FrameCount = animation.FramesCount;
+            if (animation is H3DMaterialAnim)
+                TextureList = ((H3DMaterialAnim)animation).TextureNames;
+
+            //Create an animation node for loading into the dope sheet
+            Root = new AnimationTree.AnimNode(this);
+            Root.Header = Name;
+            Root.Icon = '\uf0e7'.ToString();
+
+            this.Loop = false;
+            if (animation.AnimationFlags.HasFlag(H3DAnimationFlags.IsLooping))
+                this.Loop = true;
+
+            foreach (var Elem in animation.Elements)
+                AddElement(Elem);
+
+            MaterialAnimUI.ReloadTree(Root, this, animation);
+        }
+
         public void ToH3D(H3DAnimation animation)
         {
             //Save generic in tool animation format back into H3D animation data

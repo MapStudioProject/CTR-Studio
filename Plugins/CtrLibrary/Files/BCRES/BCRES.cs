@@ -482,11 +482,22 @@ namespace CtrLibrary.Bcres
                 dlg.FileName = $"{Header}.json";
                 dlg.AddFilter(".json", "json");
                 dlg.AddFilter(".bcres", "bcres");
+
+                if (((GfxAnimation)Section).TargetAnimGroupName == "SkeletalAnimation")
+                {
+                    dlg.AddFilter(".anim", "anim");
+                    dlg.FileName = $"{Header}.anim";
+                }
+
                 if (dlg.ShowDialog())
                 {
                     if (dlg.FilePath.EndsWith(".json"))
                     {
                         File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                    }
+                    else if (dlg.FilePath.ToLower().EndsWith(".anim"))
+                    {
+                        BcresSkelAnimationImporter.Export(((GfxAnimation)Section), GetModel(), dlg.FilePath);
                     }
                     else
                     {
@@ -496,17 +507,61 @@ namespace CtrLibrary.Bcres
                 }
             }
 
+            private H3DModel GetModel()
+            {
+                return H3DRender.GetFirstVisibleModel();
+            }
+
+            public override void Replace()
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = false;
+                dlg.FileName = $"{Header}.json";
+                dlg.AddFilter(".json", "json");
+                dlg.AddFilter(".bcres", "bcres");
+
+                if (((GfxAnimation)Section).TargetAnimGroupName == "SkeletalAnimation")
+                {
+                    dlg.AddFilter(".anim", "anim");
+                    dlg.FileName = $"{Header}.anim";
+                }
+
+                if (dlg.ShowDialog())
+                {
+                    if (dlg.FilePath.EndsWith(".json"))
+                    {
+                        Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
+                        Dict[this.Header] = (T)Section;
+                        Dict[this.Header].Name = this.Header;
+                    }
+                    else if (dlg.FilePath.ToLower().EndsWith(".anim"))
+                    {
+                         BcresSkelAnimationImporter.Import(dlg.FilePath, ((GfxAnimation)Section), GetModel());
+                    }
+                    else
+                    {
+                        var type = ((H3DGroupNode<T>)this.Parent).Type;
+                        Section = ReplaceRaw(dlg.FilePath, type);
+                    }
+
+                    H3DAnimation = ((GfxAnimation)Section).ToH3DAnimation();
+                    ((AnimationWrapper)Tag).Reload(H3DAnimation);
+
+                    ((AnimationWrapper)Tag).AnimationSet();
+                }
+            }
+
             public void OnSave()
             {
                 ((AnimationWrapper)Tag).ToH3D(H3DAnimation);
-               ((GfxAnimation)Section).FromH3D(H3DAnimation);
+                ((GfxAnimation)Section).FromH3D(H3DAnimation);
             }
         }
 
         class NodeSection<T> : NodeBase where T : SPICA.Formats.Common.INamed
         {
             internal object Section;
-            private GfxDict<T> Dict;
+            internal GfxDict<T> Dict;
 
             public NodeSection(GfxDict<T> subSections, object section)
             {
