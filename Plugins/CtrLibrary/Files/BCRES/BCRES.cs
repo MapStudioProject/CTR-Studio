@@ -281,7 +281,25 @@ namespace CtrLibrary.Bcres
             H3DGroupNode<T> folder = new H3DGroupNode<T>(type);
             folder.Load(section);
 
-            Root.AddChild(folder);
+            if (folder.Children.Count > 0)
+                Root.AddChild(folder);
+
+            var addMenu = Root.ContextMenus.FirstOrDefault(x => x.Header == "Add");
+            if (addMenu == null)
+            {
+                addMenu = new MenuItemModel($"Add Folder", () =>
+                {
+                    if (!Root.Children.Contains(folder))
+                        Root.AddChild(folder);
+                });
+                Root.ContextMenus.Add(addMenu);
+            }
+
+            addMenu.MenuItems.Add(new MenuItemModel($"{type}", () =>
+            {
+                if (!Root.Children.Contains(folder))
+                    Root.AddChild(folder);
+            }));
         }
 
         public enum H3DGroupType
