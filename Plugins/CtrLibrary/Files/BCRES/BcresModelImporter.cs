@@ -15,6 +15,7 @@ using SPICA.PICA.Converters;
 using SPICA.PICA;
 using Newtonsoft.Json;
 using System.IO;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace CtrLibrary.Bcres
 {
@@ -371,9 +372,14 @@ namespace CtrLibrary.Bcres
             CalculatePositionScaleOffset(attributes.FirstOrDefault(), gfxShape, iomesh);
 
             vertexBuffer.Attributes.AddRange(attributes);
-            vertexBuffer.VertexStride = VerticesConverter.CalculateStride(attributes.Select(x => x.ToPICAAttribute()));
+            vertexBuffer.VertexStride = VerticesConverter.CalculateStride(attributes.Select(x => x.ToPICAAttribute()), true);
             vertexBuffer.RawBuffer = VerticesConverter.GetBuffer(vertices, attributes.Select(x => x.ToPICAAttribute()),    vertexBuffer.VertexStride);
             gfxShape.VertexBuffers.Add(vertexBuffer);
+
+            foreach (var att in attributes)
+                Console.WriteLine(att.AttrName + "Offset " + att.Offset);
+
+            Console.WriteLine("VertexStride " + vertexBuffer.VertexStride);
 
             //Calculate bounding box
             CalculateBounding(ref gfxShape, iomesh);
