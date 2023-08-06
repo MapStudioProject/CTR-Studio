@@ -284,7 +284,7 @@ namespace CtrLibrary.Bcres
             if (folder.Children.Count > 0)
                 Root.AddChild(folder);
 
-            var addMenu = Root.ContextMenus.FirstOrDefault(x => x.Header == "Add");
+            var addMenu = Root.ContextMenus.FirstOrDefault(x => x.Header == "Add Folder");
             if (addMenu == null)
             {
                 addMenu = new MenuItemModel($"Add Folder", () =>
