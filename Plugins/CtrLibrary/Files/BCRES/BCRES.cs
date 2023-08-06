@@ -593,6 +593,8 @@ namespace CtrLibrary.Bcres
                 this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Remove", Remove));
 
                 this.OnHeaderRenamed += delegate
                 {
@@ -644,6 +646,19 @@ namespace CtrLibrary.Bcres
                         var type = ((H3DGroupNode<T>)this.Parent).Type;
                         ExportRaw(dlg.FilePath, Section, type);
                     }
+                }
+            }
+
+            public virtual void Remove()
+            {
+                if (Section == null)
+                    return;
+
+                int result = TinyFileDialog.MessageBoxInfoYesNo($"Are you sure you want to remove {this.Header}?");
+                if (result == 1)
+                {
+                    Dict.Remove((T)Section);
+                    this.Parent.Children.Remove(this);
                 }
             }
 
