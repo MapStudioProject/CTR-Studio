@@ -104,7 +104,7 @@ namespace CtrLibrary.Bcres
         /// <summary>
         /// The file instance of the bcres data.
         /// </summary>
-        private Gfx BcresData;
+        public Gfx BcresData;
 
         //Folder for model data
         private ModelFolder ModelFolder;

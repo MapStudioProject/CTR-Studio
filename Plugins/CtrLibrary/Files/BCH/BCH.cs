@@ -111,7 +111,7 @@ namespace CtrLibrary.Bch
         /// <summary>
         /// The file instance for handling bch data.
         /// </summary>
-        private H3D H3DData;
+        public H3D H3DData;
 
         //Shader window for debugging and viewing how shader code is generated
         ShaderWindow ShaderWindow;
