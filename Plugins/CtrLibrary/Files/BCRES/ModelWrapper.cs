@@ -419,6 +419,8 @@ namespace CtrLibrary.Bcres
             ParentBCRESNode.Render.InsertModel(h3d, modelIndex);
 
             ReloadModel();
+
+            GenerateAnimGroups();
         }
 
         public void ImportMaterial()
@@ -445,6 +447,8 @@ namespace CtrLibrary.Bcres
                 ParentBCRESNode.Render.InsertModel(h3d, modelIndex);
 
                 ReloadModel();
+
+                GenerateAnimGroups();
             }
         }
     }
@@ -761,6 +765,9 @@ namespace CtrLibrary.Bcres
             //Remove from UI
             var parent = Parent;
             parent.Children.Remove(this);
+
+            var modelNode =  parent.Parent as CMDL;
+            modelNode.GenerateAnimGroups();
 
             if (IconManager.HasIcon(Icon))
                 IconManager.RemoveTextureIcon(Icon);
