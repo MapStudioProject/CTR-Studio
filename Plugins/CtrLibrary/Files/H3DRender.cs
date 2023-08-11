@@ -204,16 +204,20 @@ namespace CtrLibrary.Rendering
                 if (Renderer.Models[i].SkeletalAnim != null)
                 {
                     var skelAnim = Renderer.Models[i].SkeletalAnim.FrameSkeleton;
-                    for (int j = 0; j < skel.Bones.Count; j++)
+                    //Only update when the data has been set
+                    if (skelAnim.Length > 0 && skelAnim[0].Scale != OpenTK.Vector3.Zero)
                     {
-                        if (skelAnim.Length <= j)
-                            continue;
+                        for (int j = 0; j < skel.Bones.Count; j++)
+                        {
+                            if (skelAnim.Length <= j)
+                                continue;
 
-                        skel.Bones[j].BoneData.AnimationController.Position = skelAnim[j].Translation;
-                        skel.Bones[j].BoneData.AnimationController.Rotation = skelAnim[j].Rotation;
-                        skel.Bones[j].BoneData.AnimationController.Scale = skelAnim[j].Scale;
+                            skel.Bones[j].BoneData.AnimationController.Position = skelAnim[j].Translation;
+                            skel.Bones[j].BoneData.AnimationController.Rotation = skelAnim[j].Rotation;
+                            skel.Bones[j].BoneData.AnimationController.Scale = skelAnim[j].Scale;
+                        }
+                        skel.Update();
                     }
-                    skel.Update();
                 }
             }
 
