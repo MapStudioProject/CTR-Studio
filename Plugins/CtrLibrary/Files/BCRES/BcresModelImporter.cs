@@ -82,8 +82,8 @@ namespace CtrLibrary.Bcres
                     var boneList = model.Skeleton.BreathFirstOrder();
                     //Remove "Armature" bone blender makes as it is not needed
                     var armatures = boneList.Where(x => x.Name == "Armature").ToList();
-                    foreach (var armature in armatures)
-                        boneList.Remove(armature);
+                 //   foreach (var armature in armatures)
+                  //      boneList.Remove(armature);
 
                     foreach (var bone in boneList)
                     {
