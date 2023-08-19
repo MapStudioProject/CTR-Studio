@@ -66,6 +66,7 @@ namespace CtrLibrary.Bcres
             {
                 foreach (var item in ModelNode.AnimGroupSettings.MaterialTypes)
                     ModelNode.AnimGroupSettings.MaterialTypes[item.Key] = checkAll;
+                ModelNode.GenerateAnimGroups();
             }
 
             int index = 0;
