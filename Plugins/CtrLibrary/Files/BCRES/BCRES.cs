@@ -366,8 +366,22 @@ namespace CtrLibrary.Bcres
                 //Add section list
                 SectionList.Add((T)item);
                 //Add to UI
-                var nodeFile = new NodeSection<T>(SectionList, item);
-                AddChild(nodeFile);
+                if (item is GfxAnimation)
+                    AddChild(new AnimationNode<T>(SectionList, item));
+                else
+                    AddChild(new NodeSection<T>(SectionList, item));
+
+                //Set animation types
+                if (this.Type == H3DGroupType.SkeletalAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "SkeletalAnimation";
+                else if (this.Type == H3DGroupType.MaterialAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "MaterialAnimation";
+                else if (this.Type == H3DGroupType.FogAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "FogAnimation";
+                else if (this.Type == H3DGroupType.LightAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "LightAnimation";
+                else if (this.Type == H3DGroupType.VisibiltyAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "VisibilityAnimation";
             }
 
             private void ExportAll()
