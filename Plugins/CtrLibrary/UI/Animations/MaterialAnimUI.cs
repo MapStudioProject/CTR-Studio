@@ -594,7 +594,10 @@ namespace CtrLibrary
                     dialogOpened = true;
 
                     var render = GLFrameworkEngine.DataCache.ModelCache.Values.FirstOrDefault();
-                    TextureSelectionDialog.Textures = TextureList;
+
+                    TextureSelectionDialog.Textures.Clear();
+                    foreach (var tex in H3DRender.TextureCache)
+                        TextureSelectionDialog.Textures.Add(tex.Key);
                 }
                 ImGui.SameLine();
 
