@@ -50,6 +50,8 @@ namespace CtrLibrary
             {
                 //rename group
                 group.Name = elemNode.Header;
+                //Rename element
+                ((AnimationWrapper.ElementNode)group).Element.Name = group.Name;
             };
 
             elemNode.ContextMenus.Add(new MenuItem("Rename", () =>
