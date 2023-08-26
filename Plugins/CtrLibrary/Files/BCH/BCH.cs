@@ -30,6 +30,7 @@ using static System.Collections.Specialized.BitVector32;
 using System.Runtime.ConstrainedExecution;
 using static CtrLibrary.Bch.BCH;
 using SPICA.Formats.CtrGfx.Animation;
+using static MapStudio.UI.AnimationTree;
 
 namespace CtrLibrary.Bch
 {
@@ -216,14 +217,10 @@ namespace CtrLibrary.Bch
 
             foreach (var folder in this.Root.Children)
             {
-                if (folder is H3DGroupNode<H3DAnimation>)
+                foreach (var c in folder.Children)
                 {
-                    var animNode = (H3DGroupNode<GfxAnimation>)folder;
-                    if (animNode.Type == H3DGroupType.MaterialAnim)
-                    {
-                        foreach (AnimationNode<H3DAnimation> anim in animNode.Children)
-                            anim.OnSave();
-                    }
+                    if (c is AnimationNode<H3DMaterialAnim>)
+                        ((AnimationNode<H3DMaterialAnim>)c).OnSave();
                 }
             }
 
@@ -289,6 +286,8 @@ namespace CtrLibrary.Bch
             {
                 if (typeof(T) == typeof(H3DShader))
                     folder.AddChild(new ShaderNode<T>(subSections, item));
+                else if (typeof(T) == typeof(H3DShader))
+                    folder.AddChild(new AnimationNode<T>(subSections, item));
                 else
                     folder.AddChild(new NodeSection<T>(subSections, item));
             }
@@ -353,8 +352,32 @@ namespace CtrLibrary.Bch
                 //Add section list
                 SectionList.Add((T)item);
                 //Add to UI
-                var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
-                AddChild(node);
+                if (item is H3DAnimation)
+                {
+                    var node = new AnimationNode<T>(SectionList, item);
+                    AddChild(node);
+
+                    switch (this.Type)
+                    {
+                        case H3DGroupType.MaterialAnim:
+                            ((H3DAnimation)item).AnimationType = H3DAnimationType.Material;
+                            break;
+                        case H3DGroupType.VisibiltyAnim:
+                            ((H3DAnimation)item).AnimationType = H3DAnimationType.Visibility;
+                            break;
+                        case H3DGroupType.CameraAnim:
+                            ((H3DAnimation)item).AnimationType = H3DAnimationType.Camera;
+                            break;
+                        case H3DGroupType.LightAnim:
+                            ((H3DAnimation)item).AnimationType = H3DAnimationType.Fog;
+                            break;
+                    }
+                }
+                else
+                {
+                    var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
+                    AddChild(node);
+                }
             }
 
             public virtual void Import()
@@ -453,7 +476,16 @@ namespace CtrLibrary.Bch
         {
             public AnimationNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
-             
+                //Create an animation wrapper for animation playback if node is an animation type
+                var wrapper = new AnimationWrapper((H3DAnimation)section);
+                Tag = wrapper;
+
+                this.OnSelected += delegate
+                {
+                    //Check if the current node selected was an animation and apply playback
+                    if (Tag is AnimationWrapper)
+                        ((AnimationWrapper)Tag).AnimationSet();
+                };
             }
 
             public void OnSave()
@@ -522,18 +554,6 @@ namespace CtrLibrary.Bch
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Delete", () => Delete()));
 
-                //Create an animation wrapper for animation playback if node is an animation type
-                if (section is H3DAnimation)
-                {
-                    var wrapper = new AnimationWrapper((H3DAnimation)section);
-                    Tag = wrapper;
-                }
-                this.OnSelected += delegate
-                {
-                    //Check if the current node selected was an animation and apply playback
-                    if (Tag is AnimationWrapper)
-                        ((AnimationWrapper)Tag).AnimationSet();
-                };
                 this.OnHeaderRenamed += delegate
                 {
                     //Update binary name on tree node rename
