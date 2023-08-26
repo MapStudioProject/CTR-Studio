@@ -99,13 +99,16 @@ namespace CtrLibrary
                     return;
 
                 int Value = (int)textureGroup.Value.GetFrameValue(anim.Frame);
-                string Name = anim.TextureList[Value];
-
-                switch (group.Element.TargetType)
+                if (Value < anim.TextureList.Count)
                 {
-                    case H3DTargetType.MaterialMapper0Texture: State.Texture0Name = Name; break;
-                    case H3DTargetType.MaterialMapper1Texture: State.Texture1Name = Name; break;
-                    case H3DTargetType.MaterialMapper2Texture: State.Texture2Name = Name; break;
+                    string Name = anim.TextureList[Value];
+
+                    switch (group.Element.TargetType)
+                    {
+                        case H3DTargetType.MaterialMapper0Texture: State.Texture0Name = Name; break;
+                        case H3DTargetType.MaterialMapper1Texture: State.Texture1Name = Name; break;
+                        case H3DTargetType.MaterialMapper2Texture: State.Texture2Name = Name; break;
+                    }
                 }
             }
 
