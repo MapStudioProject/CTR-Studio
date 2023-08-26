@@ -29,6 +29,7 @@ using SPICA.Formats.Common;
 using static System.Collections.Specialized.BitVector32;
 using System.Runtime.ConstrainedExecution;
 using static CtrLibrary.Bch.BCH;
+using SPICA.Formats.CtrGfx.Animation;
 
 namespace CtrLibrary.Bch
 {
@@ -212,6 +213,19 @@ namespace CtrLibrary.Bch
                 model.OnSave();
 
             H3DData.Textures = TextureFolder.GetTextures();
+
+            foreach (var folder in this.Root.Children)
+            {
+                if (folder is H3DGroupNode<H3DAnimation>)
+                {
+                    var animNode = (H3DGroupNode<GfxAnimation>)folder;
+                    if (animNode.Type == H3DGroupType.MaterialAnim)
+                    {
+                        foreach (AnimationNode<H3DAnimation> anim in animNode.Children)
+                            anim.OnSave();
+                    }
+                }
+            }
 
             H3D.Save(stream, H3DData);
 
@@ -432,6 +446,30 @@ namespace CtrLibrary.Bch
                     default:
                         throw new System.Exception("Unknown type? " + Type);
                 }
+            }
+        }
+
+        class AnimationNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            public AnimationNode(H3DDict<T> subSections, object section) : base(subSections, section)
+            {
+             
+            }
+
+            public void OnSave()
+            {
+                //check for possible edits
+                bool isEdited = ((AnimationWrapper)Tag).IsEdited();
+                //Convert the gui to H3D animation
+                if (isEdited)
+                    ((AnimationWrapper)Tag).ToH3D((H3DAnimation)Section);
+                else
+                {
+                    //only transfer frame count property
+                    ((GfxAnimation)Section).FramesCount = ((AnimationWrapper)Tag).FrameCount;
+                }
+                //Apply any wrapper data on save
+                ((AnimationWrapper)Tag).OnSave();
             }
         }
 
