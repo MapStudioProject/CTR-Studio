@@ -48,10 +48,16 @@ namespace CtrLibrary
             elemNode.CanRename = true;
             elemNode.OnHeaderRenamed += delegate
             {
-                //rename group
+                //Rename all anim nodes that target this material
+                var elements = anim.AnimGroups.Where(x => x.Name == group.Name).ToList();
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    //rename group
+                    elements[i].Name = elemNode.Header;
+                    //Rename element
+                    ((AnimationWrapper.ElementNode)elements[i]).Element.Name = elements[i].Name;
+                }
                 group.Name = elemNode.Header;
-                //Rename element
-                ((AnimationWrapper.ElementNode)group).Element.Name = group.Name;
             };
 
             elemNode.ContextMenus.Add(new MenuItem("Rename", () =>

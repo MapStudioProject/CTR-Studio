@@ -82,7 +82,10 @@ namespace CtrLibrary
         {
             int hash = 0;
             foreach (ElementNode elementNode in this.AnimGroups)
+            {
+                hash += elementNode.Name.GetHashCode();
                 hash += elementNode.GetHashCode();
+            }
             return hash;
         }
 
