@@ -147,6 +147,10 @@ namespace CtrLibrary
 
         static void DrawElementDialog(string materialName)
         {
+            var size = ImGui.GetWindowSize();
+
+            ImGui.BeginChild("elementList", new Vector2(size.X, size.Y - 53));
+
             ImGui.Columns(2);
 
             void DrawSelect(H3DTargetType type, string name)
@@ -192,6 +196,8 @@ namespace CtrLibrary
             DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
 
             ImGui.Columns(1);
+
+            ImGui.EndChild();
 
             DialogHandler.DrawCancelOk();
         }
