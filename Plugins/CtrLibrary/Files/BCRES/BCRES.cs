@@ -599,7 +599,11 @@ namespace CtrLibrary.Bcres
                     ((GfxAnimation)Section).FromH3D(H3DAnimation);
                 else
                 {
-                    //only transfer frame count property
+                    //only transfer loop and frame count property
+                    if (((AnimationWrapper)Tag).Loop)
+                        ((GfxAnimation)Section).LoopMode = GfxLoopMode.Loop;
+                    else
+                        ((GfxAnimation)Section).LoopMode = GfxLoopMode.OneTime;
                     ((GfxAnimation)Section).FramesCount = H3DAnimation.FramesCount;
                 }
                 //Apply any wrapper data on save

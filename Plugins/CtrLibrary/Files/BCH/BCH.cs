@@ -492,6 +492,13 @@ namespace CtrLibrary.Bch
                 };
             }
 
+            public override void Export(string filePath)
+            {
+                OnSave();
+
+                base.Export(filePath);
+            }
+
             public void OnSave()
             {
                 //check for possible edits
@@ -501,8 +508,13 @@ namespace CtrLibrary.Bch
                     ((AnimationWrapper)Tag).ToH3D((H3DAnimation)Section);
                 else
                 {
-                    //only transfer frame count property
-                    ((GfxAnimation)Section).FramesCount = ((AnimationWrapper)Tag).FrameCount;
+                    //only transfer loop and frame count property
+                    if (((AnimationWrapper)Tag).Loop)
+                        ((H3DAnimation)Section).AnimationFlags |= H3DAnimationFlags.IsLooping;
+                    else
+                        ((H3DAnimation)Section).AnimationFlags &= H3DAnimationFlags.IsLooping;
+
+                    ((H3DAnimation)Section).FramesCount = ((AnimationWrapper)Tag).FrameCount;
                 }
                 //Apply any wrapper data on save
                 ((AnimationWrapper)Tag).OnSave();
