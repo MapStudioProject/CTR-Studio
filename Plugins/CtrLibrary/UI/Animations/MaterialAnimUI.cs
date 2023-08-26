@@ -87,6 +87,8 @@ namespace CtrLibrary
                 {
                     if (group.Name ==  elemNode.Header)
                         anim.AnimGroups.Remove(group);
+                    if (anim.H3DAnimation.Elements.Contains(group.Element))
+                        anim.H3DAnimation.Elements.Remove(group.Element);
                 }
             }));
             return elemNode;
@@ -275,6 +277,10 @@ namespace CtrLibrary
                 //remove element from animation
                 anim.AnimGroups.Remove(group);
                 group.SubAnimGroups.Remove(kind);
+
+                //Remove from H3D
+                if (anim.H3DAnimation.Elements.Contains(group.Element))
+                    anim.H3DAnimation.Elements.Remove(group.Element);
             }));
 
             if (kind is AnimationWrapper.RGBAGroup)
@@ -293,6 +299,10 @@ namespace CtrLibrary
                     //remove element from animation
                     anim.AnimGroups.Remove(group);
                     group.SubAnimGroups.Remove(kind);
+
+                    //Remove from H3D
+                    if (anim.H3DAnimation.Elements.Contains(group.Element))
+                        anim.H3DAnimation.Elements.Remove(group.Element);
                 };
             }
             else if (kind is AnimationWrapper.QuatTransformGroup)
