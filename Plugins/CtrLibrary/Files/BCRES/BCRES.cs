@@ -234,7 +234,7 @@ namespace CtrLibrary.Bcres
             foreach (var lut in LUTFolder.SectionList)
                 BcresData.LUTs.Add(SPICA.Formats.CtrGfx.LUT.GfxLUT.FromH3D(lut));
             
-          /*  foreach (var folder in this.Root.Children)
+            foreach (var folder in this.Root.Children)
             {
                 if (folder is H3DGroupNode<GfxAnimation>)
                 {
@@ -245,7 +245,7 @@ namespace CtrLibrary.Bcres
                             anim.OnSave();
                     }
                 }
-            }*/
+            }
 
             Gfx.Save(stream, BcresData);
         }
@@ -508,7 +508,7 @@ namespace CtrLibrary.Bcres
 
             public override void Export()
             {
-               // OnSave();
+                OnSave();
 
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
@@ -586,8 +586,20 @@ namespace CtrLibrary.Bcres
 
             public void OnSave()
             {
+                //check for possible edits
+                bool isEdited = ((AnimationWrapper)Tag).IsEdited();
+                //Convert the gui to H3D animation
                 ((AnimationWrapper)Tag).ToH3D(H3DAnimation);
-                ((GfxAnimation)Section).FromH3D(H3DAnimation);
+                //Apply the H3D animation to bcres animation data if edited
+                if (isEdited)
+                    ((GfxAnimation)Section).FromH3D(H3DAnimation);
+                else
+                {
+                    //only transfer frame count property
+                    ((GfxAnimation)Section).FramesCount = H3DAnimation.FramesCount;
+                }
+                //Apply any wrapper data on save
+                ((AnimationWrapper)Tag).OnSave();
             }
         }
 

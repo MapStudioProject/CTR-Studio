@@ -28,6 +28,8 @@ namespace CtrLibrary
 
         public H3DAnimation H3DAnimation;
 
+        private int Hash;
+
         public AnimationWrapper(H3DAnimation animation)
         {
             Name = animation.Name;
@@ -49,6 +51,7 @@ namespace CtrLibrary
                 AddElement(Elem);
 
             MaterialAnimUI.ReloadTree(Root, this, animation);
+            Hash = CalculateHash();
         }
 
         public void Reload(H3DAnimation animation)
@@ -72,6 +75,64 @@ namespace CtrLibrary
                 AddElement(Elem);
 
             MaterialAnimUI.ReloadTree(Root, this, animation);
+            Hash = CalculateHash();
+        }
+
+        private int CalculateHash()
+        {
+            int hash = 0;
+            foreach (ElementNode elementNode in this.AnimGroups)
+                hash += elementNode.GetHashCode();
+            return hash;
+        }
+
+        public bool IsEdited()
+        {
+            bool edited = false;
+
+            if (Hash != CalculateHash())
+                edited = true;
+
+            foreach (ElementNode elementNode in this.AnimGroups)
+            {
+                foreach (var group in elementNode.SubAnimGroups)
+                {
+                    //Apply animation group data
+                    if (group is Vector2Group)
+                    {
+                        edited |= ((Vector2Group)group).X.HasChange();
+                        edited |= ((Vector2Group)group).Y.HasChange();
+                    }
+                    else if (group is Vector3Group)
+                    {
+                        edited |= ((Vector3Group)group).X.HasChange();
+                        edited |= ((Vector3Group)group).Y.HasChange();
+                        edited |= ((Vector3Group)group).Z.HasChange();
+                    }
+                    else if (group is FloatGroup)
+                    {
+                        edited |= ((FloatGroup)group).Value.HasChange();
+                    }
+                    else if (group is RGBAGroup)
+                    {
+                        edited |= ((RGBAGroup)group).R.HasChange();
+                        edited |= ((RGBAGroup)group).G.HasChange();
+                        edited |= ((RGBAGroup)group).B.HasChange();
+                        edited |= ((RGBAGroup)group).A.HasChange();
+                    }
+                    else if (group is TextureGroup)
+                    {
+                        edited |= ((TextureGroup)group).Value.HasChange();
+                    }
+                }
+            }
+            return edited;
+        }
+
+        public void OnSave()
+        {
+            //update hash
+            Hash = CalculateHash();
         }
 
         public void ToH3D(H3DAnimation animation)
@@ -544,6 +605,12 @@ namespace CtrLibrary
                     }
                 }
                 Hash = CalculateHash();
+            }
+
+            public bool HasChange()
+            {
+                int hash = CalculateHash();
+                return Hash != hash;
             }
 
             private int CalculateHash()
