@@ -722,6 +722,15 @@ namespace CtrLibrary.Bch
                 else
                     Material.MaterialParams.SelectionColor = new System.Numerics.Vector4(0);
             };
+            this.OnHeaderRenamed += delegate
+            {
+                //reinsert the material into the list to update dictionary keys
+                int index = model.Materials.Find(Material.Name);
+
+                Material.Name = this.Header;
+                model.Materials.Remove(Material);
+                model.Materials.Insert(index, Material);
+            };
 
             //Pokemon specific data
             //Here we check the shader name but not the shader data itself as that can be external

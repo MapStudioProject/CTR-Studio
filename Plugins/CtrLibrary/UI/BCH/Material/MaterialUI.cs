@@ -262,8 +262,8 @@ namespace CtrLibrary
 
             if (ImGui.InputText("Name", ref name, 0x200))
             {
-                Material.Name = name;
                 UINode.Header = name;
+                UINode.OnHeaderRenamed?.Invoke(UINode, EventArgs.Empty);
             }
 
             if (ImGuiHelper.InputFromBoolean("Enable Fragment Lighting", Material.MaterialParams, "IsFragmentLightingEnabled"))

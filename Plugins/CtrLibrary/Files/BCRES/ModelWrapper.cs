@@ -713,6 +713,10 @@ namespace CtrLibrary.Bcres
         {
             GfxMaterial = material;
             GfxModel = model;
+            this.OnHeaderRenamed += delegate
+            {
+                GfxMaterial.Name = this.Header;
+            };
         }
 
         public override void DeleteBatch()
