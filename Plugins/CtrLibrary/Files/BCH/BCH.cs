@@ -479,6 +479,10 @@ namespace CtrLibrary.Bch
                 //Create an animation wrapper for animation playback if node is an animation type
                 var wrapper = new AnimationWrapper((H3DAnimation)section);
                 Tag = wrapper;
+                this.OnHeaderRenamed += delegate
+                {
+                    wrapper.OnRename();
+                };
 
                 this.OnSelected += delegate
                 {

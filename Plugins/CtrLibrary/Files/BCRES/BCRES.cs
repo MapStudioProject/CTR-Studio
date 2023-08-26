@@ -499,6 +499,10 @@ namespace CtrLibrary.Bcres
                 H3DAnimation = ((GfxAnimation)section).ToH3DAnimation();
                 var wrapper = new AnimationWrapper(H3DAnimation);
                 Tag = wrapper;
+                this.OnHeaderRenamed += delegate
+                {
+                    wrapper.OnRename();
+                };
 
                 this.OnSelected += delegate
                 {
