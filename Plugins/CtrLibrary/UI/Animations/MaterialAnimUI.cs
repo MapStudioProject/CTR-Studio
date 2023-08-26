@@ -11,6 +11,7 @@ using ImGuiNET;
 using CtrLibrary.Rendering;
 using SPICA.Formats.CtrH3D.Texture;
 using System.Numerics;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace CtrLibrary
 {
@@ -113,7 +114,7 @@ namespace CtrLibrary
                     ImGui.EndColumns();
                 }
                 if (ImGui.CollapsingHeader("Element", ImGuiTreeNodeFlags.DefaultOpen))
-                    DrawElementDialog(material);
+                    DrawElementDialog(anim, material);
 
             }, (o) =>
             {
@@ -137,7 +138,7 @@ namespace CtrLibrary
             target = 0;
             DialogHandler.Show("Material Elements", 350, 500, () =>
             {
-                DrawElementDialog(group.Name);
+                DrawElementDialog(anim, group.Name);
             }, (o) =>
             {
                 if (o)
@@ -147,7 +148,7 @@ namespace CtrLibrary
             });
         }
 
-        static void DrawElementDialog(string materialName)
+        static void DrawElementDialog(AnimationWrapper anim, string materialName)
         {
             var size = ImGui.GetWindowSize();
 
@@ -157,16 +158,23 @@ namespace CtrLibrary
 
             void DrawSelect(H3DTargetType type, string name)
             {
-                ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
-
-                if (ImGui.Selectable($"   {materialName}.{name}"))
+                if (anim.H3DAnimation.Elements.Any(x => x.Name == materialName && x.TargetType == type))
                 {
-                    target = type;
-                    DialogHandler.ClosePopup(true);
+                    ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1f), $"   {materialName}.{name}"); 
                 }
-                ImGui.NextColumn();
-                ImGui.Text($"{IconManager.ADD_ICON}");
-                ImGui.NextColumn();
+                else
+                {
+                    ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
+
+                    if (ImGui.Selectable($"   {materialName}.{name}"))
+                    {
+                        target = type;
+                        DialogHandler.ClosePopup(true);
+                    }
+                    ImGui.NextColumn();
+                    ImGui.Text($"{IconManager.ADD_ICON}");
+                    ImGui.NextColumn();
+                }
             }
 
             DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
