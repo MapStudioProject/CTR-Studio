@@ -156,16 +156,18 @@ namespace CtrLibrary
 
             ImGui.Columns(2);
 
+            ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
+
             void DrawSelect(H3DTargetType type, string name)
             {
                 if (anim.H3DAnimation.Elements.Any(x => x.Name == materialName && x.TargetType == type))
                 {
-                    ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1f), $"   {materialName}.{name}"); 
+                    ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1f), $"   {materialName}.{name}");
+                    ImGui.NextColumn();
+                    ImGui.NextColumn();
                 }
                 else
                 {
-                    ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
-
                     if (ImGui.Selectable($"   {materialName}.{name}"))
                     {
                         target = type;
