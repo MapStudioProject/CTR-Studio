@@ -286,7 +286,7 @@ namespace CtrLibrary.Bch
             {
                 if (typeof(T) == typeof(H3DShader))
                     folder.AddChild(new ShaderNode<T>(subSections, item));
-                else if (typeof(T) == typeof(H3DShader))
+                else if (typeof(T) == typeof(H3DAnimation))
                     folder.AddChild(new AnimationNode<T>(subSections, item));
                 else
                     folder.AddChild(new NodeSection<T>(subSections, item));
