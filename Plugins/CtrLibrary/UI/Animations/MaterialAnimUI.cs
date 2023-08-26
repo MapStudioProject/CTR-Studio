@@ -79,6 +79,8 @@ namespace CtrLibrary
             if (elem == null)
                 return;
 
+            animWrapper.H3DAnimation.Elements.Add(elem);
+
             //Add to animation handler
             var track = animWrapper.AddElement(elem);
             //Add to the gui
