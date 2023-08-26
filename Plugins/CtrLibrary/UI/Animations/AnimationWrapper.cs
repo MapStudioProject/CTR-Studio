@@ -215,6 +215,7 @@ namespace CtrLibrary
                         var v = Elem.Content as H3DAnimFloat;
 
                         var g = new FloatGroup();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.Value.Load(v.Value);
                         elemNode.SubAnimGroups.Add(g);
@@ -225,6 +226,7 @@ namespace CtrLibrary
                         var v = Elem.Content as H3DAnimBoolean;
 
                         var g = new BoolGroup();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.Value.Load(v);
                         elemNode.SubAnimGroups.Add(g);
@@ -235,6 +237,7 @@ namespace CtrLibrary
                         var v = Elem.Content as H3DAnimFloat;
 
                         var g = new TextureGroup();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.Value.Load(v.Value);
                         elemNode.SubAnimGroups.Add(g);
@@ -251,6 +254,7 @@ namespace CtrLibrary
                         var vec2 = Elem.Content as H3DAnimVector2D;
 
                         var g = new Vector2Group();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.X.Load(vec2.X);
                         g.Y.Load(vec2.Y);
@@ -262,6 +266,7 @@ namespace CtrLibrary
                         var vec2 = Elem.Content as H3DAnimVector3D;
 
                         var g = new Vector3Group();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.X.Load(vec2.X);
                         g.Y.Load(vec2.Y);
@@ -274,6 +279,7 @@ namespace CtrLibrary
                         var quatTransform = Elem.Content as H3DAnimQuatTransform;
 
                         var g = new QuatTransformGroup();
+                        g.Element = Elem;
                         g.Name = targetName;
                         for (int i = 0; i < quatTransform.Translations.Count; i++)
                         {
@@ -302,6 +308,7 @@ namespace CtrLibrary
                         var rgba = Elem.Content as H3DAnimRGBA;
 
                         var g = new RGBAGroup();
+                        g.Element = Elem;
                         g.Name = targetName;
                         g.R.Load(rgba.R);
                         g.G.Load(rgba.G);
@@ -447,35 +454,35 @@ namespace CtrLibrary
             }
         }
 
-        public class BoolGroup : STAnimGroup
+        public class BoolGroup : H3DElementGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
         }
 
-        public class FloatGroup : STAnimGroup
+        public class FloatGroup : H3DElementGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
         }
 
-        public class TextureGroup : STAnimGroup
+        public class TextureGroup : H3DElementGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
         }
 
-        public class Vector2Group : STAnimGroup
+        public class Vector2Group : H3DElementGroup
         {
             public H3DTrack X = new H3DTrack("X");
             public H3DTrack Y = new H3DTrack("Y");
         }
 
-        public class Vector3Group : STAnimGroup
+        public class Vector3Group : H3DElementGroup
         {
             public H3DTrack X = new H3DTrack("X");
             public H3DTrack Y = new H3DTrack("Y");
             public H3DTrack Z = new H3DTrack("Z");
         }
 
-        public class Vector4Group : STAnimGroup
+        public class Vector4Group : H3DElementGroup
         {
             public H3DTrack X = new H3DTrack("X");
             public H3DTrack Y = new H3DTrack("Y");
@@ -483,7 +490,7 @@ namespace CtrLibrary
             public H3DTrack W = new H3DTrack("W");
         }
 
-        public class QuatTransformGroup : STAnimGroup
+        public class QuatTransformGroup : H3DElementGroup
         {
             public Vector3Group Translate = new Vector3Group() { Name = "Translate" };
             public Vector3Group Scale = new Vector3Group() { Name = "Scale" };
@@ -497,7 +504,7 @@ namespace CtrLibrary
             }
         }
 
-        public class RGBAGroup : STAnimGroup
+        public class RGBAGroup : H3DElementGroup
         {
             public H3DTrack R = new H3DTrack("R");
             public H3DTrack G = new H3DTrack("G");
@@ -508,6 +515,11 @@ namespace CtrLibrary
             {
                 return new List<STAnimationTrack>() { R, G, B, A };
             }
+        }
+
+        public class H3DElementGroup : STAnimGroup
+        {
+            public H3DAnimationElement Element;
         }
 
         public class H3DTrack : STAnimationTrack

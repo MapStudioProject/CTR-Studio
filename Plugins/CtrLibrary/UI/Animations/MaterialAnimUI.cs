@@ -21,84 +21,174 @@ namespace CtrLibrary
             Root.Children.Clear();
             Root.Header = anim.Name;
 
+            Root.ContextMenus.Add(new MenuItem("Add Material Element", () =>
+            {
+                MaterialDialog(Root, anim);
+            }));
+
+
             foreach (var group in anim.AnimGroups)
             {
                 TreeNode elemNode = Root.Children.FirstOrDefault(x => x.Header == group.Name);
                 if (elemNode == null)
-                {
-                    elemNode = new TreeNode();
-                    elemNode.Header = group.Name;
-                    elemNode.Icon = '\uf5fd'.ToString();
-                    Root.AddChild(elemNode);
-                    elemNode.IsExpanded = true;
+                    elemNode = AddMaterialTreeNode(Root, anim, group);
 
-                    elemNode.ContextMenus.Add(new MenuItem("Add Material Element", () =>
-                    {
-                        H3DTargetType target = 0;
-                        DialogHandler.Show("Material Elements", 350, 500, () =>
-                        {
-                            ImGui.Columns(2);
-
-                            void DrawSelect(H3DTargetType type, string name)
-                            {
-                                ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
-
-                                if (ImGui.Selectable($"   {group.Name}.{name}"))
-                                {
-                                    target = type;
-                                    DialogHandler.ClosePopup(true);
-                                }
-                                ImGui.NextColumn();
-                                ImGui.Text($"{IconManager.ADD_ICON}");
-                                ImGui.NextColumn();
-                            }
-
-                            DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
-                            DrawSelect(H3DTargetType.MaterialMapper1Texture, "Texture Map 1");
-                            DrawSelect(H3DTargetType.MaterialMapper2Texture, "Texture Map 2");
-
-                            DrawSelect(H3DTargetType.MaterialTexCoord0Trans, "Texture Coord 0 Translate");
-                            DrawSelect(H3DTargetType.MaterialTexCoord0Scale, "Texture Coord 0 Scale");
-                            DrawSelect(H3DTargetType.MaterialTexCoord0Rot, "Texture Coord 0 Rotate");
-
-                            DrawSelect(H3DTargetType.MaterialTexCoord1Trans, "Texture Coord 1 Translate");
-                            DrawSelect(H3DTargetType.MaterialTexCoord1Scale, "Texture Coord 1 Scale");
-                            DrawSelect(H3DTargetType.MaterialTexCoord1Rot, "Texture Coord 1 Rotate");
-
-                            DrawSelect(H3DTargetType.MaterialTexCoord2Trans, "Texture Coord 2 Translate");
-                            DrawSelect(H3DTargetType.MaterialTexCoord2Scale, "Texture Coord 2 Scale");
-                            DrawSelect(H3DTargetType.MaterialTexCoord2Rot, "Texture Coord 2 Rotate");
-
-                            DrawSelect(H3DTargetType.MaterialDiffuse, "Diffuse Color");
-                            DrawSelect(H3DTargetType.MaterialEmission, "Emission Color");
-                            DrawSelect(H3DTargetType.MaterialSpecular0, "Specular 0 Color");
-                            DrawSelect(H3DTargetType.MaterialSpecular1, "Specular 1 Color");
-
-                            DrawSelect(H3DTargetType.MaterialConstant0, "Constant 0 Color");
-                            DrawSelect(H3DTargetType.MaterialConstant1, "Constant 1 Color");
-                            DrawSelect(H3DTargetType.MaterialConstant2, "Constant 2 Color");
-                            DrawSelect(H3DTargetType.MaterialConstant3, "Constant 3 Color");
-                            DrawSelect(H3DTargetType.MaterialConstant4, "Constant 4 Color");
-                            DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
-
-                            ImGui.Columns(1);
-
-                            DialogHandler.DrawCancelOk();
-                        }, (o) =>
-                        {
-                            if (o)
-                            {
-                                AddElement(anim, elemNode, (AnimationWrapper.ElementNode)group, target);
-                            }
-                        });
-                    }));
-                }
                 LoadAnimationGroups(anim, elemNode, (AnimationWrapper.ElementNode)group);
             }
             return Root;
         }
 
-        static void LoadAnimationGroups(STAnimation anim, TreeNode elemNode, AnimationWrapper.ElementNode group)
+        static TreeNode AddMaterialTreeNode(TreeNode Root, AnimationWrapper anim, STAnimGroup group)
+        {
+            TreeNode elemNode = new TreeNode();
+            elemNode.Header = group.Name;
+            elemNode.Icon = '\uf5fd'.ToString();
+            Root.AddChild(elemNode);
+            elemNode.IsExpanded = true;
+            elemNode.CanRename = true;
+            elemNode.OnHeaderRenamed += delegate
+            {
+                //rename group
+                group.Name = elemNode.Header;
+            };
+
+            elemNode.ContextMenus.Add(new MenuItem("Rename", () =>
+            {
+                elemNode.ActivateRename = true;
+            }));
+            elemNode.ContextMenus.Add(new MenuItem("Add Material Element", () =>
+            {
+                MaterialElementDialog(anim, elemNode, group);
+            }));
+            elemNode.ContextMenus.Add(new MenuItem("Remove", () =>
+            {
+                var result = TinyFileDialog.MessageBoxInfoYesNo(
+                    string.Format($"Are you sure you want to remove {0}? This cannot be undone!", elemNode.Header));
+
+                if (result != 1)
+                    return;
+
+                //reset first
+                anim.Reset();
+
+                //Remove from gui
+                Root.Children.Remove(elemNode);
+                //Remove all elements that use this material
+                var groupList = anim.AnimGroups.ToList();
+                foreach (AnimationWrapper.ElementNode group in groupList)
+                {
+                    if (group.Name ==  elemNode.Header)
+                        anim.AnimGroups.Remove(group);
+                }
+            }));
+            return elemNode;
+        }
+
+        static H3DTargetType target = 0;
+
+        static void MaterialDialog(TreeNode Root, AnimationWrapper anim)
+        {
+            string material = "NewMaterial";
+            target = 0;
+            DialogHandler.Show("Material Elements", 350, 500, () =>
+            {
+                if (ImGui.CollapsingHeader("Material", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    ImGui.BeginColumns("MatDialog", 2);
+                    ImGui.AlignTextToFramePadding();
+                    ImGui.Text("Material");
+                    ImGui.NextColumn();
+                    ImGui.InputText("##Material", ref material, 0x50);
+                    ImGui.NextColumn();
+                    ImGui.EndColumns();
+                }
+                if (ImGui.CollapsingHeader("Element", ImGuiTreeNodeFlags.DefaultOpen))
+                    DrawElementDialog(material);
+
+            }, (o) =>
+            {
+                if (o)
+                {
+                    var group = new AnimationWrapper.ElementNode(new H3DAnimationElement());
+                    group.Name = material;
+
+                    //Create new group instance if no material anim with the input name exists
+                    TreeNode elemNode = Root.Children.FirstOrDefault(x => x.Header == material);
+                    if (elemNode == null)
+                        elemNode = AddMaterialTreeNode(Root, anim, group);
+
+                    AddElement(anim, elemNode, group, target);
+                }
+            });
+        }
+
+        static void MaterialElementDialog(AnimationWrapper anim, TreeNode elemNode, STAnimGroup group)
+        {
+            target = 0;
+            DialogHandler.Show("Material Elements", 350, 500, () =>
+            {
+                DrawElementDialog(group.Name);
+            }, (o) =>
+            {
+                if (o)
+                {
+                    AddElement(anim, elemNode, (AnimationWrapper.ElementNode)group, target);
+                }
+            });
+        }
+
+        static void DrawElementDialog(string materialName)
+        {
+            ImGui.Columns(2);
+
+            void DrawSelect(H3DTargetType type, string name)
+            {
+                ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
+
+                if (ImGui.Selectable($"   {materialName}.{name}"))
+                {
+                    target = type;
+                    DialogHandler.ClosePopup(true);
+                }
+                ImGui.NextColumn();
+                ImGui.Text($"{IconManager.ADD_ICON}");
+                ImGui.NextColumn();
+            }
+
+            DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
+            DrawSelect(H3DTargetType.MaterialMapper1Texture, "Texture Map 1");
+            DrawSelect(H3DTargetType.MaterialMapper2Texture, "Texture Map 2");
+
+            DrawSelect(H3DTargetType.MaterialTexCoord0Trans, "Texture Coord 0 Translate");
+            DrawSelect(H3DTargetType.MaterialTexCoord0Scale, "Texture Coord 0 Scale");
+            DrawSelect(H3DTargetType.MaterialTexCoord0Rot, "Texture Coord 0 Rotate");
+
+            DrawSelect(H3DTargetType.MaterialTexCoord1Trans, "Texture Coord 1 Translate");
+            DrawSelect(H3DTargetType.MaterialTexCoord1Scale, "Texture Coord 1 Scale");
+            DrawSelect(H3DTargetType.MaterialTexCoord1Rot, "Texture Coord 1 Rotate");
+
+            DrawSelect(H3DTargetType.MaterialTexCoord2Trans, "Texture Coord 2 Translate");
+            DrawSelect(H3DTargetType.MaterialTexCoord2Scale, "Texture Coord 2 Scale");
+            DrawSelect(H3DTargetType.MaterialTexCoord2Rot, "Texture Coord 2 Rotate");
+
+            DrawSelect(H3DTargetType.MaterialDiffuse, "Diffuse Color");
+            DrawSelect(H3DTargetType.MaterialEmission, "Emission Color");
+            DrawSelect(H3DTargetType.MaterialSpecular0, "Specular 0 Color");
+            DrawSelect(H3DTargetType.MaterialSpecular1, "Specular 1 Color");
+
+            DrawSelect(H3DTargetType.MaterialConstant0, "Constant 0 Color");
+            DrawSelect(H3DTargetType.MaterialConstant1, "Constant 1 Color");
+            DrawSelect(H3DTargetType.MaterialConstant2, "Constant 2 Color");
+            DrawSelect(H3DTargetType.MaterialConstant3, "Constant 3 Color");
+            DrawSelect(H3DTargetType.MaterialConstant4, "Constant 4 Color");
+            DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
+
+            ImGui.Columns(1);
+
+            DialogHandler.DrawCancelOk();
+        }
+
+        static void LoadAnimationGroups(AnimationWrapper anim, TreeNode elemNode, AnimationWrapper.ElementNode group)
         {
             //Check for track type
             //All possible options
@@ -117,7 +207,6 @@ namespace CtrLibrary
 
             //Add to animation handler
             var track = animWrapper.AddElement(elem);
-            //Add to the gui
             CreateGroupNode(animWrapper, elemNode, track.SubAnimGroups[0], group);
 
             var anim = track.SubAnimGroups[0];
@@ -159,11 +248,20 @@ namespace CtrLibrary
             }
         }
 
-        static TreeNode CreateGroupNode(STAnimation anim, TreeNode elemNode, STAnimGroup kind, AnimationWrapper.ElementNode group)
+        static TreeNode CreateGroupNode(AnimationWrapper anim, TreeNode elemNode, STAnimGroup kind, AnimationWrapper.ElementNode group)
         {
             TreeNode trackNode = new TreeNode();
             trackNode.Icon = '\uf6ff'.ToString();
             trackNode.IsExpanded = true;
+            trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+            {
+                elemNode.Children.Remove(trackNode);
+
+                anim.Reset();
+                //remove element from animation
+                anim.AnimGroups.Remove(group);
+                group.SubAnimGroups.Remove(kind);
+            }));
 
             if (kind is AnimationWrapper.RGBAGroup)
             {
@@ -174,6 +272,14 @@ namespace CtrLibrary
                     trackNode.AddChild(CreateTrack(anim, track));
                 trackNode.Header = kind.Name;
                 elemNode.AddChild(trackNode);
+
+                ((AnimationTree.GroupNode)trackNode).OnGroupRemoved += delegate
+                {
+                    anim.Reset();
+                    //remove element from animation
+                    anim.AnimGroups.Remove(group);
+                    group.SubAnimGroups.Remove(kind);
+                };
             }
             else if (kind is AnimationWrapper.QuatTransformGroup)
             {
