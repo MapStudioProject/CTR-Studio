@@ -411,6 +411,14 @@ namespace CtrLibrary
                     type = H3DPrimitiveType.Float;
                     ((H3DAnimFloat)content).Value.InterpolationType = H3DInterpolationType.Linear;
                     break;
+                case H3DTargetType.MaterialTexCoord0Trans:
+                case H3DTargetType.MaterialTexCoord1Trans:
+                case H3DTargetType.MaterialTexCoord2Trans:
+                    content = new H3DAnimVector2D();
+                    type = H3DPrimitiveType.Vector2D;
+                    ((H3DAnimVector2D)content).X.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimVector2D)content).Y.InterpolationType = H3DInterpolationType.Linear;
+                    break;
                 case H3DTargetType.MaterialTexCoord0Scale:
                 case H3DTargetType.MaterialTexCoord1Scale:
                 case H3DTargetType.MaterialTexCoord2Scale:
