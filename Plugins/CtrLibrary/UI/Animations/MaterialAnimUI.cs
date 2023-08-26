@@ -12,6 +12,7 @@ using CtrLibrary.Rendering;
 using SPICA.Formats.CtrH3D.Texture;
 using System.Numerics;
 using static OpenTK.Graphics.OpenGL.GL;
+using OpenTK.Graphics.OpenGL;
 
 namespace CtrLibrary
 {
@@ -276,12 +277,9 @@ namespace CtrLibrary
 
         static TreeNode CreateGroupNode(AnimationWrapper anim, TreeNode elemNode, STAnimGroup kind, AnimationWrapper.ElementNode group)
         {
-            TreeNode trackNode = new TreeNode();
-            trackNode.Icon = '\uf6ff'.ToString();
-            trackNode.IsExpanded = true;
-            trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+            void RemoveTrack(TreeNode n)
             {
-                elemNode.Children.Remove(trackNode);
+                elemNode.Children.Remove(n);
 
                 anim.Reset();
                 //remove element from animation
@@ -289,8 +287,17 @@ namespace CtrLibrary
                 group.SubAnimGroups.Remove(kind);
 
                 //Remove from H3D
-                if (anim.H3DAnimation.Elements.Contains(group.Element))
-                    anim.H3DAnimation.Elements.Remove(group.Element);
+                var g = kind as AnimationWrapper.H3DGroup;
+                if (g != null && anim.H3DAnimation.Elements.Contains(g.Element))
+                    anim.H3DAnimation.Elements.Remove(g.Element);
+            }
+
+            TreeNode trackNode = new TreeNode();
+            trackNode.Icon = '\uf6ff'.ToString();
+            trackNode.IsExpanded = true;
+            trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+            {
+                RemoveTrack(trackNode);
             }));
 
             if (kind is AnimationWrapper.RGBAGroup)
@@ -311,8 +318,9 @@ namespace CtrLibrary
                     group.SubAnimGroups.Remove(kind);
 
                     //Remove from H3D
-                    if (anim.H3DAnimation.Elements.Contains(group.Element))
-                        anim.H3DAnimation.Elements.Remove(group.Element);
+                    var g = kind as AnimationWrapper.H3DGroup;
+                    if (g != null && anim.H3DAnimation.Elements.Contains(g.Element))
+                        anim.H3DAnimation.Elements.Remove(g.Element);
                 };
             }
             else if (kind is AnimationWrapper.QuatTransformGroup)
@@ -350,6 +358,10 @@ namespace CtrLibrary
             {
                 var f = kind as AnimationWrapper.FloatGroup;
                 trackNode = CreateTrack(anim, f.Value);
+                trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+                {
+                    RemoveTrack(trackNode);
+                }));
                 trackNode.Header = kind.Name;
                 elemNode.AddChild(trackNode);
             }
@@ -357,6 +369,10 @@ namespace CtrLibrary
             {
                 var f = kind as AnimationWrapper.BoolGroup;
                 trackNode = new BooleanTreeNode(anim, f.Value);
+                trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+                {
+                    RemoveTrack(trackNode);
+                }));
                 trackNode.Header = kind.Name;
                 elemNode.AddChild(trackNode);
             }
@@ -364,6 +380,10 @@ namespace CtrLibrary
             {
                 var f = kind as AnimationWrapper.TextureGroup;
                 trackNode = new SamplerTreeTrack(anim, f.Value, group);
+                trackNode.ContextMenus.Add(new MenuItem("Remove Property", () =>
+                {
+                    RemoveTrack(trackNode);
+                }));
                 trackNode.Header = kind.Name;
                 elemNode.AddChild(trackNode);
             }
