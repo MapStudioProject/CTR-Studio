@@ -22,7 +22,12 @@ namespace CtrLibrary
         {
             Root.Children.Clear();
             Root.Header = anim.Name;
+            Root.CanRename = true;
 
+            Root.ContextMenus.Add(new MenuItem("Rename", () =>
+            {
+                Root.ActivateRename = true;
+            }));
             Root.ContextMenus.Add(new MenuItem("Add Material Element", () =>
             {
                 MaterialDialog(Root, anim);

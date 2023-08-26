@@ -54,11 +54,6 @@ namespace CtrLibrary
             Hash = CalculateHash();
         }
 
-        public void OnRename()
-        {
-            Root.Header = H3DAnimation.Name;
-        }
-
         public void Reload(H3DAnimation animation)
         {
             Name = animation.Name;

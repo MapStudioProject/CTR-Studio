@@ -501,7 +501,11 @@ namespace CtrLibrary.Bcres
                 Tag = wrapper;
                 this.OnHeaderRenamed += delegate
                 {
-                    wrapper.OnRename();
+                    wrapper.Root.Header = this.Header;
+                };
+                wrapper.Root.OnHeaderRenamed += delegate
+                {
+                    this.Header = wrapper.Root.Header;
                 };
 
                 this.OnSelected += delegate
