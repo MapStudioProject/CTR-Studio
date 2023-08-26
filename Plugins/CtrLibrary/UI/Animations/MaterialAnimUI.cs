@@ -10,6 +10,7 @@ using MapStudio.UI;
 using ImGuiNET;
 using CtrLibrary.Rendering;
 using SPICA.Formats.CtrH3D.Texture;
+using System.Numerics;
 
 namespace CtrLibrary
 {
@@ -34,20 +35,53 @@ namespace CtrLibrary
                     elemNode.ContextMenus.Add(new MenuItem("Add Material Element", () =>
                     {
                         H3DTargetType target = 0;
-                        DialogHandler.Show("Material Elements", 250, 400, () =>
+                        DialogHandler.Show("Material Elements", 350, 500, () =>
                         {
-                            void DrawSelect(H3DTargetType type)
+                            ImGui.Columns(2);
+
+                            void DrawSelect(H3DTargetType type, string name)
                             {
-                                if (ImGui.Selectable($"   {type}    {IconManager.ADD_ICON}"))
+                                ImGui.SetColumnWidth(0, ImGui.GetWindowWidth() - 30);
+
+                                if (ImGui.Selectable($"   {group.Name}.{name}"))
                                 {
                                     target = type;
                                     DialogHandler.ClosePopup(true);
                                 }
+                                ImGui.NextColumn();
+                                ImGui.Text($"{IconManager.ADD_ICON}");
+                                ImGui.NextColumn();
                             }
 
-                            DrawSelect(H3DTargetType.MaterialMapper0Texture);
-                            DrawSelect(H3DTargetType.MaterialMapper1Texture);
-                            DrawSelect(H3DTargetType.MaterialMapper2Texture);
+                            DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
+                            DrawSelect(H3DTargetType.MaterialMapper1Texture, "Texture Map 1");
+                            DrawSelect(H3DTargetType.MaterialMapper2Texture, "Texture Map 2");
+
+                            DrawSelect(H3DTargetType.MaterialTexCoord0Trans, "Texture Coord 0 Translate");
+                            DrawSelect(H3DTargetType.MaterialTexCoord0Scale, "Texture Coord 0 Scale");
+                            DrawSelect(H3DTargetType.MaterialTexCoord0Rot, "Texture Coord 0 Rotate");
+
+                            DrawSelect(H3DTargetType.MaterialTexCoord1Trans, "Texture Coord 1 Translate");
+                            DrawSelect(H3DTargetType.MaterialTexCoord1Scale, "Texture Coord 1 Scale");
+                            DrawSelect(H3DTargetType.MaterialTexCoord1Rot, "Texture Coord 1 Rotate");
+
+                            DrawSelect(H3DTargetType.MaterialTexCoord2Trans, "Texture Coord 2 Translate");
+                            DrawSelect(H3DTargetType.MaterialTexCoord2Scale, "Texture Coord 2 Scale");
+                            DrawSelect(H3DTargetType.MaterialTexCoord2Rot, "Texture Coord 2 Rotate");
+
+                            DrawSelect(H3DTargetType.MaterialDiffuse, "Diffuse Color");
+                            DrawSelect(H3DTargetType.MaterialEmission, "Emission Color");
+                            DrawSelect(H3DTargetType.MaterialSpecular0, "Specular 0 Color");
+                            DrawSelect(H3DTargetType.MaterialSpecular1, "Specular 1 Color");
+
+                            DrawSelect(H3DTargetType.MaterialConstant0, "Constant 0 Color");
+                            DrawSelect(H3DTargetType.MaterialConstant1, "Constant 1 Color");
+                            DrawSelect(H3DTargetType.MaterialConstant2, "Constant 2 Color");
+                            DrawSelect(H3DTargetType.MaterialConstant3, "Constant 3 Color");
+                            DrawSelect(H3DTargetType.MaterialConstant4, "Constant 4 Color");
+                            DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
+
+                            ImGui.Columns(1);
 
                             DialogHandler.DrawCancelOk();
                         }, (o) =>
@@ -85,9 +119,47 @@ namespace CtrLibrary
             var track = animWrapper.AddElement(elem);
             //Add to the gui
             CreateGroupNode(animWrapper, elemNode, track.SubAnimGroups[0], group);
+
+            var anim = track.SubAnimGroups[0];
+            if (anim is AnimationWrapper.RGBAGroup)
+            {
+                ((AnimationWrapper.RGBAGroup)anim).R.Insert(new STKeyFrame(0, 1));
+                ((AnimationWrapper.RGBAGroup)anim).G.Insert(new STKeyFrame(0, 1));
+                ((AnimationWrapper.RGBAGroup)anim).B.Insert(new STKeyFrame(0, 1));
+                ((AnimationWrapper.RGBAGroup)anim).A.Insert(new STKeyFrame(0, 1));
+            }
+            else if (anim is AnimationWrapper.FloatGroup)
+            {
+                ((AnimationWrapper.FloatGroup)anim).Value.Insert(new STKeyFrame(0, 0));
+            }
+            else if (anim is AnimationWrapper.TextureGroup)
+            {
+                ((AnimationWrapper.TextureGroup)anim).Value.Insert(new STKeyFrame(0, 0));
+            }
+            else if (anim is AnimationWrapper.Vector2Group)
+            {
+                if (target == H3DTargetType.MaterialTexCoord0Scale ||
+                    target == H3DTargetType.MaterialTexCoord1Scale ||
+                    target == H3DTargetType.MaterialTexCoord2Scale)
+                {
+                    ((AnimationWrapper.Vector2Group)anim).X.Insert(new STKeyFrame(0, 1));
+                    ((AnimationWrapper.Vector2Group)anim).Y.Insert(new STKeyFrame(0, 1));
+                }
+                else
+                {
+                    ((AnimationWrapper.Vector2Group)anim).X.Insert(new STKeyFrame(0, 0));
+                    ((AnimationWrapper.Vector2Group)anim).Y.Insert(new STKeyFrame(0, 0));
+                }
+            }
+            else if (anim is AnimationWrapper.Vector3Group)
+            {
+                ((AnimationWrapper.Vector3Group)anim).X.Insert(new STKeyFrame(0, 0));
+                ((AnimationWrapper.Vector3Group)anim).Y.Insert(new STKeyFrame(0, 0));
+                ((AnimationWrapper.Vector3Group)anim).Y.Insert(new STKeyFrame(0, 0));
+            }
         }
 
-        static void CreateGroupNode(STAnimation anim, TreeNode elemNode, STAnimGroup kind, AnimationWrapper.ElementNode group)
+        static TreeNode CreateGroupNode(STAnimation anim, TreeNode elemNode, STAnimGroup kind, AnimationWrapper.ElementNode group)
         {
             TreeNode trackNode = new TreeNode();
             trackNode.Icon = '\uf6ff'.ToString();
@@ -172,6 +244,7 @@ namespace CtrLibrary
                 trackNode.Header = kind.Name;
                 elemNode.AddChild(trackNode);
             }
+            return trackNode;
         }
 
         static H3DAnimationElement CreateH3DAnimationElement(AnimationWrapper ani, string matName, H3DTargetType target)
@@ -189,18 +262,22 @@ namespace CtrLibrary
                 case H3DTargetType.MaterialMapper2Texture:
                     content = new H3DAnimFloat();
                     type = H3DPrimitiveType.Texture;
+                    ((H3DAnimFloat)content).Value.InterpolationType = H3DInterpolationType.Step;
                     break;
                 case H3DTargetType.MaterialTexCoord0Rot:
                 case H3DTargetType.MaterialTexCoord1Rot:
                 case H3DTargetType.MaterialTexCoord2Rot:
                     content = new H3DAnimFloat();
                     type = H3DPrimitiveType.Float;
+                    ((H3DAnimFloat)content).Value.InterpolationType = H3DInterpolationType.Linear;
                     break;
                 case H3DTargetType.MaterialTexCoord0Scale:
                 case H3DTargetType.MaterialTexCoord1Scale:
                 case H3DTargetType.MaterialTexCoord2Scale:
                     content = new H3DAnimVector2D();
                     type = H3DPrimitiveType.Vector2D;
+                    ((H3DAnimVector2D)content).X.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimVector2D)content).Y.InterpolationType = H3DInterpolationType.Linear;
                     break;
                 case H3DTargetType.MaterialConstant0:
                 case H3DTargetType.MaterialConstant1:
@@ -218,6 +295,10 @@ namespace CtrLibrary
                 case H3DTargetType.MaterialMapper1BorderCol:
                 case H3DTargetType.MaterialMapper2BorderCol:
                     content = new H3DAnimRGBA();
+                    ((H3DAnimRGBA)content).R.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).G.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).B.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).A.InterpolationType = H3DInterpolationType.Linear;
                     type = H3DPrimitiveType.RGBA;
                     break;
             }
@@ -281,6 +362,18 @@ namespace CtrLibrary
             public ColorTreeNode(STAnimation anim, STAnimGroup group, STAnimGroup parent) : base(anim, group, parent)
             {
                 Icon = '\uf53f'.ToString();
+            }
+
+            /// <summary>
+            /// Sets the track color of the current frame.
+            /// </summary>
+            public override void SetTrackColor(Vector4 color)
+            {
+                var group = this.Group as AnimationWrapper.RGBAGroup;
+                group.R.Insert(new STKeyFrame(Anim.Frame, color.X));
+                group.G.Insert(new STKeyFrame(Anim.Frame, color.Y));
+                group.B.Insert(new STKeyFrame(Anim.Frame, color.Z));
+                group.A.Insert(new STKeyFrame(Anim.Frame, color.W));
             }
         }
 
