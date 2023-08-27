@@ -609,6 +609,7 @@ namespace CtrLibrary.Bcres
                     else
                         ((GfxAnimation)Section).LoopMode = GfxLoopMode.OneTime;
                     ((GfxAnimation)Section).FramesCount = H3DAnimation.FramesCount;
+                    ((GfxAnimation)Section).Name = H3DAnimation.Name;
                 }
                 //Apply any wrapper data on save
                 ((AnimationWrapper)Tag).OnSave();
