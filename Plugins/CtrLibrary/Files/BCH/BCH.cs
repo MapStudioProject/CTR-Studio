@@ -474,6 +474,10 @@ namespace CtrLibrary.Bch
 
         class AnimationNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
         {
+            public override string DefaultExtension => ".json";
+            public override string[] ExportFilters => new string[] { ".bch", ".json", ".anim" };
+            public override string[] ReplaceFilters => new string[] { ".bch", ".json", ".anim" };
+
             public AnimationNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
                 //Create an animation wrapper for animation playback if node is an animation type
@@ -500,7 +504,40 @@ namespace CtrLibrary.Bch
             {
                 OnSave();
 
-                base.Export(filePath);
+                if (filePath.EndsWith(".json"))
+                {
+                    File.WriteAllText(filePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                }
+                else if (filePath.ToLower().EndsWith(".anim"))
+                {
+                    BchSkelAnimationImporter.Export(((H3DAnimation)Section), GetModel(), filePath);
+                }
+                else
+                {
+                    var type = ((H3DGroupNode<T>)this.Parent).Type;
+                    ExportRaw(filePath, Section, type);
+                }
+            }
+
+            public override void Replace(string filePath)
+            {
+                //Replace as raw binary or json text formats
+                if (filePath.ToLower().EndsWith(".anim"))
+                {
+                    BchSkelAnimationImporter.Import(filePath, ((H3DAnimation)Section), GetModel());
+                    ReloadName();
+                }
+                else
+                {
+                    base.Replace(filePath);
+                }
+                ((AnimationWrapper)Tag).Reload((H3DAnimation)Section);
+                ((AnimationWrapper)Tag).AnimationSet();
+            }
+
+            private H3DModel GetModel()
+            {
+                return H3DRender.GetFirstVisibleModel();
             }
 
             public void OnSave()
@@ -681,6 +718,11 @@ namespace CtrLibrary.Bch
             //Applies the current UI tree node name to the section used by the binary file.
             public virtual void ReloadName()
             {
+                //check if name was changed or not
+                if (((INamed)Section).Name == this.Header)
+                    return;
+
+                //update the lookup with name
                 if (Dict.Contains(((INamed)Section).Name))
                     Dict.Remove(((INamed)Section).Name);
 
