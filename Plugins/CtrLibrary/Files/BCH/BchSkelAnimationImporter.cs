@@ -252,6 +252,8 @@ namespace CtrLibrary
             }
         }
 
+        static Vector3 ToEuler(OpenTK.Quaternion q) => ToEuler(new System.Numerics.Quaternion(q.X, q.Y, q.Z, q.W));
+
         static Vector3 ToEuler(Quaternion q)
         {
             return new Vector3(
@@ -311,7 +313,7 @@ namespace CtrLibrary
                     var matrix = transform.Frames[i];
                     var mat4 = matrix.ToMatrix4x4().ToMatrix4();
 
-                    var rot = mat4.ExtractRotation();
+                    var rot = ToEuler(mat4.ExtractRotation());
                     var sca = mat4.ExtractScale();
                     var pos = mat4.ExtractTranslation();
 
