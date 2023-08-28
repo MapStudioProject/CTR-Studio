@@ -21,6 +21,7 @@ using SPICA.PICA.Converters;
 using SPICA.Math3D;
 using SixLabors.ImageSharp.Processing;
 using static CtrLibrary.Bch.BCH;
+using SPICA.Rendering;
 
 namespace CtrLibrary.Bch
 {
@@ -231,7 +232,7 @@ namespace CtrLibrary.Bch
 
             Texture = (H3DTexture)section;
             Header = Texture.Name;
-            Tag = new EditableTexture(this, Texture);
+            Tag = new EditableTexture(this, Texture, ReloadTexture);
             Icon = $"{Texture.Name}";
             if (IconManager.HasIcon(Icon))
                 IconManager.RemoveTextureIcon(Icon);
@@ -333,7 +334,7 @@ namespace CtrLibrary.Bch
 
         private void ReloadImported()
         {
-            Tag = new EditableTexture(this, Texture);
+            Tag = new EditableTexture(this, Texture, ReloadTexture);
             //Update texture render used for icons
             ((EditableTexture)Tag).LoadRenderableTexture();
 
@@ -359,6 +360,21 @@ namespace CtrLibrary.Bch
 
             //Update viewer
             GLContext.ActiveContext.UpdateViewport = true;
+        }
+
+        public void ReloadTexture()
+        {
+            var folder = ((TextureFolder<H3DTexture>)this.Parent);
+            var renderer = folder.H3DRender.Renderer;
+
+            //Reload renderer
+            if (H3DRender.TextureCache.ContainsKey(Texture.Name))
+                H3DRender.TextureCache.Remove(Texture.Name);
+
+            if (renderer.Textures.ContainsKey(Texture.Name))
+                renderer.Textures.Remove(Texture.Name);
+            renderer.Textures.Add(Texture.Name, new SPICA.Rendering.Texture(Texture));
+            H3DRender.TextureCache.Add(Texture.Name, Texture);
         }
 
         //Replace only RGB color, not alpha
@@ -577,14 +593,16 @@ namespace CtrLibrary.Bch
     class EditableTexture : STGenericTexture
     {
         private H3DTexture H3DTexture;
+        private Action UpdateRender;
 
         public EditableTexture()
         {
 
         }
 
-        public EditableTexture(NodeBase node, H3DTexture texRender)
+        public EditableTexture(NodeBase node, H3DTexture texRender, Action updateRender)
         {
+            UpdateRender = updateRender;
             H3DTexture = texRender;
             var format = (CTR_3DS.PICASurfaceFormat)texRender.Format;
             Width = (uint)texRender.Width;
@@ -634,7 +652,23 @@ namespace CtrLibrary.Bch
 
         public override void SetImageData(List<byte[]> imageData, uint width, uint height, int arrayLevel = 0)
         {
-            throw new NotImplementedException();
+            //Prepare imagesharp img used for encoding and mip generating
+            Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(imageData[0], (int)width, (int)height);
+
+            //Re encode with updated alpha
+            var output = TextureConverter.Encode(Img, H3DTexture.Format, (int)this.MipCount);
+            Img.Dispose();
+
+            H3DTexture.RawBuffer = output;
+
+            LoadRenderableTexture();
+
+            UpdateRender?.Invoke();
         }
+/*
+        public override void OnRenderUpdated()
+        {
+            UpdateRender?.Invoke();
+        }*/
     }
 }
