@@ -15,7 +15,7 @@ namespace CtrLibrary.UI
 {
     public class ETC1Compressor
     {
-        public static bool IsHighQuality = true;
+        public static bool IsHighQuality = false;
         public static bool UseEncoder = true;
 
         public static byte[] Encode(Image<Rgba32> image, int mipCount, bool isAlpha)
