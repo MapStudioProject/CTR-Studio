@@ -26,6 +26,8 @@
 	<ItemGroup>
 	  <None Remove="Lib\Hashes\ALBW.txt" />
 	  <None Remove="Lib\Languages\English\RevoKartLibrary.txt" />
+	  <None Remove="Lib\Shaders\Editor\ImageTool.frag" />
+	  <None Remove="Lib\Shaders\Editor\ImageTool.vert" />
 	</ItemGroup>
   
 	<ItemGroup>
