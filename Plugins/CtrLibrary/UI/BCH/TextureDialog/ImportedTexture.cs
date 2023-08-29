@@ -14,6 +14,7 @@ using SPICA.PICA.Commands;
 using SPICA.PICA.Converters;
 using SixLabors.ImageSharp.Processing;
 using SPICA.Formats.Common;
+using CtrLibrary.UI;
 
 namespace CtrLibrary
 {
@@ -228,7 +229,11 @@ namespace CtrLibrary
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            surface.EncodedData = TextureConverter.Encode(surface.ImageFile, Format, (int)MipCount);
+            bool isETC1 = Format == PICATextureFormat.ETC1 || Format == PICATextureFormat.ETC1A4;
+            if (isETC1 && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && ETC1Compressor.UseEncoder)
+                surface.EncodedData = ETC1Compressor.Encode(surface.ImageFile, (int)MipCount, Format == PICATextureFormat.ETC1A4);
+            else
+                surface.EncodedData = TextureConverter.Encode(surface.ImageFile, Format, (int)MipCount);
             Encoded = true;
 
             stopWatch.Stop();

@@ -22,6 +22,8 @@ using SPICA.Math3D;
 using SixLabors.ImageSharp.Processing;
 using static CtrLibrary.Bch.BCH;
 using SPICA.Rendering;
+using CtrLibrary.UI;
+using System.Runtime.InteropServices;
 
 namespace CtrLibrary.Bch
 {
@@ -656,10 +658,14 @@ namespace CtrLibrary.Bch
             Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(imageData[0], (int)width, (int)height);
 
             //Re encode with updated alpha
-            var output = TextureConverter.Encode(Img, H3DTexture.Format, (int)this.MipCount);
-            Img.Dispose();
+            bool isETC1 = H3DTexture.Format == PICATextureFormat.ETC1 || H3DTexture.Format == PICATextureFormat.ETC1A4;
 
-            H3DTexture.RawBuffer = output;
+            if (isETC1 && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                H3DTexture.RawBuffer = ETC1Compressor.Encode(Img, (int)MipCount, H3DTexture.Format == PICATextureFormat.ETC1A4);
+            else
+                H3DTexture.RawBuffer = TextureConverter.Encode(Img, H3DTexture.Format, (int)this.MipCount);
+
+            Img.Dispose();
 
             LoadRenderableTexture();
 

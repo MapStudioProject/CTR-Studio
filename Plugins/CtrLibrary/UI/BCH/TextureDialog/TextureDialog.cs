@@ -13,6 +13,7 @@ using GLFrameworkEngine;
 using UIFramework;
 using MapStudio.UI;
 using SPICA.PICA.Commands;
+using CtrLibrary.UI;
 
 namespace CtrLibrary
 {
@@ -304,6 +305,23 @@ namespace CtrLibrary
 
                 ImGuiHelper.BoldTextLabel(TranslationSource.GetText("WIDTH"), texture.Width.ToString());
                 ImGuiHelper.BoldTextLabel(TranslationSource.GetText("HEIGHT"), texture.Height.ToString());
+
+                bool isETC1 = texture.Format == PICATextureFormat.ETC1 || texture.Format == PICATextureFormat.ETC1A4;
+                if (isETC1)
+                {
+                    if (ImGui.Checkbox("High Quality (Slow Compress)", ref ETC1Compressor.IsHighQuality))
+                    {
+                        //Disable current display
+                        DecodedTexture.Reload(1, 1, new byte[4]);
+                        //Multi edit
+                        foreach (var selection in SelectedIndices)
+                        {
+                            //Re encode format
+                            Textures[selection].Encoded = false;
+                        }
+                        ReloadImageDisplay();
+                    }
+                }
             }
             ImGui.EndChild();
 
