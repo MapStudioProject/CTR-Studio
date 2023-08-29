@@ -115,6 +115,12 @@ namespace CtrLibrary.Bch
         private void ImportSampler()
         {
             var wrapper = LUTSamplerWrapper.Import();
+            if (wrapper == null) //cancelled
+                return;
+
+            wrapper.Sampler.Name = Utils.RenameDuplicateString(wrapper.Sampler.Name, this.Children.Select(x => x.Header).ToList());
+            wrapper.Header = wrapper.Sampler.Name;
+
             AddChild(wrapper);
             LUT.Samplers.Add(wrapper.Sampler);
 
@@ -175,7 +181,7 @@ namespace CtrLibrary.Bch
                 };
 
                 this.ContextMenus.Add(new MenuItemModel("Export", Export));
-                this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
+                this.ContextMenus.Add(new MenuItemModel("Replace", () => { Replace(); }));
                 this.ContextMenus.Add(new MenuItemModel(""));
                 this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
                 this.ContextMenus.Add(new MenuItemModel(""));
@@ -217,11 +223,13 @@ namespace CtrLibrary.Bch
                 {
                     Name = "NewSampler",
                 });
-                wrapper.Replace();
-                return wrapper;
+                if (wrapper.Replace())
+                    return wrapper;
+
+                return null;
             }
 
-            void Replace()
+            bool Replace()
             {
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
@@ -238,7 +246,10 @@ namespace CtrLibrary.Bch
                     //Turn the rgba data into LUT
                     Sampler.Table = RemapTable(FromRGBA(rgba, image.Height));
                     ReloadRender();
+
+                    return true;
                 }
+                return false;
             }
 
             void Export()
