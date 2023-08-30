@@ -30,22 +30,10 @@ namespace CtrLibrary
                 Root.ActivateRename = true;
             }));
 
-            switch (animation.AnimationType)
+            Root.ContextMenus.Add(new MenuItem($"Add {animation.AnimationType} Element", () =>
             {
-                case H3DAnimationType.Material:
-                    Root.ContextMenus.Add(new MenuItem("Add Material Element", () =>
-                    {
-                        MaterialDialog(Root, anim);
-                    }));
-                    break;
-                default:
-                    Root.ContextMenus.Add(new MenuItem("Add Element", () =>
-                    {
-                        MaterialDialog(Root, anim);
-                    }));
-                    break;
-            }
-
+                MaterialDialog(Root, anim);
+            }));
 
             foreach (var group in anim.AnimGroups)
             {
@@ -118,32 +106,33 @@ namespace CtrLibrary
 
         static void MaterialDialog(TreeNode Root, AnimationWrapper anim)
         {
-            string material = "NewMaterial";
+            string type = $"{anim.H3DAnimation.AnimationType}";
+            string elementName = $"New{type}";
             target = 0;
-            DialogHandler.Show("Material Elements", 350, 500, () =>
+            DialogHandler.Show($"{type} Elements", 350, 500, () =>
             {
-                if (ImGui.CollapsingHeader("Material", ImGuiTreeNodeFlags.DefaultOpen))
+                if (ImGui.CollapsingHeader($"{type}", ImGuiTreeNodeFlags.DefaultOpen))
                 {
-                    ImGui.BeginColumns("MatDialog", 2);
+                    ImGui.BeginColumns($"{type}Dialog", 2);
                     ImGui.AlignTextToFramePadding();
-                    ImGui.Text("Material");
+                    ImGui.Text(type);
                     ImGui.NextColumn();
-                    ImGui.InputText("##Material", ref material, 0x50);
+                    ImGui.InputText($"##{type}", ref elementName, 0x50);
                     ImGui.NextColumn();
                     ImGui.EndColumns();
                 }
                 if (ImGui.CollapsingHeader("Element", ImGuiTreeNodeFlags.DefaultOpen))
-                    DrawElementDialog(anim, material);
+                    DrawElementDialog(anim, elementName);
 
             }, (o) =>
             {
                 if (o)
                 {
-                    var group = new AnimationWrapper.ElementNode(new H3DAnimationElement());
-                    group.Name = material;
+                    var group = new AnimationWrapper.ElementNode(new H3DAnimationElement() { Name = elementName });
+                    group.Name = elementName;
 
                     //Create new group instance if no material anim with the input name exists
-                    TreeNode elemNode = Root.Children.FirstOrDefault(x => x.Header == material);
+                    TreeNode elemNode = Root.Children.FirstOrDefault(x => x.Header == elementName);
                     if (elemNode == null)
                         elemNode = AddMaterialTreeNode(Root, anim, group);
 
@@ -171,7 +160,7 @@ namespace CtrLibrary
         {
             var size = ImGui.GetWindowSize();
 
-            ImGui.BeginChild("elementList", new Vector2(size.X, size.Y - 53));
+            ImGui.BeginChild("elementList", new Vector2(size.X, size.Y - 150));
 
             ImGui.Columns(2);
 
@@ -187,7 +176,7 @@ namespace CtrLibrary
                 }
                 else
                 {
-                    if (ImGui.Selectable($"   {materialName}.{name}"))
+                    if (ImGui.Selectable($"   {name}"))
                     {
                         target = type;
                         DialogHandler.ClosePopup(true);
