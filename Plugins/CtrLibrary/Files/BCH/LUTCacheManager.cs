@@ -24,12 +24,13 @@ namespace CtrLibrary.UI
 
         static bool loaded = false;
 
-        public static void Setup(Renderer renderer)
+        public static void Setup(Renderer renderer, bool force = false)
         {
-            if (loaded)
+            if (loaded && !force)
                 return;
 
             loaded = true;
+            Cache.Clear();
 
             string lutDir = Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "LUTS");
             if (Directory.Exists(lutDir))

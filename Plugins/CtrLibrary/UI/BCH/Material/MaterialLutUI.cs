@@ -175,6 +175,15 @@ namespace CtrLibrary
 
                     FileUtility.OpenFolder(folder);
                 }
+                if (ImGui.MenuItem("Reload LUT Folder"))
+                {
+                    string folder = Path.Combine(Toolbox.Core.Runtime.ExecutableDir, "LUTS");
+                    if (!Directory.Exists(folder))
+                        Directory.CreateDirectory(folder);
+
+                    var render = H3DRender.RenderCache.FirstOrDefault();
+                    LUTCacheManager.Setup(render, true);
+                }
                 ImGuiHelper.EndBoldText();
 
                 ImGui.Spacing();
