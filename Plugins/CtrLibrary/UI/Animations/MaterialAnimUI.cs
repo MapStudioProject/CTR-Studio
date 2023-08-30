@@ -13,6 +13,7 @@ using SPICA.Formats.CtrH3D.Texture;
 using System.Numerics;
 using static OpenTK.Graphics.OpenGL.GL;
 using OpenTK.Graphics.OpenGL;
+using static SPICA.Formats.CtrGfx.Scene.GfxScene;
 
 namespace CtrLibrary
 {
@@ -28,10 +29,22 @@ namespace CtrLibrary
             {
                 Root.ActivateRename = true;
             }));
-            Root.ContextMenus.Add(new MenuItem("Add Material Element", () =>
+
+            switch (animation.AnimationType)
             {
-                MaterialDialog(Root, anim);
-            }));
+                case H3DAnimationType.Material:
+                    Root.ContextMenus.Add(new MenuItem("Add Material Element", () =>
+                    {
+                        MaterialDialog(Root, anim);
+                    }));
+                    break;
+                default:
+                    Root.ContextMenus.Add(new MenuItem("Add Element", () =>
+                    {
+                        MaterialDialog(Root, anim);
+                    }));
+                    break;
+            }
 
 
             foreach (var group in anim.AnimGroups)
@@ -71,7 +84,7 @@ namespace CtrLibrary
             {
                 elemNode.ActivateRename = true;
             }));
-            elemNode.ContextMenus.Add(new MenuItem("Add Material Element", () =>
+            elemNode.ContextMenus.Add(new MenuItem($"Add {anim.H3DAnimation.AnimationType} Element", () =>
             {
                 MaterialElementDialog(anim, elemNode, group);
             }));
@@ -142,7 +155,7 @@ namespace CtrLibrary
         static void MaterialElementDialog(AnimationWrapper anim, TreeNode elemNode, STAnimGroup group)
         {
             target = 0;
-            DialogHandler.Show("Material Elements", 350, 500, () =>
+            DialogHandler.Show($"{anim.H3DAnimation.AnimationType} Elements", 350, 500, () =>
             {
                 DrawElementDialog(anim, group.Name);
             }, (o) =>
@@ -185,33 +198,102 @@ namespace CtrLibrary
                 }
             }
 
-            DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
-            DrawSelect(H3DTargetType.MaterialMapper1Texture, "Texture Map 1");
-            DrawSelect(H3DTargetType.MaterialMapper2Texture, "Texture Map 2");
+            if (anim.H3DAnimation.AnimationType == H3DAnimationType.Material)
+            {
+                DrawSelect(H3DTargetType.MaterialMapper0Texture, "Texture Map 0");
+                DrawSelect(H3DTargetType.MaterialMapper1Texture, "Texture Map 1");
+                DrawSelect(H3DTargetType.MaterialMapper2Texture, "Texture Map 2");
 
-            DrawSelect(H3DTargetType.MaterialTexCoord0Trans, "Texture Coord 0 Translate");
-            DrawSelect(H3DTargetType.MaterialTexCoord0Scale, "Texture Coord 0 Scale");
-            DrawSelect(H3DTargetType.MaterialTexCoord0Rot, "Texture Coord 0 Rotate");
+                DrawSelect(H3DTargetType.MaterialTexCoord0Trans, "Texture Coord 0 Translate");
+                DrawSelect(H3DTargetType.MaterialTexCoord0Scale, "Texture Coord 0 Scale");
+                DrawSelect(H3DTargetType.MaterialTexCoord0Rot, "Texture Coord 0 Rotate");
 
-            DrawSelect(H3DTargetType.MaterialTexCoord1Trans, "Texture Coord 1 Translate");
-            DrawSelect(H3DTargetType.MaterialTexCoord1Scale, "Texture Coord 1 Scale");
-            DrawSelect(H3DTargetType.MaterialTexCoord1Rot, "Texture Coord 1 Rotate");
+                DrawSelect(H3DTargetType.MaterialTexCoord1Trans, "Texture Coord 1 Translate");
+                DrawSelect(H3DTargetType.MaterialTexCoord1Scale, "Texture Coord 1 Scale");
+                DrawSelect(H3DTargetType.MaterialTexCoord1Rot, "Texture Coord 1 Rotate");
 
-            DrawSelect(H3DTargetType.MaterialTexCoord2Trans, "Texture Coord 2 Translate");
-            DrawSelect(H3DTargetType.MaterialTexCoord2Scale, "Texture Coord 2 Scale");
-            DrawSelect(H3DTargetType.MaterialTexCoord2Rot, "Texture Coord 2 Rotate");
+                DrawSelect(H3DTargetType.MaterialTexCoord2Trans, "Texture Coord 2 Translate");
+                DrawSelect(H3DTargetType.MaterialTexCoord2Scale, "Texture Coord 2 Scale");
+                DrawSelect(H3DTargetType.MaterialTexCoord2Rot, "Texture Coord 2 Rotate");
 
-            DrawSelect(H3DTargetType.MaterialDiffuse, "Diffuse Color");
-            DrawSelect(H3DTargetType.MaterialEmission, "Emission Color");
-            DrawSelect(H3DTargetType.MaterialSpecular0, "Specular 0 Color");
-            DrawSelect(H3DTargetType.MaterialSpecular1, "Specular 1 Color");
+                DrawSelect(H3DTargetType.MaterialDiffuse, "Diffuse Color");
+                DrawSelect(H3DTargetType.MaterialEmission, "Emission Color");
+                DrawSelect(H3DTargetType.MaterialSpecular0, "Specular 0 Color");
+                DrawSelect(H3DTargetType.MaterialSpecular1, "Specular 1 Color");
 
-            DrawSelect(H3DTargetType.MaterialConstant0, "Constant 0 Color");
-            DrawSelect(H3DTargetType.MaterialConstant1, "Constant 1 Color");
-            DrawSelect(H3DTargetType.MaterialConstant2, "Constant 2 Color");
-            DrawSelect(H3DTargetType.MaterialConstant3, "Constant 3 Color");
-            DrawSelect(H3DTargetType.MaterialConstant4, "Constant 4 Color");
-            DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
+                DrawSelect(H3DTargetType.MaterialConstant0, "Constant 0 Color");
+                DrawSelect(H3DTargetType.MaterialConstant1, "Constant 1 Color");
+                DrawSelect(H3DTargetType.MaterialConstant2, "Constant 2 Color");
+                DrawSelect(H3DTargetType.MaterialConstant3, "Constant 3 Color");
+                DrawSelect(H3DTargetType.MaterialConstant4, "Constant 4 Color");
+                DrawSelect(H3DTargetType.MaterialConstant5, "Constant 5 Color");
+
+                DrawSelect(H3DTargetType.MaterialBlendColor, "Blend Color");
+
+                DrawSelect(H3DTargetType.MaterialMapper0BorderCol, "Texture 0 Border Color");
+                DrawSelect(H3DTargetType.MaterialMapper1BorderCol, "Texture 1 Border Color");
+                DrawSelect(H3DTargetType.MaterialMapper2BorderCol, "Texture 2 Border Color");
+            }
+            else if (anim.H3DAnimation.AnimationType == H3DAnimationType.Visibility)
+            {
+                DrawSelect(H3DTargetType.ModelVisibility, "Model Visibility");
+                DrawSelect(H3DTargetType.MeshNodeVisibility, "Mesh Visibility");
+            }
+            else if (anim.H3DAnimation.AnimationType == H3DAnimationType.Fog)
+            {
+                DrawSelect(H3DTargetType.FogColor, "Fog Color");
+            }
+            else if (anim.H3DAnimation.AnimationType == H3DAnimationType.Camera)
+            {
+                ImGuiHelper.BoldText("Camera");
+
+                DrawSelect(H3DTargetType.CameraTransform, "Transform");
+
+                ImGuiHelper.BoldText("View Rotation");
+
+                DrawSelect(H3DTargetType.CameraViewRotation, "View Rotation");
+
+                ImGuiHelper.BoldText("LookAt Rotation");
+
+                DrawSelect(H3DTargetType.CameraTargetPos, "TargetPos");
+
+                ImGuiHelper.BoldText("Aim Rotation");
+
+                DrawSelect(H3DTargetType.CameraUpVector, "Up Vector");
+                DrawSelect(H3DTargetType.CameraTwist, "Twist");
+
+                ImGuiHelper.BoldText("Projection");
+
+                DrawSelect(H3DTargetType.CameraZNear, "Z Near");
+                DrawSelect(H3DTargetType.CameraZNear, "Z Far");
+                DrawSelect(H3DTargetType.CameraAspectRatio, "Aspect");
+                DrawSelect(H3DTargetType.CameraHeight, "Height");
+            }
+            else if (anim.H3DAnimation.AnimationType == H3DAnimationType.Light)
+            {
+                ImGuiHelper.BoldText("Lighting");
+
+                DrawSelect(H3DTargetType.LightEnabled, "Enabled");
+                DrawSelect(H3DTargetType.LightTransform, "Transform");
+
+                ImGuiHelper.BoldText("Color");
+
+                DrawSelect(H3DTargetType.LightDiffuse, "Diffuse Color");
+                DrawSelect(H3DTargetType.LightAmbient, "Ambient Color");
+                DrawSelect(H3DTargetType.LightSpecular0, "Specular 0 Color");
+                DrawSelect(H3DTargetType.LightSpecular1, "Specular 1 Color");
+
+                ImGuiHelper.BoldText("Hemi Lighting");
+
+                DrawSelect(H3DTargetType.LightGround, "Ground Color");
+                DrawSelect(H3DTargetType.LightSky, "Sky Color");
+                DrawSelect(H3DTargetType.LightInterpolationFactor, "Hemi Interpolation");
+
+                ImGuiHelper.BoldText("Attenuation");
+
+                DrawSelect(H3DTargetType.LightAttenuationStart, "Attenuation Start");
+                DrawSelect(H3DTargetType.LightAttenuationEnd, "Attenuation End");
+            }
 
             ImGui.Columns(1);
 
@@ -474,6 +556,45 @@ namespace CtrLibrary
                     ((H3DAnimRGBA)content).A.InterpolationType = H3DInterpolationType.Linear;
                     type = H3DPrimitiveType.RGBA;
                     break;
+                case H3DTargetType.LightSky:
+                case H3DTargetType.LightGround:
+                case H3DTargetType.LightDiffuse:
+                case H3DTargetType.LightAmbient:
+                case H3DTargetType.LightSpecular0:
+                case H3DTargetType.LightSpecular1:
+                    content = new H3DAnimRGBA();
+                    ((H3DAnimRGBA)content).R.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).G.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).B.InterpolationType = H3DInterpolationType.Linear;
+                    ((H3DAnimRGBA)content).A.InterpolationType = H3DInterpolationType.Linear;
+                    type = H3DPrimitiveType.RGBA;
+                    break;
+                case H3DTargetType.LightAttenuationStart:
+                case H3DTargetType.LightAttenuationEnd:
+                case H3DTargetType.LightInterpolationFactor:
+                case H3DTargetType.CameraAspectRatio:
+                case H3DTargetType.CameraHeight:
+                case H3DTargetType.CameraZFar:
+                case H3DTargetType.CameraZNear:
+                case H3DTargetType.CameraTwist:
+                    content = new H3DAnimFloat();
+                    type = H3DPrimitiveType.Float;
+                    ((H3DAnimFloat)content).Value.InterpolationType = H3DInterpolationType.Linear;
+                    break;
+                case H3DTargetType.MeshNodeVisibility:
+                case H3DTargetType.ModelVisibility:
+                case H3DTargetType.LightEnabled:
+                    content = new H3DAnimBoolean();
+                    type = H3DPrimitiveType.Boolean;
+                    break;
+                case H3DTargetType.CameraTransform:
+                case H3DTargetType.LightTransform:
+                case H3DTargetType.Bone:
+                    content = new H3DAnimTransform();
+                    type = H3DPrimitiveType.Transform;
+                    break;
+                default:
+                    throw new Exception($"Unsupported element target to create {target}!");
             }
 
             return new H3DAnimationElement()
@@ -493,7 +614,7 @@ namespace CtrLibrary
             return trackNode;
         }
 
-        public class BooleanTreeNode : AnimationTree.TrackNode
+        public class BooleanTreeNode : AnimationTree.TrackNodeVisibility
         {
             public BooleanTreeNode(STAnimation anim, STAnimationTrack track) : base(anim, track)
             {

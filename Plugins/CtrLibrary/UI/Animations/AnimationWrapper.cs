@@ -127,6 +127,10 @@ namespace CtrLibrary
                     {
                         edited |= ((TextureGroup)group).Value.HasChange();
                     }
+                    else if (group is BoolGroup)
+                    {
+                        edited |= ((BoolGroup)group).Value.HasChange();
+                    }
                 }
             }
             return edited;
@@ -177,6 +181,10 @@ namespace CtrLibrary
                     else if (group is TextureGroup)
                     {
                         ((TextureGroup)group).Value.Save();
+                    }
+                    else if (group is BoolGroup)
+                    {
+                        ((BoolGroup)group).Value.Save();
                     }
                 }
             }
@@ -643,6 +651,12 @@ namespace CtrLibrary
             //Convert data back into H3D key data
             public void Save() 
             {
+                if (KeyBoolData != null)
+                {
+                    SaveBoolean();
+                    return;
+                }
+
                 //Check if keys have been edited or not
                 int hash = CalculateHash();
                 if (Hash == hash)
@@ -650,6 +664,8 @@ namespace CtrLibrary
 
                 //Update hash with resave
                 Hash = hash;
+
+                KeyData.StartFrame = 0;
 
                 //Set expected end frame.
                 KeyData.EndFrame = this.KeyFrames.Max(x => x.Frame);
@@ -665,6 +681,32 @@ namespace CtrLibrary
                     {
                         kf.InSlope = ((STHermiteKeyFrame)key).TangentIn;
                         kf.OutSlope = ((STHermiteKeyFrame)key).TangentOut;
+                    }
+                }
+            }
+
+            public void SaveBoolean()
+            {
+                //Check if keys have been edited or not
+                int hash = CalculateHash();
+                if (Hash == hash)
+                    return;
+
+                //Update hash with resave
+                Hash = hash;
+
+                //Set expected end frame.
+                KeyBoolData.StartFrame = 0;
+                KeyBoolData.EndFrame = this.KeyFrames.Max(x => x.Frame);
+                KeyBoolData.Values.Clear();
+
+                if (KeyFrames.Count > 0)
+                {
+                    //bake all the keys. No keyable method :(
+                    for (float i = KeyBoolData.StartFrame; i < Math.Max(KeyBoolData.EndFrame, 1.0f); i++)
+                    {
+                        bool v = this.GetFrameValue(i) != 0;
+                        KeyBoolData.Values.Add(v);
                     }
                 }
             }
