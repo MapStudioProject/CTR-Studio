@@ -216,7 +216,10 @@ namespace CtrLibrary
             List<uint> FileOffsets = new List<uint>();
             foreach (string k in Keys)
             {
-                bw.Align((int)GuessFileAlignment(data.Files[k]));
+                var alignment = (int)GuessFileAlignment(data.Files[k]);
+                Console.WriteLine($"alignment {alignment} {k}");
+                if (alignment != 0)
+                    bw.Align(alignment);
                 FileOffsets.Add((uint)bw.BaseStream.Position);
                 bw.Write(data.Files[k]);
             }
