@@ -123,6 +123,7 @@ namespace CtrLibrary
             else if (f.Matches("MsgStdBn")) Ext = ".msbt";
             else if (f.Matches("MsgPrjBn")) Ext = ".msbp";
             else if (f.Matches((uint)(f.Length - 0x28), "FLIM")) Ext = ".bflim";
+            else if (f.Matches((uint)(f.Length - 0x28), "CLIM")) Ext = ".bclim";
             return Ext;
         }
 
@@ -217,7 +218,6 @@ namespace CtrLibrary
             foreach (string k in Keys)
             {
                 var alignment = (int)GuessFileAlignment(data.Files[k]);
-                Console.WriteLine($"alignment {alignment} {k}");
                 if (alignment != 0)
                     bw.Align(alignment);
                 FileOffsets.Add((uint)bw.BaseStream.Position);

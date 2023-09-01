@@ -27,7 +27,7 @@ namespace CtrLibrary
 
         public bool Identify(File_Info fileInfo, Stream stream)
         {
-            if (stream.Length < 0x40)
+            if (stream.Length < 0x40 || !fileInfo.FileName.EndsWith(".bclim"))
                 return false;
 
             using (FileReader reader = new FileReader(stream, true)) {
