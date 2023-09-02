@@ -130,6 +130,14 @@ namespace CtrLibrary.Bch
 
         public override bool DisplayViewport => ModelFolder.Children.Count > 0;
 
+        public BCH() { }
+
+        public BCH(H3D h3D, string name)
+        {
+            this.FileInfo = new File_Info() { FileName = name };
+            Load(h3D);
+        }
+
         public void Load(Stream stream)
         {
             Load(H3D.Open(new MemoryStream(stream.ToArray())));
@@ -142,10 +150,13 @@ namespace CtrLibrary.Bch
             Root.TagUI.Tag = h3d;
 
             //Check for optional .mbn file binary which is used in Smash 3DS to store mesh buffers
-            if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
+            if (!string.IsNullOrEmpty(FileInfo.FilePath))
             {
-                ModelBinary = new MBn(FileInfo.FilePath.Replace(".bch", ".mbn"), H3DData);
-                H3DData = ModelBinary.ToH3D();
+                if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
+                {
+                    ModelBinary = new MBn(FileInfo.FilePath.Replace(".bch", ".mbn"), H3DData);
+                    H3DData = ModelBinary.ToH3D();
+                }
             }
             //Create a renderer and add to the editor
             Render = new H3DRender(H3DData, null);
@@ -190,7 +201,7 @@ namespace CtrLibrary.Bch
             AddNodeGroup(H3DData.VisibilityAnimations, H3DGroupType.VisibiltyAnim);
             AddNodeGroup(H3DData.CameraAnimations, H3DGroupType.CameraAnim);
             AddNodeGroup(H3DData.LightAnimations, H3DGroupType.LightAnim);
-            AddNodeGroup(H3DData.FogAnimations, H3DGroupType.EmitterAnim);
+            AddNodeGroup(H3DData.FogAnimations, H3DGroupType.FogAnim);
         }
 
 
@@ -341,7 +352,7 @@ namespace CtrLibrary.Bch
             VisibiltyAnim,
             CameraAnim,
             LightAnim,
-            EmitterAnim,
+            FogAnim,
             Particles,
         }
 
@@ -505,7 +516,7 @@ namespace CtrLibrary.Bch
                     case H3DGroupType.VisibiltyAnim: return "Visibilty Animations";
                     case H3DGroupType.CameraAnim: return "Camera Animations";
                     case H3DGroupType.LightAnim: return "Light Animations";
-                    case H3DGroupType.EmitterAnim: return "Emitter Animations";
+                    case H3DGroupType.FogAnim: return "Fog Animations";
                     case H3DGroupType.Particles: return "Particles";
                     default:
                         throw new System.Exception("Unknown type? " + Type);
