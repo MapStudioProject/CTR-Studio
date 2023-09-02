@@ -154,6 +154,12 @@ namespace Updater
                 File.Move(file, Path.Combine(folderDir, Path.GetFileName(file)));
             }
             Directory.Delete($"{folderDir}\\latest", true);
+
+            //Finally update the install version if everything installed correctly
+            WriteInstalledVersion(folderDir);
+            //Remove dl version
+            if (File.Exists($"{folderDir}\\Version.txt"))
+                File.Delete($"{folderDir}\\Version.txt");
         }
 
         static async Task GetReleases(GitHubClient client)
@@ -180,11 +186,24 @@ namespace Updater
         //Stores the current release information within a .txt file
         static void WriteRepoVersion(string folder, Release release)
         {
-            using (StreamWriter writer = new StreamWriter($"{folder}\\Version.txt"))
+            using (StreamWriter writer = new StreamWriter($"{folder}\\VersionDownload.txt"))
             {
                 writer.WriteLine($"{release.TagName}");
                 writer.WriteLine($"{release.Assets[0].UpdatedAt.ToString()}");
                 writer.WriteLine($"{release.TargetCommitish}");
+            }
+        }
+
+        static void WriteInstalledVersion(string folder)
+        {
+            if (!File.Exists($"{folder}\\VersionDownload.txt"))
+                return;
+
+            //Transfer same version info to newly installed update
+            using (StreamReader reader = new StreamReader($"{folder}\\VersionDownload.txt"))
+            using (StreamWriter writer = new StreamWriter($"{folder}\\Version.txt"))
+            {
+                writer.WriteLine(reader.ReadLine());
             }
         }
 
