@@ -273,6 +273,8 @@ namespace CtrLibrary.Bch
                 //Skinning
                 mesh.Skinning = H3DMeshSkinning.Mixed;
 
+                CalculatePositionScaleOffset(attributes.FirstOrDefault(), mesh, iomesh);
+
                 //Attributes
                 mesh.Attributes = attributes;
                 mesh.Layer = 0;
