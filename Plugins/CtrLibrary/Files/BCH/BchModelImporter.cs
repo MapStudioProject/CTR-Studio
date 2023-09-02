@@ -15,6 +15,7 @@ using SPICA.PICA.Converters;
 using SPICA.PICA;
 using Newtonsoft.Json;
 using SPICA.Formats.CtrH3D.Texture;
+using SPICA.Formats.CtrGfx.Model.Mesh;
 
 namespace CtrLibrary.Bch
 {
@@ -380,6 +381,8 @@ namespace CtrLibrary.Bch
             //Pica attributes from vertex data
             var attributes = CreateAttributes(iomesh, skinningCount, settings);
 
+            CalculatePositionScaleOffset(attributes.FirstOrDefault(), mesh, iomesh);
+
             //Convert attributes into pica attributes for conversion into a buffer
             PICAVertex[] vertices = GetPICAVertices(iomesh.Vertices, skinningMatrices, h3dModel, skinningCount == 1).ToArray();
 
@@ -468,6 +471,51 @@ namespace CtrLibrary.Bch
                 mesh.MetaData.Add(new H3DMetaDataValue("OBBox", CalculateBounding(iomesh)));
         }
 
+
+        static void CalculatePositionScaleOffset(PICAAttribute attributePos, H3DMesh shape, IOMesh iomesh)
+        {
+            //Only calculate scale/offset when not a float
+            if (attributePos.Format == PICAAttributeFormat.Float)
+                return;
+
+            //Calculate AABB
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float minZ = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            float maxZ = float.MinValue;
+
+            for (int i = 0; i < iomesh.Vertices.Count; i++)
+            {
+                minX = Math.Min(minX, iomesh.Vertices[i].Position.X);
+                minY = Math.Min(minY, iomesh.Vertices[i].Position.Y);
+                minZ = Math.Min(minZ, iomesh.Vertices[i].Position.Z);
+                maxX = Math.Max(maxX, iomesh.Vertices[i].Position.X);
+                maxY = Math.Max(maxY, iomesh.Vertices[i].Position.Y);
+                maxZ = Math.Max(maxZ, iomesh.Vertices[i].Position.Z);
+            }
+
+            //Min/max coordinates
+            Vector3 max = new Vector3(maxX, maxY, maxZ);
+            Vector3 min = new Vector3(minX, minY, minZ);
+            //Get smallest/largest value
+            float smallest = MathF.Min(MathF.Min(min.X, min.Z), min.Y);
+            float largest = MathF.Max(MathF.Max(max.X, max.Z), max.Y);
+            //Precision value by data type
+            float precision = 0.001f;
+
+            //Get the scale by smallest/largest value
+            float GetScale(float minV, float maxV)
+            {
+                var nvalues = 1 + MathF.Ceiling((maxV - minV) / (2 * precision));
+                var n = MathF.Ceiling(MathF.Log2(nvalues));
+                return (maxV - minV) / (MathF.Pow(2, n) - 1);
+            }
+
+            shape.PositionOffset = new Vector4();
+            attributePos.Scale = GetScale(smallest, largest);
+        }
 
         static float[] CalculateBoundingMinMax(IOMesh iomesh)
         {
