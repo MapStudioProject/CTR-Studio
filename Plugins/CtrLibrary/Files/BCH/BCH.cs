@@ -893,8 +893,8 @@ namespace CtrLibrary.Bch
                 case H3DGroupType.Scenes: h3d.Scenes.Add((H3DScene)Section); break;
                 case H3DGroupType.Shaders: h3d.Shaders.Add((H3DShader)Section); break;
                 case H3DGroupType.VisibiltyAnim: h3d.VisibilityAnimations.Add((H3DAnimation)Section); break;
-                case H3DGroupType.CameraAnim: h3d.CameraAnimations.Add((H3DAnimation)Section); break;
-                case H3DGroupType.LightAnim: h3d.LightAnimations.Add((H3DAnimation)Section); break;
+                case H3DGroupType.CameraAnim: h3d.CameraAnimations.Add((H3DCameraAnim)Section); break;
+                case H3DGroupType.LightAnim: h3d.LightAnimations.Add((H3DLightAnim)Section); break;
                 default:
                     throw new Exception($"Unsupported section! {type}");
             }
