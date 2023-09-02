@@ -27,6 +27,7 @@ namespace CtrLibrary
         public enum ImportPreset
         {
             Default,
+            MarioKart7Character,
             Smash3DS,
             AnimalCrossing,
             Pokemon,
@@ -128,6 +129,10 @@ namespace CtrLibrary
             Settings = CtrImportSettings.Load();
             switch (ImportSettingsPreset)
             {
+                case ImportPreset.MarioKart7Character:
+                    Settings.LimitSkinCount = true; //Shaders only support rigid skin count
+                    Settings.SkinCountLimit = 1;
+                    break;
                 case ImportPreset.Pokemon:
                     Settings.IsPokemon = true; //Custom vertex shader settings and custom user data
                     break;
