@@ -264,6 +264,27 @@ namespace CtrLibrary.Bcres
             return anim;
         }
 
+        public static GfxAnimGroup GenerateLightAnims()
+        {
+            var anim = new GfxAnimGroup()
+            {
+                Name = "LightAnimation",
+                EvaluationTiming = GfxAnimEvaluationTiming.BeforeWorldUpdate,
+                MemberType = 4,
+                BlendOperationTypes = new int[5] { 4, 3, 6, 2, 0 }
+            };
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Transform", 48, 0, 0, (GfxAnimGroupObjType)9));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Ambient", 188, 0, 1, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Diffuse", 204, 1, 1, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Specular0", 220, 2, 1, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Specular1", 236, 3, 1, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("Direction", 268, 4, 2, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("DistanceAttenuationStart", 288, 5, 3, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("DistanceAttenuationEnd", 292, 6, 3, (GfxAnimGroupObjType)13));
+            anim.Elements.Add(CreateElement<GfxAnimGroupElement>("IsLightEnabled", 180, 0, 4, (GfxAnimGroupObjType)0));
+            return anim;
+        }
+
         static GfxAnimGroup GenerateVisAnims(GfxModel model, List<GfxMesh> meshes)
         {
             var anim = new GfxAnimGroup()
@@ -301,6 +322,18 @@ namespace CtrLibrary.Bcres
             element.Name = name;
             element.BlendOpIndex = opIdx;
             element.MemberType = (uint)type;
+
+            return (T)element;
+        }
+
+        static T CreateElement<T>(string name, int offset, int type, int opIdx, GfxAnimGroupObjType obj) where T : GfxAnimGroupElement
+        {
+            GfxAnimGroupElement element = Activator.CreateInstance<T>();
+            element.MemberOffset = offset;
+            element.Name = name;
+            element.BlendOpIndex = opIdx;
+            element.MemberType = (uint)type;
+            element.ObjType = obj;
 
             return (T)element;
         }

@@ -38,6 +38,8 @@ using static System.Collections.Specialized.BitVector32;
 using SPICA.PICA.Shader;
 using static CtrLibrary.Bch.BCH;
 using Toolbox.Core.Animations;
+using SPICA.Formats.CtrGfx.Camera;
+using SPICA.Formats.CtrH3D.Camera;
 
 namespace CtrLibrary.Bcres
 {
@@ -160,6 +162,8 @@ namespace CtrLibrary.Bcres
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {
                 Root.AddChild(lightNode);
+                //only load one scene light for global usage
+                break;
             }
 
             ModelFolder = new ModelFolder(this, BcresData, h3d);
@@ -237,13 +241,33 @@ namespace CtrLibrary.Bcres
             foreach (var folder in this.Root.Children)
             {
                 if (folder is H3DGroupNode<GfxAnimation>)
+                    ((H3DGroupNode<GfxAnimation>)folder).OnSave();
+
+                if (folder is H3DGroupNode<GfxAnimation>)
                 {
                     var animNode = (H3DGroupNode<GfxAnimation>)folder;
-                    if (animNode.Type == H3DGroupType.MaterialAnim)
-                    {
-                        foreach (AnimationNode<GfxAnimation> anim in animNode.Children)
-                            anim.OnSave();
-                    }
+                    foreach (AnimationNode<GfxAnimation> anim in animNode.Children)
+                        anim.OnSave();
+                }
+                if (folder is H3DGroupNode<GfxFog>)
+                {
+                    foreach (FogNode<GfxFog> anim in folder.Children)
+                        anim.OnSave();
+                }
+                if (folder is H3DGroupNode<GfxLight>)
+                {
+                    foreach (LightNode<GfxLight> anim in folder.Children)
+                        anim.OnSave();
+                }
+                if (folder is H3DGroupNode<GfxScene>)
+                {
+                    foreach (SceneNode<GfxScene> anim in folder.Children)
+                        anim.OnSave();
+                }
+                if (folder is H3DGroupNode<GfxCamera>)
+                {
+                    foreach (CameraNode<GfxCamera> anim in folder.Children)
+                        anim.OnSave();
                 }
             }
 
@@ -351,6 +375,14 @@ namespace CtrLibrary.Bcres
                         this.AddChild(new ShaderNode<T>(SectionList, item));
                     else if (item is GfxAnimation)
                         this.AddChild(new AnimationNode<T>(SectionList, item));
+                    else if (item is GfxFog)
+                        this.AddChild(new FogNode<T>(SectionList, item));
+                    else if (item is GfxScene)
+                        this.AddChild(new SceneNode<T>(SectionList, item));
+                    else if (item is GfxLight)
+                        this.AddChild(new LightNode<T>(SectionList, item));
+                    else if (item is GfxCamera)
+                        this.AddChild(new CameraNode<T>(SectionList, item));
                     else
                         this.AddChild(new NodeSection<T>(SectionList, item));
                 }
@@ -377,12 +409,24 @@ namespace CtrLibrary.Bcres
                     ((GfxAnimation)item).TargetAnimGroupName = "LightAnimation";
                 else if (this.Type == H3DGroupType.VisibiltyAnim)
                     ((GfxAnimation)item).TargetAnimGroupName = "VisibilityAnimation";
+                else if (this.Type == H3DGroupType.CameraAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "CameraAnimation";
 
                 //Add to UI
-                if (item is GfxAnimation)
-                    AddChild(new AnimationNode<T>(SectionList, item));
+                if (item is GfxShader)
+                    this.AddChild(new ShaderNode<T>(SectionList, item));
+                else if (item is GfxAnimation)
+                    this.AddChild(new AnimationNode<T>(SectionList, item));
+                else if (item is GfxFog)
+                    this.AddChild(new FogNode<T>(SectionList, item));
+                else if (item is GfxScene)
+                    this.AddChild(new SceneNode<T>(SectionList, item));
+                else if (item is GfxLight)
+                    this.AddChild(new LightNode<T>(SectionList, item));
+                else if (item is GfxCamera)
+                    this.AddChild(new CameraNode<T>(SectionList, item));
                 else
-                    AddChild(new NodeSection<T>(SectionList, item));
+                    this.AddChild(new NodeSection<T>(SectionList, item));
             }
 
             private void ExportAll()
@@ -463,6 +507,122 @@ namespace CtrLibrary.Bcres
                         throw new System.Exception("Unknown type? " + Type);
                 }
             }
+
+            public virtual void OnSave()
+            {
+
+            }
+        }
+
+        class SceneNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            GfxScene Scene => (GfxScene)Section;
+            H3DScene H3DScene;
+
+            public SceneNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                H3DScene = Scene.ToH3D();
+
+                BchSceneUI sceneUI = new BchSceneUI();
+                sceneUI.Init(H3DScene, Scene.MetaData);
+
+                TagUI.UIDrawer += delegate
+                {
+                    sceneUI.Render();
+                };
+                Tag = Scene;
+            }
+
+            public override void OnSave()
+            {
+                Scene.FromH3D(this.H3DScene);
+            }
+        }
+
+        class LightNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            GfxLight Light => (GfxLight)Section;
+
+            H3DLight H3DLight;
+
+            public LightNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                H3DLight = Light.ToH3DLight();
+
+                BchLightUI lightUI = new BchLightUI();
+                lightUI.Init(H3DLight, Light.MetaData);
+
+                TagUI.UIDrawer += delegate
+                {
+                    lightUI.Render();
+                };
+                Tag = Light;
+            }
+
+            public override void OnSave()
+            {
+                int index = this.Dict.Find(((T)Section).Name);
+                if (index == -1)
+                    return;
+
+                this.Dict.Remove((T)Section);
+
+                //reinsert instance. GfxLight can change type instance so it has to be reloaded
+                Section = GfxLight.FromH3D(this.H3DLight);
+
+                this.Dict.Insert(index, (T)Section);
+            }
+        }
+
+        class CameraNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            GfxCamera Camera => (GfxCamera)Section;
+
+            H3DCamera H3DCamera;
+
+            public CameraNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                H3DCamera = Camera.ToH3DCamera();
+
+                BchCameraUI camUI = new BchCameraUI();
+                camUI.Init(H3DCamera, Camera.MetaData);
+
+                TagUI.UIDrawer += delegate
+                {
+                    camUI.Render();
+                };
+                Tag = Camera;
+            }
+
+            public override void OnSave()
+            {
+                Camera.FromH3D(this.H3DCamera);
+            }
+        }
+
+        class FogNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            GfxFog Fog => (GfxFog)Section;
+            H3DFog H3DFog;
+
+            public FogNode(GfxDict<T> subSections, object section) : base(subSections, section)
+            {
+                H3DFog = Fog.ToH3D();
+
+                BchFogUI fogUI = new BchFogUI();
+                fogUI.Init(H3DFog, Fog.MetaData);
+
+                TagUI.UIDrawer += delegate
+                {
+                    fogUI.Render();
+                };
+                Tag = Fog;
+            }
+
+            public override void OnSave()
+            {
+                Fog.FromH3D(this.H3DFog);
+            }
         }
 
         class ShaderNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
@@ -473,6 +633,9 @@ namespace CtrLibrary.Bcres
 
             public ShaderNode(GfxDict<T> subSections, object section) : base(subSections, section)
             {
+                if (Shader.ShaderData == null)
+                    return;
+
                 ShBin = Shader.ToBinary();
 
                 foreach (var prog in Shader.ShaderInfos)
@@ -508,6 +671,12 @@ namespace CtrLibrary.Bcres
                     this.Header = wrapper.Root.Header;
                 };
 
+                BchAnimPropertyUI propertyUI = new BchAnimPropertyUI();
+                this.TagUI.UIDrawer += delegate
+                {
+                    propertyUI.Render(wrapper, ((GfxAnimation)section).MetaData);
+                };
+
                 this.OnSelected += delegate
                 {
                     ((AnimationWrapper)Tag).AnimationSet();
@@ -516,8 +685,6 @@ namespace CtrLibrary.Bcres
 
             public override void Export()
             {
-                OnSave();
-
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = true;
                 dlg.FileName = $"{Header}.json";
@@ -532,6 +699,8 @@ namespace CtrLibrary.Bcres
 
                 if (dlg.ShowDialog())
                 {
+                    OnSave();
+
                     if (dlg.FilePath.EndsWith(".json"))
                     {
                         File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
@@ -609,7 +778,6 @@ namespace CtrLibrary.Bcres
                     else
                         ((GfxAnimation)Section).LoopMode = GfxLoopMode.OneTime;
                     ((GfxAnimation)Section).FramesCount = H3DAnimation.FramesCount;
-                    ((GfxAnimation)Section).Name = H3DAnimation.Name;
                 }
                 //Apply any wrapper data on save
                 ((AnimationWrapper)Tag).OnSave();
@@ -638,7 +806,14 @@ namespace CtrLibrary.Bcres
 
                 this.OnHeaderRenamed += delegate
                 {
+                    var index = this.Dict.Find(((T)this.Section).Name);
+                    if (index != -1)
+                        this.Dict.Remove((T)this.Section);
+
                     ((INamed)Section).Name = this.Header;
+
+                    if (index != -1)
+                        this.Dict.Insert(index, (T)this.Section);
                 };
             }
 
@@ -679,6 +854,8 @@ namespace CtrLibrary.Bcres
                 dlg.AddFilter(".bcres", "bcres");
                 if (dlg.ShowDialog())
                 {
+                    OnSave();
+
                     if (dlg.FilePath.EndsWith(".json"))
                         File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
                     else
@@ -687,6 +864,11 @@ namespace CtrLibrary.Bcres
                         ExportRaw(dlg.FilePath, Section, type);
                     }
                 }
+            }
+
+            public virtual void OnSave()
+            {
+
             }
 
             public virtual void Remove()

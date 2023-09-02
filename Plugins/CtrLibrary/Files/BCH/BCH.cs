@@ -31,6 +31,7 @@ using System.Runtime.ConstrainedExecution;
 using static CtrLibrary.Bch.BCH;
 using SPICA.Formats.CtrGfx.Animation;
 using static MapStudio.UI.AnimationTree;
+using SPICA.Formats.CtrH3D.Camera;
 
 namespace CtrLibrary.Bch
 {
@@ -138,6 +139,8 @@ namespace CtrLibrary.Bch
         {
             H3DData = h3d;
 
+            Root.TagUI.Tag = h3d;
+
             //Check for optional .mbn file binary which is used in Smash 3DS to store mesh buffers
             if (FileInfo.FilePath.EndsWith(".bch") && File.Exists(FileInfo.FilePath.Replace(".bch", ".mbn")))
             {
@@ -165,6 +168,8 @@ namespace CtrLibrary.Bch
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {
                 Root.AddChild(lightNode);
+                //only load one scene light for global usage
+                break;
             }
 
             //Prepare tree nodes to visualize in the gui
@@ -288,11 +293,36 @@ namespace CtrLibrary.Bch
                     folder.AddChild(new ShaderNode<T>(subSections, item));
                 else if (item is H3DAnimation)
                     folder.AddChild(new AnimationNode<T>(subSections, item));
+                else if (item is H3DFog)
+                    folder.AddChild(new FogNode<T>(subSections, item));
+                else if (item is H3DLight)
+                    folder.AddChild(new LightNode<T>(subSections, item));
+                else if (item is H3DCamera)
+                    folder.AddChild(new CameraNode<T>(subSections, item));
+                else if (item is H3DScene)
+                    folder.AddChild(new SceneNode<T>(subSections, item));
                 else
                     folder.AddChild(new NodeSection<T>(subSections, item));
             }
 
-            Root.AddChild(folder);
+            if (folder.Children.Count > 0)
+                Root.AddChild(folder);
+
+            var addMenu = Root.ContextMenus.FirstOrDefault(x => x.Header == "Add Folder");
+            if (addMenu == null)
+            {
+                addMenu = new MenuItemModel($"Add Folder", () =>
+                {
+                    if (!Root.Children.Contains(folder))
+                        Root.AddChild(folder);
+                });
+                Root.ContextMenus.Add(addMenu);
+            }
+            addMenu.MenuItems.Add(new MenuItemModel($"{type}", () =>
+            {
+                if (!Root.Children.Contains(folder))
+                    Root.AddChild(folder);
+            }));
         }
 
         public enum H3DGroupType
@@ -354,9 +384,6 @@ namespace CtrLibrary.Bch
                 //Add to UI
                 if (item is H3DAnimation)
                 {
-                    var node = new AnimationNode<T>(SectionList, item);
-                    AddChild(node);
-
                     switch (this.Type)
                     {
                         case H3DGroupType.MaterialAnim:
@@ -369,10 +396,24 @@ namespace CtrLibrary.Bch
                             ((H3DAnimation)item).AnimationType = H3DAnimationType.Camera;
                             break;
                         case H3DGroupType.LightAnim:
+                            ((H3DAnimation)item).AnimationType = H3DAnimationType.Light;
+                            break;
+                        case H3DGroupType.Fogs:
                             ((H3DAnimation)item).AnimationType = H3DAnimationType.Fog;
                             break;
                     }
+
+                    var node = new AnimationNode<T>(SectionList, item);
+                    AddChild(node);
                 }
+                else if (item is H3DFog)
+                    AddChild(new FogNode<T>(SectionList, item));
+                else if (item is H3DLight)
+                    AddChild(new LightNode<T>(SectionList, item));
+                else if (item is H3DCamera)
+                    AddChild(new CameraNode<T>(SectionList, item));
+                else if (item is H3DScene)
+                    AddChild(new SceneNode<T>(SectionList, item));
                 else
                 {
                     var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
@@ -492,6 +533,12 @@ namespace CtrLibrary.Bch
                     this.Header = wrapper.Root.Header;
                 };
 
+                BchAnimPropertyUI propertyUI = new BchAnimPropertyUI();
+                this.TagUI.UIDrawer += delegate
+                {
+                    propertyUI.Render(wrapper, null);
+                };
+
                 this.OnSelected += delegate
                 {
                     //Check if the current node selected was an animation and apply playback
@@ -574,6 +621,70 @@ namespace CtrLibrary.Bch
                 this.TagUI.UIDrawer += delegate
                 {
                     ShaderUI.Render();
+                };
+            }
+        }
+
+        class FogNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            H3DFog Fog => (H3DFog)Section;
+
+            public FogNode(H3DDict<T> subSections, object section) : base(subSections, section)
+            {
+                BchFogUI fogUI = new BchFogUI();
+                fogUI.Init(Fog);
+
+                this.TagUI.UIDrawer += delegate
+                {
+                    fogUI.Render();
+                };
+            }
+        }
+
+        class LightNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            H3DLight Light => (H3DLight)Section;
+
+            public LightNode(H3DDict<T> subSections, object section) : base(subSections, section)
+            {
+                BchLightUI lightUI = new BchLightUI();
+                lightUI.Init(Light);
+
+                this.TagUI.UIDrawer += delegate
+                {
+                    lightUI.Render();
+                };
+            }
+        }
+
+        class CameraNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            H3DCamera Camera => (H3DCamera)Section;
+
+            public CameraNode(H3DDict<T> subSections, object section) : base(subSections, section)
+            {
+                BchCameraUI cameraUI = new BchCameraUI();
+                cameraUI.Init(Camera);
+
+                this.TagUI.UIDrawer += delegate
+                {
+                    cameraUI.Render();
+                };
+            }
+        }
+
+        class SceneNode<T> : NodeSection<T> where T : SPICA.Formats.Common.INamed
+        {
+            H3DScene Scene => (H3DScene)Section;
+
+            public SceneNode(H3DDict<T> subSections, object section) : base(subSections, section)
+            {
+                BchSceneUI sceneUI = new BchSceneUI();
+                sceneUI.Init(Scene);
+
+                this.TagUI.UIDrawer += delegate
+                {
+                    sceneUI.Render();
                 };
             }
         }

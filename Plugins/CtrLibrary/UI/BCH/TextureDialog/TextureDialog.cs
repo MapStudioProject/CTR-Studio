@@ -309,6 +309,18 @@ namespace CtrLibrary
                 bool isETC1 = texture.Format == PICATextureFormat.ETC1 || texture.Format == PICATextureFormat.ETC1A4;
                 if (isETC1)
                 {
+                    if (ImGui.Checkbox("Use Better Encoder", ref ETC1Compressor.UseEncoder))
+                    {
+                        //Disable current display
+                        DecodedTexture.Reload(1, 1, new byte[4]);
+                        //Multi edit
+                        foreach (var selection in SelectedIndices)
+                        {
+                            //Re encode format
+                            Textures[selection].Encoded = false;
+                        }
+                        ReloadImageDisplay();
+                    }
                     if (ImGui.Checkbox("High Quality (Slow Compress)", ref ETC1Compressor.IsHighQuality))
                     {
                         //Disable current display

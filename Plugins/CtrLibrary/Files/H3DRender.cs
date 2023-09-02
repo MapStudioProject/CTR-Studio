@@ -31,12 +31,12 @@ namespace CtrLibrary.Rendering
         public static Dictionary<string, H3DTexture> TextureCache = new Dictionary<string, H3DTexture>();
 
         //For accessing H3D instances for bones
-        private static List<H3DRender> H3DRenderCache = new List<H3DRender>();
+        public static List<H3DRender> H3DRenderCache = new List<H3DRender>();
 
         public static List<Renderer> RenderCache = new List<Renderer>();
 
         //The H3D scene instance
-        private H3D Scene;
+        public H3D Scene;
 
         /// <summary>
         /// The renderer instance used to load and render out the scene.
@@ -132,7 +132,7 @@ namespace CtrLibrary.Rendering
             if (File.Exists("CtrScene.json"))
             {
                 var lights = JsonConvert.DeserializeObject<Light[]>(File.ReadAllText("CtrScene.json"));
-                foreach (var light in Renderer.Lights)
+                foreach (var light in lights)
                     Renderer.Lights.Add(light);
             }
             else
@@ -231,6 +231,33 @@ namespace CtrLibrary.Rendering
 
             //Draw the models
             Renderer.Render();
+
+            //bounding box debugging
+        /*    foreach (var model in Scene.Models)
+            {
+                foreach (var mesh in model.Meshes)
+                {
+                    if (!mesh.IsSelected)
+                        continue;
+
+                    foreach (var usd in mesh.MetaData)
+                    {
+                        if (usd.Type == H3DMetaDataType.BoundingBox)
+                        {
+                            var v = (H3DBoundingBox)usd.Values[0];
+                            var min = v.Center - v.Size;
+                            var max = v.Center + v.Size;
+
+                            StandardMaterial mat = new StandardMaterial();
+                            mat.Render(GLContext.ActiveContext);
+
+                            BoundingBoxRender.Draw(GLContext.ActiveContext,
+                                new OpenTK.Vector3(min.X, min.Y, min.Z),
+                                new OpenTK.Vector3(max.X, max.Y, max.Z));
+                        }
+                    }
+                }
+            }*/
 
             //Draw the skeleton
             foreach (var skeleton in Skeletons)

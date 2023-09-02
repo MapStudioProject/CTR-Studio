@@ -197,7 +197,6 @@ namespace CtrLibrary
                     }
                 }
 
-
                 ImGui.EndCombo();
             }
             ImGui.PopItemWidth();

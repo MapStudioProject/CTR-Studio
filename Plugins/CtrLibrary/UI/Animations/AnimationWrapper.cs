@@ -14,10 +14,15 @@ using UIFramework;
 using SPICA.Rendering.SPICA_GL;
 using SPICA.Math3D;
 using SPICA.Formats.Common;
+using SharpEXR.ColorSpace;
+using Newtonsoft.Json.Linq;
+using Octokit;
+using ImGuiNET;
+using SPICA.Formats.CtrGfx;
 
 namespace CtrLibrary
 {
-    internal class AnimationWrapper : STAnimation, IEditableAnimation
+    public class AnimationWrapper : STAnimation, IEditableAnimation
     {
         //Root for animation tree in the dope editor
         public TreeNode Root { get; set; }
@@ -50,7 +55,7 @@ namespace CtrLibrary
             foreach (var Elem in animation.Elements)
                 AddElement(Elem);
 
-            MaterialAnimUI.ReloadTree(Root, this, animation);
+            AnimUI.ReloadTree(Root, this, animation);
             Hash = CalculateHash();
         }
 
@@ -71,10 +76,11 @@ namespace CtrLibrary
             if (animation.AnimationFlags.HasFlag(H3DAnimationFlags.IsLooping))
                 this.Loop = true;
 
+            AnimGroups.Clear();
             foreach (var Elem in animation.Elements)
                 AddElement(Elem);
 
-            MaterialAnimUI.ReloadTree(Root, this, animation);
+            AnimUI.ReloadTree(Root, this, animation);
             Hash = CalculateHash();
         }
 
@@ -83,7 +89,8 @@ namespace CtrLibrary
             int hash = 0;
             foreach (ElementNode elementNode in this.AnimGroups)
             {
-                hash += elementNode.Name.GetHashCode();
+                if (!string.IsNullOrEmpty(elementNode.Name))
+                    hash += elementNode.Name.GetHashCode();
                 hash += elementNode.GetHashCode();
             }
             return hash;
@@ -122,6 +129,20 @@ namespace CtrLibrary
                         edited |= ((RGBAGroup)group).G.HasChange();
                         edited |= ((RGBAGroup)group).B.HasChange();
                         edited |= ((RGBAGroup)group).A.HasChange();
+                    }
+                    else if (group is TransformGroup)
+                    {
+                        edited |= ((TransformGroup)group).Translate.X.HasChange();
+                        edited |= ((TransformGroup)group).Translate.Y.HasChange();
+                        edited |= ((TransformGroup)group).Translate.Z.HasChange();
+
+                        edited |= ((TransformGroup)group).Scale.X.HasChange();
+                        edited |= ((TransformGroup)group).Scale.Y.HasChange();
+                        edited |= ((TransformGroup)group).Scale.Z.HasChange();
+
+                        edited |= ((TransformGroup)group).Rotation.X.HasChange();
+                        edited |= ((TransformGroup)group).Rotation.Y.HasChange();
+                        edited |= ((TransformGroup)group).Rotation.Z.HasChange();
                     }
                     else if (group is TextureGroup)
                     {
@@ -177,6 +198,18 @@ namespace CtrLibrary
                         ((RGBAGroup)group).G.Save();
                         ((RGBAGroup)group).B.Save();
                         ((RGBAGroup)group).A.Save();
+                    }
+                    else if (group is TransformGroup)
+                    {
+                        ((TransformGroup)group).Translate.X.Save();
+                        ((TransformGroup)group).Translate.Y.Save();
+                        ((TransformGroup)group).Translate.Z.Save();
+                        ((TransformGroup)group).Rotation.X.Save();
+                        ((TransformGroup)group).Rotation.Y.Save();
+                        ((TransformGroup)group).Rotation.Z.Save();
+                        ((TransformGroup)group).Scale.X.Save();
+                        ((TransformGroup)group).Scale.Y.Save();
+                        ((TransformGroup)group).Scale.Z.Save();
                     }
                     else if (group is TextureGroup)
                     {
@@ -282,6 +315,28 @@ namespace CtrLibrary
                         g.X.Load(vec2.X);
                         g.Y.Load(vec2.Y);
                         g.Y.Load(vec2.Z);
+                        elemNode.SubAnimGroups.Add(g);
+                    }
+                    break;
+                case H3DPrimitiveType.Transform:
+                    {
+                        var transform = Elem.Content as H3DAnimTransform;
+
+                        var g = new TransformGroup();
+                        g.Element = Elem;
+                        g.Name = targetName;
+                        g.Translate.X.Load(transform.TranslationX);
+                        g.Translate.Y.Load(transform.TranslationY);
+                        g.Translate.Z.Load(transform.TranslationZ);
+
+                        g.Scale.X.Load(transform.ScaleX);
+                        g.Scale.Y.Load(transform.ScaleY);
+                        g.Scale.Z.Load(transform.ScaleZ);
+
+                        g.Rotation.X.Load(transform.RotationX);
+                        g.Rotation.Y.Load(transform.RotationY);
+                        g.Rotation.Z.Load(transform.RotationZ);
+
                         elemNode.SubAnimGroups.Add(g);
                     }
                     break;
@@ -451,39 +506,43 @@ namespace CtrLibrary
                 Element = element;
                 Name = element.Name;
             }
-
-            public void Save()
-            {
-                if (Element is H3DFloatKeyFrameGroup)
-                {
-
-                }
-
-                foreach (var group in this.SubAnimGroups)
-                { 
-                }
-            }
         }
 
         public class BoolGroup : H3DGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
+
+            public override List<STAnimationTrack> GetTracks() {
+                return new List<STAnimationTrack>() { Value };
+            }
         }
 
         public class FloatGroup : H3DGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
+
+            public override List<STAnimationTrack> GetTracks() {
+                return new List<STAnimationTrack>() { Value };
+            }
         }
 
         public class TextureGroup : H3DGroup
         {
             public H3DTrack Value = new H3DTrack("Value");
+
+            public override List<STAnimationTrack> GetTracks() {
+                return new List<STAnimationTrack>() { Value };
+            }
         }
 
         public class Vector2Group : H3DGroup
         {
             public H3DTrack X = new H3DTrack("X");
             public H3DTrack Y = new H3DTrack("Y");
+
+            public override List<STAnimationTrack> GetTracks() {
+                return new List<STAnimationTrack>() { X, Y };
+            }
         }
 
         public class Vector3Group : H3DGroup
@@ -491,6 +550,10 @@ namespace CtrLibrary
             public H3DTrack X = new H3DTrack("X");
             public H3DTrack Y = new H3DTrack("Y");
             public H3DTrack Z = new H3DTrack("Z");
+
+            public override List<STAnimationTrack> GetTracks() {
+                return new List<STAnimationTrack>() { X, Y, Z };
+            }
         }
 
         public class Vector4Group : H3DGroup
@@ -499,6 +562,25 @@ namespace CtrLibrary
             public H3DTrack Y = new H3DTrack("Y");
             public H3DTrack Z = new H3DTrack("Z");
             public H3DTrack W = new H3DTrack("W");
+
+            public override List<STAnimationTrack> GetTracks()
+            {
+                return new List<STAnimationTrack>() { X, Y, Z, W };
+            }
+        }
+
+        public class TransformGroup : H3DGroup
+        {
+            public Vector3Group Translate = new Vector3Group() { Name = "Translate" };
+            public Vector3Group Scale = new Vector3Group() { Name = "Scale" };
+            public Vector3Group Rotation = new Vector3Group() { Name = "Rotation" };
+
+            public TransformGroup()
+            {
+                this.SubAnimGroups.Add(Translate);
+                this.SubAnimGroups.Add(Scale);
+                this.SubAnimGroups.Add(Rotation);
+            }
         }
 
         public class QuatTransformGroup : H3DGroup
@@ -570,6 +652,14 @@ namespace CtrLibrary
                     for (float i = group.StartFrame; i < Math.Max(group.EndFrame, 1.0f); i++)
                     {
                         bool value = KeyBoolData.GetFrameValue((int)i);
+                        if (i != group.StartFrame)
+                        {
+                            bool prevValue = KeyBoolData.GetFrameValue((int)i - 1);
+                            //Only insert new keys that change during the frame
+                            if (prevValue == value)
+                                continue;
+                        }
+
                         KeyFrames.Add(new STKeyFrame()
                         {
                             Frame = i,
@@ -662,6 +752,55 @@ namespace CtrLibrary
                 if (Hash == hash)
                     return;
 
+                //force insert key data to save.
+                if (KeyData == null)
+                    KeyData = new H3DFloatKeyFrameGroup();
+
+                KeyData.InterpolationType = H3DInterpolationType.Linear;
+
+                switch (this.InterpolationType)
+                {
+                    case STInterpoaltionType.Hermite:
+                        KeyData.InterpolationType = H3DInterpolationType.Hermite;
+                        break;
+                    case STInterpoaltionType.Linear:
+                        KeyData.InterpolationType = H3DInterpolationType.Linear;
+                        break;
+                    case STInterpoaltionType.Step:
+                        KeyData.InterpolationType = H3DInterpolationType.Step;
+                        break;
+                }
+
+                //Step
+                if (KeyData.InterpolationType == H3DInterpolationType.Step)
+                {
+                    //Ensure it is using a linear/step quantiziation
+                    if (!(KeyData.Quantization == KeyFrameQuantization.StepLinear32 ||
+                          KeyData.Quantization == KeyFrameQuantization.StepLinear64))
+                    {
+                        KeyData.Quantization = KeyFrameQuantization.StepLinear64;
+                    }
+                }
+                //Linear interpolatiom
+                else if (KeyData.InterpolationType == H3DInterpolationType.Linear)
+                {
+                    //Ensure it is using a linear/step quantiziation
+                    if (!(KeyData.Quantization == KeyFrameQuantization.StepLinear32 ||
+                          KeyData.Quantization == KeyFrameQuantization.StepLinear64))
+                    {
+                        KeyData.Quantization = KeyFrameQuantization.StepLinear64;
+                    }
+                } //hermite interpolation
+                else if (KeyData.InterpolationType == H3DInterpolationType.Hermite)
+                {
+                    //Convert quantiziation to hermite if needed
+                    if (!KeyData.Quantization.ToString().Contains("Hermite"))
+                    {
+                        KeyData.Quantization = KeyFrameQuantization.Hermite128;
+                    }
+                }
+
+
                 //Update hash with resave
                 Hash = hash;
 
@@ -675,13 +814,13 @@ namespace CtrLibrary
                 foreach (var key in this.KeyFrames)
                 {
                     KeyFrame kf = new KeyFrame() { Frame = key.Frame, Value = key.Value, };
-                    KeyData.KeyFrames.Add(kf);
 
                     if (key is STHermiteKeyFrame)
                     {
                         kf.InSlope = ((STHermiteKeyFrame)key).TangentIn;
                         kf.OutSlope = ((STHermiteKeyFrame)key).TangentOut;
                     }
+                    KeyData.KeyFrames.Add(kf);
                 }
             }
 
