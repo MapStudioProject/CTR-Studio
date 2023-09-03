@@ -236,8 +236,14 @@ namespace CtrLibrary.Bch
             {
                 foreach (var c in folder.Children)
                 {
-                    if (c is AnimationNode<H3DMaterialAnim>)
+                    if (c is AnimationNode<H3DAnimation>)
+                        ((AnimationNode<H3DAnimation>)c).OnSave();
+                    else if (c is AnimationNode<H3DMaterialAnim>)
                         ((AnimationNode<H3DMaterialAnim>)c).OnSave();
+                    else if (c is AnimationNode<H3DCameraAnim>)
+                        ((AnimationNode<H3DCameraAnim>)c).OnSave();
+                    else if (c is AnimationNode<H3DLightAnim>)
+                        ((AnimationNode<H3DLightAnim>)c).OnSave();
                 }
             }
 
@@ -600,7 +606,7 @@ namespace CtrLibrary.Bch
                 return H3DRender.GetFirstVisibleModel();
             }
 
-            public void OnSave()
+            public override void OnSave()
             {
                 //check for possible edits
                 bool isEdited = ((AnimationWrapper)Tag).IsEdited();
@@ -740,6 +746,11 @@ namespace CtrLibrary.Bch
                     //Update binary name on tree node rename
                     ReloadName();
                 };
+            }
+
+            public virtual void OnSave()
+            {
+
             }
 
             public virtual bool Delete()
