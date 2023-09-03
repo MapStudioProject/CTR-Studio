@@ -701,7 +701,7 @@ namespace CtrLibrary
                         case H3DInterpolationType.Hermite:
                             KeyFrames.Add(new STHermiteKeyFrame()
                             {
-                                Frame = key.Frame,
+                                Frame = group.StartFrame + key.Frame,
                                 Value = key.Value,
                                 TangentIn = key.InSlope,
                                 TangentOut = key.OutSlope,
@@ -711,7 +711,7 @@ namespace CtrLibrary
                         case H3DInterpolationType.Step:
                             KeyFrames.Add(new STKeyFrame()
                             {
-                                Frame = key.Frame,
+                                Frame = group.StartFrame + key.Frame,
                                 Value = key.Value,
                             });
                             break;
@@ -730,6 +730,8 @@ namespace CtrLibrary
             {
                 int hash = 0;
                 hash += this.InterpolationType.GetHashCode();
+                hash += this.InterpolationType.GetHashCode();
+
                 for (int i = 0; i < KeyFrames.Count; i++)
                 {
                     hash += KeyFrames[i].Frame.GetHashCode();
@@ -813,7 +815,7 @@ namespace CtrLibrary
                 KeyData.KeyFrames.Clear();
                 foreach (var key in this.KeyFrames)
                 {
-                    KeyFrame kf = new KeyFrame() { Frame = key.Frame, Value = key.Value, };
+                    KeyFrame kf = new KeyFrame() { Frame = KeyData.StartFrame - key.Frame, Value = key.Value, };
 
                     if (key is STHermiteKeyFrame)
                     {
