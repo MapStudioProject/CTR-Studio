@@ -395,38 +395,7 @@ namespace CtrLibrary.Bcres
                 item.Name = $"New{this.Type}";
                 //Auto rename possible dupes
                 item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
-                //Add section list
-                SectionList.Add((T)item);
-
-                //Set animation types
-                if (this.Type == H3DGroupType.SkeletalAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "SkeletalAnimation";
-                else if (this.Type == H3DGroupType.MaterialAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "MaterialAnimation";
-                else if (this.Type == H3DGroupType.FogAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "FogAnimation";
-                else if (this.Type == H3DGroupType.LightAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "LightAnimation";
-                else if (this.Type == H3DGroupType.VisibiltyAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "VisibilityAnimation";
-                else if (this.Type == H3DGroupType.CameraAnim)
-                    ((GfxAnimation)item).TargetAnimGroupName = "CameraAnimation";
-
-                //Add to UI
-                if (item is GfxShader)
-                    this.AddChild(new ShaderNode<T>(SectionList, item));
-                else if (item is GfxAnimation)
-                    this.AddChild(new AnimationNode<T>(SectionList, item));
-                else if (item is GfxFog)
-                    this.AddChild(new FogNode<T>(SectionList, item));
-                else if (item is GfxScene)
-                    this.AddChild(new SceneNode<T>(SectionList, item));
-                else if (item is GfxLight)
-                    this.AddChild(new LightNode<T>(SectionList, item));
-                else if (item is GfxCamera)
-                    this.AddChild(new CameraNode<T>(SectionList, item));
-                else
-                    this.AddChild(new NodeSection<T>(SectionList, item));
+                AddNewSection(item);
             }
 
             private void ExportAll()
@@ -475,11 +444,45 @@ namespace CtrLibrary.Bcres
                     else
                     {
                         var item = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                        var nodeFile = new NodeSection<T>(SectionList, item);
-                        AddChild(nodeFile);
-                        SectionList.Add(item);
+                        AddNewSection(item);
                     }
                 }
+            }
+
+            private void AddNewSection(INamed item)
+            {
+                //Add section list
+                SectionList.Add((T)item);
+
+                //Set animation types
+                if (this.Type == H3DGroupType.SkeletalAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "SkeletalAnimation";
+                else if (this.Type == H3DGroupType.MaterialAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "MaterialAnimation";
+                else if (this.Type == H3DGroupType.FogAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "FogAnimation";
+                else if (this.Type == H3DGroupType.LightAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "LightAnimation";
+                else if (this.Type == H3DGroupType.VisibiltyAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "VisibilityAnimation";
+                else if (this.Type == H3DGroupType.CameraAnim)
+                    ((GfxAnimation)item).TargetAnimGroupName = "CameraAnimation";
+
+                //Add to UI
+                if (item is GfxShader)
+                    this.AddChild(new ShaderNode<T>(SectionList, item));
+                else if (item is GfxAnimation)
+                    this.AddChild(new AnimationNode<T>(SectionList, item));
+                else if (item is GfxFog)
+                    this.AddChild(new FogNode<T>(SectionList, item));
+                else if (item is GfxScene)
+                    this.AddChild(new SceneNode<T>(SectionList, item));
+                else if (item is GfxLight)
+                    this.AddChild(new LightNode<T>(SectionList, item));
+                else if (item is GfxCamera)
+                    this.AddChild(new CameraNode<T>(SectionList, item));
+                else
+                    this.AddChild(new NodeSection<T>(SectionList, item));
             }
 
             private string GetName()

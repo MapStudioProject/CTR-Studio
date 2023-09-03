@@ -32,6 +32,7 @@ using static CtrLibrary.Bch.BCH;
 using SPICA.Formats.CtrGfx.Animation;
 using static MapStudio.UI.AnimationTree;
 using SPICA.Formats.CtrH3D.Camera;
+using Discord;
 
 namespace CtrLibrary.Bch
 {
@@ -390,6 +391,34 @@ namespace CtrLibrary.Bch
                 item.Name = $"New{this.Type}";
                 //Auto rename possible dupes
                 item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                AddNewSection(item);
+            }
+
+            public virtual void Import()
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = false;
+                dlg.FileName = $"{Header}.json";
+                dlg.MultiSelect = true;
+                dlg.AddFilter("json", "json");
+
+                if (dlg.ShowDialog())
+                {
+                    foreach (var f in dlg.FilePaths)
+                    {
+                        //Create section instance
+                        var item = (T)Activator.CreateInstance(typeof(T));
+                        item.Name = Path.GetFileNameWithoutExtension(f);
+                        //Auto rename possible dupes
+                        item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
+                        //Add section list
+                        AddNewSection(item);
+                    }
+                }
+            }
+
+            private void AddNewSection(INamed item)
+            {
                 //Add section list
                 SectionList.Add((T)item);
                 //Add to UI
@@ -429,33 +458,6 @@ namespace CtrLibrary.Bch
                 {
                     var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
                     AddChild(node);
-                }
-            }
-
-            public virtual void Import()
-            {
-                ImguiFileDialog dlg = new ImguiFileDialog();
-                dlg.SaveDialog = false;
-                dlg.FileName = $"{Header}.json";
-                dlg.MultiSelect = true;
-                dlg.AddFilter("json", "json");
-
-                if (dlg.ShowDialog())
-                {
-                    foreach (var f in dlg.FilePaths)
-                    {
-                        //Create section instance
-                        var item = (T)Activator.CreateInstance(typeof(T));
-                        item.Name = Path.GetFileNameWithoutExtension(f);
-                        //Auto rename possible dupes
-                        item.Name = Utils.RenameDuplicateString(item.Name, SectionList.Select(x => x.Name).ToList());
-                        //Add section list
-                        SectionList.Add(item);
-                        //Add to UI
-                        var node = (NodeSection<T>)Activator.CreateInstance(ChildNodeType, SectionList, item);
-                        node.Replace(f);
-                        this.AddChild(node);
-                    }
                 }
             }
 
