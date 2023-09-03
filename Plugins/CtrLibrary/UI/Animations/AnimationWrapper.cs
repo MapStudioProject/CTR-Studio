@@ -806,7 +806,8 @@ namespace CtrLibrary
                 //Update hash with resave
                 Hash = hash;
 
-                KeyData.StartFrame = 0;
+                //Set smallest frame
+                KeyData.StartFrame = this.KeyFrames.Min(x => x.Frame);
 
                 //Set expected end frame.
                 KeyData.EndFrame = this.KeyFrames.Max(x => x.Frame);
