@@ -103,10 +103,10 @@ namespace FirstPlugin
                     if (entries[i].IsFolder)
                     {
                         for (int s = 0; s < entries[i].Size; s++)
-                            entries[i].FullName += $"{Name}/";
+                            entries[s].FullName += $"{Name}/";
                     }
                     else
-                        entries[i].FullName = Name;
+                        entries[i].FullName += Name;
                 }
 
                 for (int i = 0; i < entries.Count; i++)
