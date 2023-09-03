@@ -73,6 +73,19 @@ namespace CtrLibrary.UI
 
             ImguiPropertyColumn.Combo("Animation Type", ref wrapper.H3DAnimation.AnimationType);
 
+            if (wrapper.H3DAnimation is H3DCameraAnim)
+            {
+                var camAnim = (H3DCameraAnim)wrapper.H3DAnimation;
+                ImguiPropertyColumn.Combo("Camera View Type", ref camAnim.ViewType);
+                ImguiPropertyColumn.Combo("Camera Projection Type", ref camAnim.ProjectionType);
+            }
+
+            if (wrapper.H3DAnimation is H3DLightAnim)
+            {
+                var lightAnim = (H3DLightAnim)wrapper.H3DAnimation;
+                ImguiPropertyColumn.Combo("Light Type", ref lightAnim.LightType);
+            }
+
             ImguiPropertyColumn.End();
 
             ImGuiHelper.BoldText($"Anim Count {wrapper.H3DAnimation.Elements.Count}");
