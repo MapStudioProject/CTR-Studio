@@ -816,7 +816,7 @@ namespace CtrLibrary
                 KeyData.KeyFrames.Clear();
                 foreach (var key in this.KeyFrames)
                 {
-                    KeyFrame kf = new KeyFrame() { Frame = KeyData.StartFrame - key.Frame, Value = key.Value, };
+                    KeyFrame kf = new KeyFrame() { Frame = key.Frame - KeyData.StartFrame, Value = key.Value, };
 
                     if (key is STHermiteKeyFrame)
                     {
