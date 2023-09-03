@@ -33,6 +33,7 @@ using SPICA.Formats.CtrGfx.Animation;
 using static MapStudio.UI.AnimationTree;
 using SPICA.Formats.CtrH3D.Camera;
 using Discord;
+using IONET.Collada.FX.Rendering;
 
 namespace CtrLibrary.Bch
 {
@@ -176,7 +177,29 @@ namespace CtrLibrary.Bch
 
             //Prepare the global scene lighting to configure in the viewer
             var light = Render.Renderer.Lights[0];
-           // AddRender(new SceneLightingUI.LightPreview(light));
+
+            //Smash 3DS lighting setup
+            if (ModelBinary != null)
+            {
+                light.Directional = true;
+                light.TwoSidedDiffuse = false;
+
+                Renderer.GlobalHsLGCol = new Vector3(1, 1, 1);
+                Renderer.GlobalHsLSCol = new Vector3(1, 1, 1);
+
+                light.Direction = new OpenTK.Vector3(-0.681f, -0.096f, -3.139f);
+                light.Position = light.Direction;
+
+                light.Diffuse = new OpenTK.Graphics.Color4(1, 1, 1, 1f);
+                light.Ambient = new OpenTK.Graphics.Color4(1, 1, 1, 1f);
+
+                light.Specular0 = new OpenTK.Graphics.Color4(0.27f, 0.27f, 0.27f, 1f);
+                light.Specular1 = new OpenTK.Graphics.Color4(0.23f, 0.23f, 0.23f, 1f);
+
+                Render.Renderer.UpdateAllUniforms();
+            }
+
+            // AddRender(new SceneLightingUI.LightPreview(light));
             foreach (var lightNode in SceneLightingUI.Setup(Render, Render.Renderer.Lights))
             {
                 Root.AddChild(lightNode);
