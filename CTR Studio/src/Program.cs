@@ -88,7 +88,6 @@ namespace CTRStudio
         {
             //Global variables across the application
             Runtime.ExecutableDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Runtime.DisplayBones = true;
             Runtime.BonePointSize = 0.7f;
             Runtime.OpenTKInitialized = true;
 

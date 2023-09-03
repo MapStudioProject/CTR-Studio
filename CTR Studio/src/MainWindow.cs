@@ -65,6 +65,8 @@ namespace CTRStudio
             GlobalSettings.ReloadTheme();
             GlobalSettings.ReloadInput();
 
+            Runtime.DisplayBones = GlobalSettings.Current.Bones.Display;
+
             if (!Directory.Exists(GlobalSettings.Program.ProjectDirectory))
                 Directory.CreateDirectory(GlobalSettings.Program.ProjectDirectory);
 

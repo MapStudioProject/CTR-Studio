@@ -144,8 +144,6 @@ namespace CtrLibrary.Bcres
             Render = new H3DRender(h3d, null);
             AddRender(Render);
 
-            Runtime.DisplayBones = true;
-
             this.Workspace.Outliner.SelectionChanged += delegate
             {
                 var node = this.Workspace.Outliner.SelectedNode;
