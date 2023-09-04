@@ -56,7 +56,49 @@ namespace CtrLibrary.Bcres
                 DrawStats();
                 ImGui.EndTabItem();
             }
+            if (ImguiCustomWidgets.BeginTab("modelTabbar", "Animation Groups (Advanced)"))
+            {
+                DrawAnimGroups();
+                ImGui.EndTabItem();
+            }
             ImGui.EndTabBar();
+        }
+
+        private void DrawAnimGroups()
+        {
+            if (ImGui.Button("Export Anim Groups"))
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.FileName = $"{ModelNode.Header}_AnimGroups.json";
+                dlg.SaveDialog = true;
+                if (dlg.ShowDialog())
+                {
+                    var json = JsonConvert.SerializeObject(ModelNode.Model.AnimationsGroup, Formatting.Indented);
+                    File.WriteAllText(dlg.FilePath, json);
+                }
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Replace Anim Groups"))
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                if (dlg.ShowDialog())
+                {
+                    var json = File.ReadAllText(dlg.FilePath);
+                    ModelNode.Model.AnimationsGroup = JsonConvert.DeserializeObject<GfxDict<GfxAnimGroup>>(json);
+                    ;
+                }
+            }
+
+            foreach (var anim in ModelNode.Model.AnimationsGroup)
+            {
+                if (ImGui.CollapsingHeader(anim.Name, ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    foreach (var elem in anim.Elements)
+                    {
+                        ImGui.Text(elem.Name);
+                    }
+                }
+            }
         }
 
         private void DrawAnimInfo()
