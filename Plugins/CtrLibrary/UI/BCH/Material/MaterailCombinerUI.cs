@@ -351,7 +351,7 @@ namespace CtrLibrary
 
             if (open)
             {
-                ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.FrameBg);
+                ImGui.PushStyleColor(ImGuiCol.ChildBg, ThemeHandler.Theme.ChildBg);
 
                 if (ImGui.BeginChild($"texStage{index}ch{isAlpha}", new System.Numerics.Vector2(ImGui.GetWindowWidth() - 2, 140), true, ImGuiWindowFlags.HorizontalScrollbar))
                 {
