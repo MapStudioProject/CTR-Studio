@@ -617,7 +617,7 @@ namespace CtrLibrary.Bcres
                     }
                 }
                 //Add the sub mesh to the list for the shape
-                subMeshes.Add(CreateSubMesh(Indices, singleBindIndex, skinningCount, Bones));
+                subMeshes.Add(CreateSubMesh(Indices, singleBindIndex, skinningCount, Bones, settings));
             }
 
             vertices = newVertices.ToArray();
@@ -764,7 +764,8 @@ namespace CtrLibrary.Bcres
             public float GetMaxZ() => Vertices.Max(x => x.Z);
         }
 
-        static GfxSubMesh CreateSubMesh(List<ushort> Indices, int singleBindIndex, int skinningCount, List<int> Bones)
+        static GfxSubMesh CreateSubMesh(List<ushort> Indices, int singleBindIndex,
+            int skinningCount, List<int> Bones, CtrImportSettings settings)
         {
             //Sub mesh
             GfxSubMesh SM = new GfxSubMesh();
@@ -793,7 +794,7 @@ namespace CtrLibrary.Bcres
 
             //Need to atleast bind to a single bone.
             //If no bones are binded, the full model cannot be moved within a map editor if required.
-            if (SM.BoneIndices.Count == 0)
+            if (SM.BoneIndices.Count == 0 && !settings.DisableSkeleton)
                 SM.BoneIndices.Add(singleBindIndex);
 
             return SM;
