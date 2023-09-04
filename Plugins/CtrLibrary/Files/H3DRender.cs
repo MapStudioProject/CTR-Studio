@@ -162,7 +162,8 @@ namespace CtrLibrary.Rendering
 
             //Caches are used to search up globally loaded data within the UI and renders
             //So a file can access the data externally from other files
-            LUTCacheManager.Setup(Renderer);
+            LUTCacheManager.Setup();
+            LUTCacheManager.Load(Renderer);
         }
 
         public override void Dispose()
@@ -176,11 +177,7 @@ namespace CtrLibrary.Rendering
             foreach (var tex in Renderer.Textures)
                 if (TextureCache.ContainsKey(tex.Key))
                     TextureCache.Remove(tex.Key);
-            //Remove from global lut cache
-            foreach (var lut in Renderer.LUTs)
-                if (LUTCacheManager.Cache.ContainsKey(lut.Key))
-                    LUTCacheManager.Cache.Remove(lut.Key);
-
+ 
             Renderer.DeleteAll();
             RenderCache.Remove(this.Renderer);
 

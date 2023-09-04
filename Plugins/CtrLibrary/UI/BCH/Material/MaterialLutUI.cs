@@ -182,7 +182,9 @@ namespace CtrLibrary
                         Directory.CreateDirectory(folder);
 
                     var render = H3DRender.RenderCache.FirstOrDefault();
-                    LUTCacheManager.Setup(render, true);
+                    LUTCacheManager.Setup(true);
+                    LUTCacheManager.Load(render);
+
                 }
                 ImGuiHelper.EndBoldText();
 

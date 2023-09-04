@@ -24,7 +24,7 @@ namespace CtrLibrary.UI
 
         static bool loaded = false;
 
-        public static void Setup(Renderer renderer, bool force = false)
+        public static void Setup(bool force = false)
         {
             if (loaded && !force)
                 return;
@@ -44,24 +44,32 @@ namespace CtrLibrary.UI
                     Console.WriteLine($"Loading file {lut}");
 
                     if (file is BCRES)
-                        CacheLUTs(renderer, ((BCRES)file).BcresData.ToH3D());
+                        CacheLUTs(((BCRES)file).BcresData.ToH3D());
                     if (file is BCH)
-                        CacheLUTs(renderer, ((BCH)file).H3DData);
+                        CacheLUTs(((BCH)file).H3DData);
                 }
             }
         }
 
-        static void CacheLUTs(Renderer renderer, H3D h3D)
+        public static void Load(Renderer renderer)
+        {
+            if (Cache.Any(x => renderer.LUTs.ContainsKey(x.Key)))
+                return;
+
+            H3DDict<H3DLUT> dict = new H3DDict<H3DLUT>();
+            foreach (var lut in Cache.Values)
+                dict.Add(lut);
+
+            renderer.Merge(dict);
+        }
+
+        static void CacheLUTs(H3D h3D)
         {
             foreach (var l in h3D.LUTs)
             {
                 if (!Cache.ContainsKey(l.Name))
                     Cache.Add(l.Name, l);
             }
-            if (h3D.LUTs.Any(x => renderer.LUTs.ContainsKey(x.Name)))
-                return;
-
-            renderer.Merge(h3D);
         }
     }
 }
