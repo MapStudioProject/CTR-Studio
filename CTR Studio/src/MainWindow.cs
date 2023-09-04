@@ -46,6 +46,8 @@ namespace CTRStudio
         //About Window
         private AboutWindow AboutWindow;
 
+        private ThemeWindow ThemeWindow;
+
         public MainWindow(Program.Arguments arguments)
         {
             _arguments = arguments;
@@ -71,11 +73,13 @@ namespace CTRStudio
                 Directory.CreateDirectory(GlobalSettings.Program.ProjectDirectory);
 
             SettingsWindow = new SettingsWindow(GlobalSettings);
-
+            ThemeWindow = new ThemeWindow();
+            ThemeWindow.Opened = false;
 
             AboutWindow = new AboutWindow();
             Windows.Add(SettingsWindow);
             Windows.Add(AboutWindow);
+            Windows.Add(ThemeWindow);
 
             //Set the adjustable global font scale
             ImGui.GetIO().FontGlobalScale = GlobalSettings.Program.FontScale;
@@ -417,6 +421,9 @@ namespace CTRStudio
                         window.Opened = window.Opened ? false : true;
                 }
             }
+
+            if (ImGui.MenuItem($"Theme Edit Window", "", showDemoWindow))
+                ThemeWindow.Opened = !ThemeWindow.Opened;
 
 #if DEBUG
             if (ImGui.MenuItem($"{TranslationSource.GetText("STYLE_EDITOR")}", "", showStyleEditor))
