@@ -265,8 +265,13 @@ namespace CtrLibrary.Bch
                     mesh.Mesh.NodeIndex = (ushort)Model.MeshNodesTree.Find(mesh.MeshVisName);
                 }
             }
+
+            Model.Materials.Clear();
             foreach (MaterialWrapper mat in _materialFolder.Children)
+            {
                 mat.OnSave();
+                Model.Materials.Add(mat.Material);
+            }
         }
 
         public override bool Delete()
@@ -711,6 +716,8 @@ namespace CtrLibrary.Bch
             ContextMenus.Add(new MenuItemModel(""));
             ContextMenus.Add(new MenuItemModel("Copy", Copy));
             ContextMenus.Add(new MenuItemModel("Paste", Paste));
+            ContextMenus.Add(new MenuItemModel(""));
+            ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
             ContextMenus.Add(new MenuItemModel(""));
             ContextMenus.Add(new MenuItemModel("Delete", DeleteBatch));
 
