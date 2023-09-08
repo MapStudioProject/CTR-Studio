@@ -22,8 +22,10 @@ namespace CtrLibrary
 		}
 
 		public static uint GetAlignment(this byte[] arr, uint startIndex, Type dataType)
-		{
-			return ((uint)arr[arr.Length - 8] << 8 | (uint)arr[arr.Length - 7]);
+        {
+            return ((uint)arr[startIndex] << 8 | (uint)arr[startIndex - 1]);
+
+            return ((uint)arr[arr.Length - 8] << 8 | (uint)arr[arr.Length - 7]);
 		}
 	}
 }
