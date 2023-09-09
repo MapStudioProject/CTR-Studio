@@ -154,8 +154,8 @@ namespace CtrLibrary
             else if (f.Matches("BCH")) return 0x80;
             else if (f.Matches("AAMP")) return 8;
             else if (f.Matches("MsgStdBn") || f.Matches("MsgPrjBn")) return 0x80;
-            else if (f.Matches((uint)(f.Length - 0x28), "FLIM")) return (uint)f.GetAlignment((uint)(f.Length - 8), typeof(ushort));
-            else if (f.Matches((uint)(f.Length - 0x28), "CLIM")) return (uint)f.GetAlignment((uint)(f.Length - 6), typeof(ushort));
+            else if (f.Matches((uint)(f.Length - 0x28), "FLIM")) return (uint)f.GetAlignment((uint)(f.Length - 8));
+            else if (f.Matches((uint)(f.Length - 0x28), "CLIM")) return (uint)f.GetAlignment((uint)(f.Length - 6));
             else return 0x4;
         }
 

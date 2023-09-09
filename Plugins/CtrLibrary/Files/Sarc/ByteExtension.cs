@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Toolbox.Core.IO;
 
 namespace CtrLibrary
 {
@@ -21,11 +22,12 @@ namespace CtrLibrary
 			return true;
 		}
 
-		public static uint GetAlignment(this byte[] arr, uint startIndex, Type dataType)
+		public static uint GetAlignment(this byte[] data, uint offset)
         {
-            return ((uint)arr[startIndex] << 8 | (uint)arr[startIndex - 1]);
-
-            return ((uint)arr[arr.Length - 8] << 8 | (uint)arr[arr.Length - 7]);
+            using (var reader = new FileReader(data)) {
+                reader.SeekBegin(offset);
+                return reader.ReadUInt16();
+            }
 		}
 	}
 }
