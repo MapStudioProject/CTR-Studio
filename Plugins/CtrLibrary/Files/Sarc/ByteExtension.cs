@@ -22,11 +22,13 @@ namespace CtrLibrary
 			return true;
 		}
 
-		public static uint GetAlignment(this byte[] data, uint offset)
+		public static uint GetAlignment(this byte[] arr, uint offset)
         {
-            using (var reader = new FileReader(data)) {
+            using (var reader = new FileReader(arr)) {
+				reader.SetByteOrder(true);
                 reader.SeekBegin(offset);
-                return reader.ReadUInt16();
+                var alignment = reader.ReadUInt16();
+				return alignment != 0 ? alignment : (uint)32;
             }
 		}
 	}
