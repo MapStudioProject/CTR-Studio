@@ -57,7 +57,7 @@ namespace CtrLibrary.Bcres
         /// <summary>
         /// The extension of the plugin.
         /// </summary>
-        public string[] Extension => new string[] { "*.bcres" , "*.bcmdl" };
+        public string[] Extension => new string[] { "*.bcres", "*.bcmdl", "*.bch" };
 
         /// <summary>
         /// Determines if the plugin can save or not.
@@ -269,7 +269,11 @@ namespace CtrLibrary.Bcres
                 }
             }
 
-            Gfx.Save(stream, BcresData);
+            //if extension is .bch, convert to BCH
+            if (FileInfo.FilePath.EndsWith(".bch"))
+                H3D.Save(stream, BcresData.ToH3D());
+            else
+                Gfx.Save(stream, BcresData);
         }
 
         /// <summary>
