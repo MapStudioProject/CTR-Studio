@@ -14,7 +14,7 @@ namespace CtrLibrary
         public bool CanSave { get; set; } = true;
 
         public string[] Description { get; set; } = new string[] { "SARC" };
-        public string[] Extension { get; set; } = new string[] { "*.sarc" };
+        public string[] Extension { get; set; } = new string[] { "*.sarc", "*.szs" };
 
         public File_Info FileInfo { get; set; }
 
