@@ -37,16 +37,13 @@ namespace CtrLibrary.UI
             {
                 foreach (var lut in Directory.GetFiles(lutDir))
                 {
-                    var file = STFileLoader.OpenFileFormat(lut);
-                    if (file == null)
-                        continue;
-
-                    Console.WriteLine($"Loading file {lut}");
-
-                    if (file is BCRES)
-                        CacheLUTs(((BCRES)file).BcresData.ToH3D());
-                    if (file is BCH)
-                        CacheLUTs(((BCH)file).H3DData);
+                    using (var reader = new FileReader(lut))
+                    {
+                        if (reader.CheckSignature(3, "BCH"))
+                            CacheLUTs(H3D.Open(File.ReadAllBytes(lut)));
+                        if (reader.CheckSignature(4, "CGFX"))
+                            CacheLUTs(Gfx.Open(lut).ToH3D());
+                    }
                 }
             }
         }
