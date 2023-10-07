@@ -485,7 +485,7 @@ namespace CtrLibrary
                     UpdateShaders();
                 });
 
-                if (texCoord.MappingType == H3DTextureMappingType.UvCoordinateMap)
+                if (texCoord.MappingType == H3DTextureMappingType.UvCoordinateMap && texSourceID < 4)
                 {
                     var uvLayer = UVSets[texSourceID];
                     if (ImguiCustomWidgets.ComboScrollable("UV Layer", UVSets[texSourceID], ref uvLayer, UVSets))
