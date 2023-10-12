@@ -16,6 +16,7 @@ using SPICA.PICA;
 using Newtonsoft.Json;
 using SPICA.Formats.CtrH3D.Texture;
 using SPICA.Formats.CtrGfx.Model.Mesh;
+using IONET.Core.IOMath;
 
 namespace CtrLibrary.Bch
 {
@@ -331,6 +332,9 @@ namespace CtrLibrary.Bch
             H3DModel h3dModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings) 
         {
             string meshName = iomesh.Name;
+
+            if (settings.ImportTangents)
+                GenerateTangentsAndBitangents(iomesh);
 
             if (!string.IsNullOrEmpty(meshName) && !h3dModel.MeshNodesTree.Contains(meshName))
             {
@@ -986,6 +990,42 @@ namespace CtrLibrary.Bch
                 index++;
             }
             return verts;
+        }
+
+        /// <summary>
+        /// Generates Tangents and Bitangents for the vertices
+        /// </summary>
+        public static void GenerateTangentsAndBitangents(IOMesh mesh)
+        {
+            List<int> indices = new List<int>();
+
+            foreach (var v in mesh.Polygons)
+            {
+                v.ToTriangles(mesh);
+
+                if (v.PrimitiveType != IOPrimitive.TRIANGLE)
+                    continue;
+
+                indices.AddRange(v.Indicies);
+            }
+
+            var positions = mesh.Vertices.Select(e => e.Position).ToList();
+            var normals = mesh.Vertices.Select(e => e.Normal).ToList();
+            var uvs = mesh.HasUVSet(0) ? mesh.Vertices.Select(e => e.UVs[0]).ToList() : mesh.Vertices.Select(e => Vector2.Zero).ToList();
+
+            //Flip for BCH/BCRES
+            for (int i = 0; i < uvs.Count; i++)
+                uvs[i] = new Vector2(uvs[i].X, 1f - uvs[i].Y);
+
+            TriangleListUtils.CalculateTangentsBitangents(positions, normals, uvs, indices, out Vector3[] tangents, out Vector3[] bitangents);
+
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                var vertex = mesh.Vertices[i];
+                vertex.Tangent = tangents[i];
+                vertex.Binormal = bitangents[i];
+                mesh.Vertices[i] = vertex;
+            }
         }
     }
 }
