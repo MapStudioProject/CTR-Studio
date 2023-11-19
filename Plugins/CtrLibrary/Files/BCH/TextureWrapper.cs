@@ -401,7 +401,15 @@ namespace CtrLibrary.Bch
             Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
 
             //Re encode with updated alpha
-            var output = TextureConverter.Encode(Img, format, mipCount);
+            byte[] output = new byte[0];
+
+            bool isETC1 = format == PICATextureFormat.ETC1 || format == PICATextureFormat.ETC1A4;
+
+            if (isETC1 && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && ETC1Compressor.UseEncoder)
+                output = ETC1Compressor.Encode(Img, (int)mipCount, format == PICATextureFormat.ETC1A4);
+            else
+                output = TextureConverter.Encode(Img, format, mipCount);
+
             Img.Dispose();
 
             return output;
@@ -432,7 +440,15 @@ namespace CtrLibrary.Bch
             Image<Rgba32> Img = Image.LoadPixelData<Rgba32>(rgba, Texture.Width, Texture.Height);
 
             //Re encode with updated alpha
-            var output = TextureConverter.Encode(Img, format, mipCount);
+            byte[] output = new byte[0];
+
+            bool isETC1 = format == PICATextureFormat.ETC1 || format == PICATextureFormat.ETC1A4;
+
+            if (isETC1 && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && ETC1Compressor.UseEncoder)
+                output = ETC1Compressor.Encode(Img, (int)mipCount, format == PICATextureFormat.ETC1A4);
+            else
+                output = TextureConverter.Encode(Img, format, mipCount);
+
             Img.Dispose();
 
             return output;
