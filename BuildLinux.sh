@@ -1,9 +1,9 @@
 #!/bin/sh
 
-cd "CTR Studio"
-dotnet build --runtime linux-x64 --self-contained
+pwd
 
-cd "bin/Debug/net6.0"
-cp -R -T "Plugins/net6.0" "linux-x64/Plugins"
+dotnet build --runtime linux-x64 --self-contained "$(pwd)/CTR Studio"
+cp -R "$(pwd)/Plugins" "$(pwd)/CTR Studio/bin/Debug/net6.0/linux-x64/"
+cp -R "$(pwd)/CTR Studio/bin/Debug/net6.0/Plugins" "$(pwd)/CTR Studio/bin/Debug/net6.0/linux-x64/"
 
-read -p "Press any key to continue..."
+echo "Built CTR Studio correctly! Run './CTR\ Studio/bin/Debug/net6.0/linux-x64/CTR\ Studio' to launch!"
