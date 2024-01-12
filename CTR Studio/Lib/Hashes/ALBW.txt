@@ -1,5 +1,4 @@
-﻿
-EU/Font/HyliaFont.bffnt
+﻿EU/Font/HyliaFont.bffnt
 EU/Font/MessageFont.bffnt
 EU_English/Action.msbt
 EU_English/Castle.msbt
@@ -995,6 +994,8 @@ JP_Japanese/Cave.msbt
 JP_Japanese/Cm_E3CourseSelect.msbt
 JP_Japanese/Cm_E3PressKey.msbt
 JP_Japanese/Cm_E3ThankYou.msbt
+JP_Japanese/Cm_E3Title.msbt
+JP_Japanese/Cm_E3TitleB.msbt
 JP_Japanese/Cm_MessageWindowNomalT.msbt
 JP_Japanese/Cm_MessageWindowSystemT.msbt
 JP_Japanese/Cm_SkipB.msbt
@@ -1029,6 +1030,10 @@ JP_Japanese/Ed_StaffCreditMessageT.msbt
 JP_Japanese/Ed_StaffCreditT.msbt
 JP_Japanese/Ending.msbt
 JP_Japanese/EventItemGet.msbt
+JP_Japanese/ExperienceCave.msbt
+JP_Japanese/ExperienceDungeon.msbt
+JP_Japanese/ExperienceField.msbt
+JP_Japanese/ExperienceIndoor.msbt
 JP_Japanese/ExtraName.msbt
 JP_Japanese/Field.msbt
 JP_Japanese/FieldDark.msbt
