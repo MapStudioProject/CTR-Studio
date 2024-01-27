@@ -85,8 +85,11 @@ namespace CtrLibrary.Bcres
                 {
                     var json = File.ReadAllText(dlg.FilePath);
                     ModelNode.Model.AnimationsGroup = JsonConvert.DeserializeObject<GfxDict<GfxAnimGroup>>(json);
-                    ;
                 }
+            }
+            if (ImGui.Button("Regenerate Bone Anim Groups"))
+            {
+                ModelNode.GenerateSkeletalAnimGroups();
             }
 
             foreach (var anim in ModelNode.Model.AnimationsGroup)
@@ -108,7 +111,7 @@ namespace CtrLibrary.Bcres
             {
                 foreach (var item in ModelNode.AnimGroupSettings.MaterialTypes)
                     ModelNode.AnimGroupSettings.MaterialTypes[item.Key] = checkAll;
-                ModelNode.GenerateAnimGroups();
+                ModelNode.GenerateMaterialAnimGroups();
             }
 
             int index = 0;
@@ -120,7 +123,7 @@ namespace CtrLibrary.Bcres
                 if (ImGui.Checkbox($"Animate {name}", ref hasType))
                 {
                     ModelNode.AnimGroupSettings.MaterialTypes[item.Key] = hasType;
-                    ModelNode.GenerateAnimGroups();
+                    ModelNode.GenerateMaterialAnimGroups();
                 }
             }
         }
