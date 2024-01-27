@@ -152,7 +152,7 @@ namespace CtrLibrary
             return windows;
         }
 
-        public override void DrawArchiveFileEditor()
+        public void DrawArchiveFileEditor()
         {
             MapStudio.UI.ImageEditor.LoadEditor(ImageBase.Tag as STGenericTexture);
         }
