@@ -312,8 +312,8 @@ namespace CtrLibrary.Bcres
             //Check how many bones are used total
             var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();
             //If only one bone is used, no skinning requred as a bone can be used as a single binded rigid body.
-            if (boneList?.Count == 1 || !(gfxModel is GfxModelSkeletal))
-                skinningCount = 0;
+          //  if (boneList?.Count == 1 || !(gfxModel is GfxModelSkeletal))
+             //   skinningCount = 0;
 
             bool isRigid = skinningCount == 1;
 

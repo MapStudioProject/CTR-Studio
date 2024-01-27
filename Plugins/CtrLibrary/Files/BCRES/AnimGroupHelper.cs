@@ -176,6 +176,29 @@ namespace CtrLibrary.Bcres
             return animations;
         }
 
+        public static GfxAnimGroup GenerateSkeletonAnims(GfxModelSkeletal model)
+        {
+            var anim = new GfxAnimGroup()
+            {
+                Name = "SkeletalAnimation",
+                EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
+                MemberType = 1,
+                BlendOperationTypes = new int[1] { 8 }
+            };
+
+            foreach (var bone in model.Skeleton.Bones)
+            {
+                anim.Elements.Add(new GfxAnimGroupBone()
+                {
+                    MemberOffset = 0, MemberType = 0, BlendOpIndex = 0,
+                    ObjType = GfxAnimGroupObjType.Bone,
+                    BoneName = bone.Name,
+                    Name = bone.Name,
+                });
+            }
+            return anim;
+        }
+
         public static GfxAnimGroup GenerateMatAnims(GfxDict<GfxMaterial> materials, AnimationSettings settings)
         {
             var anim = new GfxAnimGroup()

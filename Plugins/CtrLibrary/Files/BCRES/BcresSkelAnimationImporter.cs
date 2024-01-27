@@ -18,7 +18,9 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Toolbox.Core;
+using Toolbox.Core.Animations;
 using static GLFrameworkEngine.CameraFrame;
+using static SPICA.Rendering.Animation.SkeletalAnimation;
 
 namespace CtrLibrary
 {
@@ -27,6 +29,12 @@ namespace CtrLibrary
         public class ExportSettings
         {
             public bool ExportMatrices = false;
+        }
+
+        public class BcresImportSettings
+        {
+            public bool BakeAsMatrices = false;
+            public bool BakeAsQuat = false;
         }
 
         public static void Export(GfxAnimation gfxAnimation, H3DModel model, string filePath)
@@ -338,20 +346,22 @@ namespace CtrLibrary
             }
         }
 
-        public static GfxAnimation Import(string filePath, H3DModel model)
+        public static GfxAnimation Import(string filePath, H3DModel model, BcresImportSettings settings = null)
         {
             var gfxAnimation = new GfxAnimation();
             gfxAnimation.Name = Path.GetFileNameWithoutExtension(filePath);
             gfxAnimation.LoopMode = GfxLoopMode.Loop;
             gfxAnimation.MetaData = new GfxDict<GfxMetaData>();
 
-            Import(filePath, gfxAnimation, model);
+            Import(filePath, gfxAnimation, model, settings);
 
             return gfxAnimation;
         }
 
-        public static void Import(string filePath, GfxAnimation gfxAnimation, H3DModel model)
+        public static void Import(string filePath, GfxAnimation gfxAnimation, H3DModel model, BcresImportSettings settings = null)
         {
+            if (settings == null) settings = new BcresImportSettings();
+
             var scene = IOManager.LoadScene(filePath, new ImportSettings());
             var ioanim = scene.Animations.FirstOrDefault();
             if (ioanim == null)
@@ -360,6 +370,30 @@ namespace CtrLibrary
             gfxAnimation.TargetAnimGroupName = "SkeletalAnimation";
             gfxAnimation.FramesCount = ioanim.EndFrame != 0 ? ioanim.EndFrame : ioanim.GetFrameCount();
             gfxAnimation.Elements.Clear();
+
+            Dictionary<string, Matrix4x4[]> baked_matrices = new Dictionary<string, Matrix4x4[]>();
+            if (settings.BakeAsMatrices)
+            {
+                baked_matrices = BakeMatrices(ioanim, model, gfxAnimation.FramesCount);
+
+                foreach (var bone in baked_matrices)
+                {
+                    GfxAnimationElement element = new GfxAnimationElement();
+                    element.Name = bone.Key;
+                    element.PrimitiveType = GfxPrimitiveType.MtxTransform;
+                    gfxAnimation.Elements.Add(element);
+
+                    var transform = new GfxAnimMtxTransform();
+                    transform.StartFrame = 0;
+                    transform.EndFrame = gfxAnimation.FramesCount;
+                    element.Content = transform;
+
+                    foreach (var mat in bone.Value)
+                        transform.Frames.Add(new SPICA.Math3D.Matrix3x4(mat));
+                }
+
+                return;
+            }
 
             void LoadGroups(IOAnimation animation)
             {
@@ -378,11 +412,11 @@ namespace CtrLibrary
                 //Normal keyed SRT
                 var type = GfxPrimitiveType.Transform;
 
-                if (animation.Tracks.Any(x => x.ChannelType == IOAnimationTrackType.TransformMatrix4x4))
+                if (animation.Tracks.Any(x => x.ChannelType == IOAnimationTrackType.TransformMatrix4x4 || settings.BakeAsMatrices))
                 {
                     type = GfxPrimitiveType.MtxTransform; //baked matrices
                 }
-                else if (animation.Tracks.Any(x => x.ChannelType == IOAnimationTrackType.QuatX))
+                else if (animation.Tracks.Any(x => x.ChannelType == IOAnimationTrackType.QuatX) || settings.BakeAsQuat)
                 {
                     type = GfxPrimitiveType.QuatTransform; //baked with SRT (quats)
                 }
@@ -395,7 +429,7 @@ namespace CtrLibrary
                         element.Content = ImportTransform(animation);
                         break;
                     case GfxPrimitiveType.MtxTransform:
-                        element.Content = ImportMtxTransform(animation);
+                        element.Content = ImportMtxTransform(animation, model);
                         break;
                     case GfxPrimitiveType.QuatTransform:
                         element.Content = ImportQuatTransform(animation, (int)gfxAnimation.FramesCount);
@@ -409,28 +443,113 @@ namespace CtrLibrary
                 LoadGroups(anim);
         }
 
-        private static GfxAnimMtxTransform ImportMtxTransform(IOAnimation animation)
+        private static Dictionary<string, Matrix4x4[]> BakeMatrices(IOAnimation ioanim, H3DModel model, float count)
+        {
+            Dictionary<string, Matrix4x4[]> baked_matrices = new Dictionary<string, Matrix4x4[]>();
+
+            int frameCount = (int)count;
+
+            void LoadGroups(IOAnimation animation)
+            {
+                foreach (var anim in animation.Groups)
+                    LoadGroups(anim);
+
+                //Ignore groups with no tracks
+                if (animation.Tracks.Count == 0)
+                    return;
+
+                var bone = model.Skeleton[animation.Name];
+
+                //decompose into mtx transform
+                var posX = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.PositionX);
+                var posY = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.PositionY);
+                var posZ = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.PositionZ);
+
+                var scaX = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.ScaleX);
+                var scaY = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.ScaleY);
+                var scaZ = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.ScaleZ);
+
+                var rotX = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.RotationEulerX);
+                var rotY = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.RotationEulerY);
+                var rotZ = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.RotationEulerZ);
+
+                baked_matrices.Add(animation.Name, new Matrix4x4[frameCount]);
+                for (int i = 0; i < frameCount; i++)
+                {
+                    var position = new Vector3(
+                            posX != null ? posX.GetFrameValue(i) : bone.Translation.X,
+                            posY != null ? posY.GetFrameValue(i) : bone.Translation.Y,
+                            posZ != null ? posZ.GetFrameValue(i) : bone.Translation.Z);
+                    var scale = new Vector3(
+                    scaX != null ? scaX.GetFrameValue(i) : bone.Scale.X,
+                        scaY != null ? scaY.GetFrameValue(i) : bone.Scale.Y,
+                        scaZ != null ? scaZ.GetFrameValue(i) : bone.Scale.Z);
+                    var rot = new Vector3(
+                               rotX != null ? rotX.GetFrameValue(i) : bone.Rotation.X,
+                               rotY != null ? rotY.GetFrameValue(i) : bone.Rotation.Y,
+                               rotZ != null ? rotZ.GetFrameValue(i) : bone.Rotation.Z);
+
+                    var mat = Matrix4x4.CreateScale(scale) *
+                        (Matrix4x4.CreateRotationX(rot.X) *
+                         Matrix4x4.CreateRotationY(rot.Y) *
+                         Matrix4x4.CreateRotationZ(rot.Z)) *
+                        Matrix4x4.CreateTranslation(position);
+                    baked_matrices[animation.Name][i] = mat;
+                }
+            }
+
+            foreach (var anim in ioanim.Groups)
+                LoadGroups(anim);
+
+            Matrix4x4 GetParentMatrix(H3DBone bone, int frame)
+            {
+                if (baked_matrices.ContainsKey(bone.Name))
+                    return baked_matrices[bone.Name][frame];
+
+                return bone.Transform;
+            }
+
+            //lastly update parents
+            foreach (var bone in model.Skeleton)
+            {
+                if (baked_matrices.ContainsKey(bone.Name))
+                {
+                    if (bone.ParentIndex != -1)
+                    {
+                        for (int i = 0; i < baked_matrices[bone.Name].Length; i++)
+                            baked_matrices[bone.Name][i] *= GetParentMatrix(model.Skeleton[bone.ParentIndex], i);
+                    }
+                }
+            }
+
+            return baked_matrices;
+        }
+
+        private static GfxAnimMtxTransform ImportMtxTransform(IOAnimation animation, H3DModel model)
         {
             var track = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.TransformMatrix4x4);
             if (track == null)
-                return new GfxAnimMtxTransform();
-
-            var transform = new GfxAnimMtxTransform();
-            transform.StartFrame = 0;
-            transform.EndFrame = track.KeyFrames.LastOrDefault().Frame;
-            transform.PreRepeat = ConvertLoop(track.PreWrap);
-            transform.PostRepeat = ConvertLoop(track.PreWrap);
-
-            foreach (var key in track.KeyFrames)
             {
-                float[] mat = (float[])key.Value;
-                transform.Frames.Add(new SPICA.Math3D.Matrix3x4(
-                    mat[0], mat[1], mat[2], mat[3],
-                    mat[4], mat[5], mat[6], mat[7],
-                    mat[8], mat[9], mat[10], mat[11]));
+                return new GfxAnimMtxTransform();
             }
+            else //Else produce using a key framed transform matrix4x4
+            {
+                var transform = new GfxAnimMtxTransform();
+                transform.StartFrame = 0;
+                transform.EndFrame = track.KeyFrames.LastOrDefault().Frame;
+                transform.PreRepeat = ConvertLoop(track.PreWrap);
+                transform.PostRepeat = ConvertLoop(track.PreWrap);
 
-            return transform;
+                foreach (var key in track.KeyFrames)
+                {
+                    float[] mat = (float[])key.Value;
+                    transform.Frames.Add(new SPICA.Math3D.Matrix3x4(
+                        mat[0], mat[1], mat[2], mat[3],
+                        mat[4], mat[5], mat[6], mat[7],
+                        mat[8], mat[9], mat[10], mat[11]));
+                }
+                return transform;
+            }
         }
 
         private static GfxAnimQuatTransform ImportQuatTransform(IOAnimation animation, int frameCount)

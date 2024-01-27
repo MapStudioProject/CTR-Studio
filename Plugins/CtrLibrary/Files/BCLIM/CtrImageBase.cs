@@ -221,6 +221,7 @@ namespace CtrLibrary
         public EditableTexture(NodeBase node, H3DTexture texRender, 
             CTR_3DS.Orientation swizzleMode, Action updateRender)
         {
+            Name = node.Header;
             UpdateRender = updateRender;
             H3DTexture = texRender;
             var format = (CTR_3DS.PICASurfaceFormat)texRender.Format;

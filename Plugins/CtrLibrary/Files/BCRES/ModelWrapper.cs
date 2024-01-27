@@ -26,6 +26,10 @@ using SPICA.Formats.CtrGfx.AnimGroup;
 using Toolbox.Core.Animations;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using static SPICA.Rendering.Animation.SkeletalAnimation;
+using IONET.Collada.Core.Controller;
+using IONET.Core.Skeleton;
+using static GLFrameworkEngine.SkeletonRenderer;
 
 namespace CtrLibrary.Bcres
 {
@@ -201,13 +205,15 @@ namespace CtrLibrary.Bcres
             if (Model is GfxModelSkeletal)
             {
                 var skeleton = ((GfxModelSkeletal)Model).Skeleton;
-                this.Skeleton = new FSKL(skeleton);
+                this.Skeleton = new FSKL(_skeletonFolder, skeleton);
 
                 if (SkeletonRenderer != null)
                     ParentBCRESNode.Render.Skeletons.Remove(SkeletonRenderer);
 
                 SkeletonRenderer = new SkeletonRenderer(Skeleton);
                 ParentBCRESNode.Render.Skeletons.Add(SkeletonRenderer);
+
+                this.Skeleton.InitRender(SkeletonRenderer);
 
                 _skeletonFolder.Children.Clear();
                 foreach (var bone in SkeletonRenderer.Bones)
@@ -252,7 +258,7 @@ namespace CtrLibrary.Bcres
             }
         }
 
-        public void GenerateAnimGroups()
+        public void GenerateMaterialAnimGroups()
         {
             //Generate material animation groups automatically
             var anim = new GfxAnimGroup()
@@ -269,6 +275,28 @@ namespace CtrLibrary.Bcres
             Model.AnimationsGroup["MaterialAnimation"].Elements.Clear();
             foreach (var elem in generatedAnimGroups.Elements)
                 Model.AnimationsGroup["MaterialAnimation"].Elements.Add(elem);
+        }
+
+        public void GenerateSkeletalAnimGroups()
+        {
+            if (!(Model is GfxModelSkeletal)) //model has no bones, skip
+                return;
+
+            //Generate material animation groups automatically
+            var anim = new GfxAnimGroup()
+            {
+                Name = "SkeletalAnimation",
+                EvaluationTiming = GfxAnimEvaluationTiming.AfterSceneCull,
+                MemberType = 1,
+                BlendOperationTypes = new int[1] { 8 }
+            };
+            if (!Model.AnimationsGroup.Contains("SkeletalAnimation"))
+                Model.AnimationsGroup.Add(anim);
+
+            var generatedAnimGroups = AnimGroupHelper.GenerateSkeletonAnims((GfxModelSkeletal)Model);
+            Model.AnimationsGroup["SkeletalAnimation"].Elements.Clear();
+            foreach (var elem in generatedAnimGroups.Elements)
+                Model.AnimationsGroup["SkeletalAnimation"].Elements.Add(elem);
         }
 
         private void Export()
@@ -369,7 +397,9 @@ namespace CtrLibrary.Bcres
             Model.Name = this.Header;
 
             //Generate animation groups with import as there may be additional materials to insert
-            GenerateAnimGroups();
+            GenerateMaterialAnimGroups();
+            if (settings.ImportBones)
+                GenerateSkeletalAnimGroups();
 
             if (modelIndex != -1)
                 BcresFile.Models.Insert(modelIndex, Model);
@@ -421,7 +451,7 @@ namespace CtrLibrary.Bcres
 
             ReloadModel();
 
-            GenerateAnimGroups();
+            GenerateMaterialAnimGroups();
         }
 
         public void ImportMaterial()
@@ -449,15 +479,28 @@ namespace CtrLibrary.Bcres
 
                 ReloadModel();
 
-                GenerateAnimGroups();
+                GenerateMaterialAnimGroups();
             }
         }
     }
 
     public class FSKL : STSkeleton
     {
-        public FSKL(GfxSkeleton skeleton)
+        private NodeBase FolderUI;
+
+        private SkeletonRenderer Renderer;
+
+        private GfxSkeleton GfxSkeleton;
+
+        public FSKL(NodeBase folder, GfxSkeleton skeleton)
         {
+            GfxSkeleton = skeleton;
+            FolderUI = folder;
+            FolderUI.ContextMenus.Add(new MenuItemModel("Add Bone", () =>
+            {
+                AddNewBoneAction(FolderUI, null);
+            }));
+
             foreach (var bone in skeleton.Bones)
             {
                 STBone bn = new BcresBone(skeleton, this)
@@ -483,6 +526,160 @@ namespace CtrLibrary.Bcres
             }
             this.Reset();
             this.Update();
+        }
+
+        public void InitRender(SkeletonRenderer renderer)
+        {
+            Renderer = renderer;
+            Renderer.CanSelect = true;
+            foreach (var bone in Renderer.Bones)
+                PrepareBoneUI(bone.UINode, bone.BoneData);
+        }
+
+        private void PrepareBoneUI(NodeBase node, STBone bone)
+        {
+            node.ContextMenus.Clear();
+            node.ContextMenus.Add(new MenuItemModel("Rename", () => { node.ActivateRename = true; }));
+            node.ContextMenus.Add(new MenuItemModel(""));
+            node.ContextMenus.Add(new MenuItemModel("Add", () =>
+            {
+                AddNewBoneAction(node, bone);
+            }));
+            node.ContextMenus.Add(new MenuItemModel("Remove", () =>
+            {
+                RemoveBoneAction(node, bone);
+            }));
+
+            node.CanRename = true;
+            node.OnHeaderRenamed += delegate
+            {
+                //Rename wrapper
+                bone.Name = node.Header;
+                //Rename raw bfres bone data
+                ((BcresBone)bone).BoneData.Name = node.Header;
+            };
+        }
+
+        private void AddNewBoneAction(NodeBase parentNode, STBone parent)
+        {
+            var nameList = this.Bones.Select(x => x.Name).ToList();
+            string name = Utils.RenameDuplicateString("NewBone", nameList);
+
+            var position = new System.Numerics.Vector3();
+
+            var genericBone = this.AddBone(new GfxBone()
+            {
+                Name = name,
+                Translation = position,
+                Scale = new System.Numerics.Vector3(1, 1, 1),
+                ParentIndex = parent != null ? (short)parent.Index : (short)-1,
+                Flags = GfxBoneFlags.IsNeededRendering | 
+                        GfxBoneFlags.IsWorldMtxCalculate |
+                        GfxBoneFlags.IsLocalMtxCalculate |
+                        GfxBoneFlags.HasSkinningMtx,
+            });
+            var render = AddBoneRender(genericBone);
+            PrepareBoneUI(render.UINode, genericBone);
+
+            if (parent == null)
+                FolderUI.AddChild(render.UINode);
+            else
+                parentNode.AddChild(render.UINode);
+        }
+
+        //Todo these will be ported to glframework when library is updated to latest
+        public BoneRender AddBoneRender(STBone bone)
+        {
+            var render = new BoneRender(bone);
+            Renderer.Bones.Add(render);
+
+            var parent = Renderer.Bones.FirstOrDefault(x => x.BoneData == bone.Parent);
+            render.SetParent(parent);
+
+            return render;
+        }
+
+        public void RemoveBoneRender(STBone bone)
+        {
+            var render = Renderer.Bones.FirstOrDefault(x => x.BoneData == bone);
+            if (render != null)
+            {
+                Renderer.Bones.Remove(render);
+            }
+        }
+
+        private void RemoveBoneAction(NodeBase node, STBone removedBone)
+        {
+            List<STBone> bonesToRemove = GetAllChildren(removedBone);
+            bonesToRemove.Add(removedBone);
+            if (this.Bones.Count == bonesToRemove.Count)
+            {
+                TinyFileDialog.MessageBoxErrorOk($"Atleast 1 bone is needed to be present!");
+                return;
+            }
+
+            var result = TinyFileDialog.MessageBoxInfoYesNo(
+                string.Format("Are you sure you want to remove {0}? This cannot be undone!", removedBone.Name));
+
+            if (result != 1)
+                return;
+
+            //Remove from gui
+            if (node.Parent != null)
+                node.Parent.Children.Remove(node);
+
+            foreach (var bone in bonesToRemove)
+            {
+                //Remove from parent
+                var parent = bone.Parent;
+                if (parent != null)
+                    parent.Children.Remove(parent);
+
+                //Remove from bone render
+                RemoveBoneRender(bone);
+
+                //Remove from generic skeleton
+                this.Bones.Remove(bone);
+
+                //Remove from bcres skeleton data
+                if (GfxSkeleton.Bones.Contains(bone.Name))
+                    GfxSkeleton.Bones.Remove(GfxSkeleton.Bones[bone.Name]);
+            }
+        }
+
+        private BcresBone AddBone(GfxBone bone)
+        {
+            BcresBone genericBone = new BcresBone(GfxSkeleton, this)
+            {
+                BoneData = bone,
+                Name = bone.Name,
+                Position = new OpenTK.Vector3(
+                        bone.Translation.X,
+                        bone.Translation.Y,
+                        bone.Translation.Z),
+                EulerRotation = new OpenTK.Vector3(
+                        bone.Rotation.X,
+                        bone.Rotation.Y,
+                        bone.Rotation.Z),
+                Scale = new OpenTK.Vector3(
+                        bone.Scale.X,
+                        bone.Scale.Y,
+                        bone.Scale.Z),
+            };
+
+            Bones.Add(genericBone);
+
+            this.Reset();
+
+            return genericBone;
+        }
+
+        private List<STBone> GetAllChildren(STBone bone)
+        {
+            List<STBone> bones = new List<STBone>();
+            foreach (var child in bone.Children)
+                bones.AddRange(GetAllChildren(child));
+            return bones;
         }
     }
 
@@ -772,7 +969,7 @@ namespace CtrLibrary.Bcres
             parent.Children.Remove(this);
 
             var modelNode =  parent.Parent as CMDL;
-            modelNode.GenerateAnimGroups();
+            modelNode.GenerateMaterialAnimGroups();
 
             if (IconManager.HasIcon(Icon))
                 IconManager.RemoveTextureIcon(Icon);

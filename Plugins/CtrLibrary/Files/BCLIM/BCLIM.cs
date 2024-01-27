@@ -27,7 +27,7 @@ namespace CtrLibrary
 
         public bool Identify(File_Info fileInfo, Stream stream)
         {
-            if (stream.Length < 0x40 || !fileInfo.FileName.EndsWith(".bclim"))
+            if (stream.Length < 0x40 || (!fileInfo.FileName.EndsWith(".bclim")))
                 return false;
 
             using (FileReader reader = new FileReader(stream, true)) {
@@ -38,7 +38,7 @@ namespace CtrLibrary
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class FileHeader
         {
-            public uint magic = 0x464C494D;
+            public Magic magic = "CLIM";
             public ushort bom = 0xFEFF;
             public ushort headerSize = 0x14;
             public uint version = 0x02020000;
@@ -50,7 +50,7 @@ namespace CtrLibrary
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class ImageHeader
         {
-            public uint magic = 0x696D6167;
+            public Magic magic = "imag";
             public uint blockSize = 0x10;
             public short Width;
             public short Height;
@@ -93,6 +93,7 @@ namespace CtrLibrary
             using (var writer = new FileWriter(stream))
             {
                 ImageInfo.DataSize = ImageData.Length;
+                ImageInfo.Alignment = 128;
 
                 writer.SetByteOrder(false);
                 writer.Write(ImageData);
@@ -149,6 +150,11 @@ namespace CtrLibrary
             windows.Add(Workspace.Outliner);
             windows.Add(Workspace.PropertyWindow);
             return windows;
+        }
+
+        public override void DrawArchiveFileEditor()
+        {
+            MapStudio.UI.ImageEditor.LoadEditor(ImageBase.Tag as STGenericTexture);
         }
 
 

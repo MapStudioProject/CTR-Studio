@@ -686,6 +686,22 @@ namespace CtrLibrary.Bcres
                 {
                     ((AnimationWrapper)Tag).AnimationSet();
                 };
+
+                this.ContextMenus.Clear();
+                this.ContextMenus.Add(new MenuItemModel("Export", Export));
+                this.ContextMenus.Add(new MenuItemModel("Replace", Replace));
+                this.ContextMenus.Add(new MenuItemModel(""));
+
+                if (((GfxAnimation)Section).TargetAnimGroupName == "SkeletalAnimation")
+                {
+                    this.ContextMenus.Add(new MenuItemModel("Replace (Baked Quaternions)", () => ReplaceAsBaked(false)));
+                    this.ContextMenus.Add(new MenuItemModel("Replace (Baked Matrices)", () => ReplaceAsBaked(true)));
+
+                    this.ContextMenus.Add(new MenuItemModel(""));
+                }
+                this.ContextMenus.Add(new MenuItemModel("Rename", () => { ActivateRename = true; }));
+                this.ContextMenus.Add(new MenuItemModel(""));
+                this.ContextMenus.Add(new MenuItemModel("Remove", Remove));
             }
 
             public override void Export()
@@ -758,6 +774,29 @@ namespace CtrLibrary.Bcres
                         var type = ((H3DGroupNode<T>)this.Parent).Type;
                         Section = ReplaceRaw(dlg.FilePath, type);
                     }
+
+                    H3DAnimation = ((GfxAnimation)Section).ToH3DAnimation();
+                    ((AnimationWrapper)Tag).Reload(H3DAnimation);
+
+                    ((AnimationWrapper)Tag).AnimationSet();
+                }
+            }
+
+            public void ReplaceAsBaked(bool asMatrices)
+            {
+                ImguiFileDialog dlg = new ImguiFileDialog();
+                dlg.SaveDialog = false;
+                dlg.AddFilter(".anim", "anim");
+                dlg.FileName = $"{Header}.anim";
+
+                if (dlg.ShowDialog())
+                {
+                    BcresSkelAnimationImporter.Import(dlg.FilePath, ((GfxAnimation)Section), GetModel(),
+                        new BcresSkelAnimationImporter.BcresImportSettings()
+                        {
+                            BakeAsMatrices = asMatrices,
+                            BakeAsQuat = !asMatrices,
+                        });
 
                     H3DAnimation = ((GfxAnimation)Section).ToH3DAnimation();
                     ((AnimationWrapper)Tag).Reload(H3DAnimation);
