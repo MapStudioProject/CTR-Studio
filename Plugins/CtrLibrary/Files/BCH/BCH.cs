@@ -744,7 +744,7 @@ namespace CtrLibrary.Bch
         {
             H3DCamera Camera => (H3DCamera)Section;
 
-            public CameraHandler CameraDisplay;
+            //public CameraHandler CameraDisplay;
 
             public CameraNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
@@ -752,7 +752,7 @@ namespace CtrLibrary.Bch
                 cameraUI.Init(Camera);
 
                 //Create a camera handle instance for previewing
-                CameraDisplay = new CameraHandler(Camera);
+            //    CameraDisplay = new CameraHandler(Camera);
 
                 this.TagUI.UIDrawer += delegate
                 {
@@ -760,7 +760,7 @@ namespace CtrLibrary.Bch
                 };
                 this.OnSelected += delegate
                 {
-                    CameraDisplay.Activate();
+                  //  CameraDisplay.Activate();
                 };
             }
         }
