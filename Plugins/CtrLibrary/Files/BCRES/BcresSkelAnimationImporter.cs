@@ -404,6 +404,10 @@ namespace CtrLibrary
                 if (animation.Tracks.Count == 0)
                     return;
 
+                //Check if group is already loaded
+                if (gfxAnimation.Elements.Any(x => x.Name == animation.Name))
+                    return;
+
                 //create a bone anim element
                 GfxAnimationElement element = new GfxAnimationElement();
                 element.Name = animation.Name;
@@ -432,7 +436,7 @@ namespace CtrLibrary
                         element.Content = ImportMtxTransform(animation, model);
                         break;
                     case GfxPrimitiveType.QuatTransform:
-                        element.Content = ImportQuatTransform(animation, (int)gfxAnimation.FramesCount);
+                        element.Content = ImportQuatTransform(animation, model,(int)gfxAnimation.FramesCount);
                         break;
                     default:
                         throw new Exception($"Unsupported primitive type! {type}");
@@ -552,9 +556,12 @@ namespace CtrLibrary
             }
         }
 
-        private static GfxAnimQuatTransform ImportQuatTransform(IOAnimation animation, int frameCount)
+        private static GfxAnimQuatTransform ImportQuatTransform(IOAnimation animation, H3DModel model, int frameCount)
         {
             var transform = new GfxAnimQuatTransform();
+
+            var bone = model.Skeleton.Contains(animation.Name) ? model.Skeleton[animation.Name] : new H3DBone();
+            var bone_quat = Quaternion.CreateFromYawPitchRoll(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
 
             var posX = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.PositionX);
             var posY = animation.Tracks.FirstOrDefault(x => x.ChannelType == IOAnimationTrackType.PositionY);
@@ -575,26 +582,26 @@ namespace CtrLibrary
 
             bool hasScale = scaX != null || scaY != null || scaZ != null;
             bool hasPos = posX != null || posY != null || posZ != null;
-            bool hasQuat = quatX != null || quatY != null || quatZ != null;
+            bool hasQuat = quatX != null || quatY != null || quatZ != null || quatW != null;
             bool hasEuler = rotX != null || rotY != null || rotZ != null;
 
             for (int i = 0; i < frameCount; i++)
             {
                 Vector3 position = new Vector3(
-                    posX != null ? posX.GetFrameValue(i) : 0,
-                    posY != null ? posY.GetFrameValue(i) : 0,
-                    posZ != null ? posZ.GetFrameValue(i) : 0);
+                    posX != null ? posX.GetFrameValue(i) : bone.Translation.X,
+                    posY != null ? posY.GetFrameValue(i) : bone.Translation.Y,
+                    posZ != null ? posZ.GetFrameValue(i) : bone.Translation.Z);
 
                 Vector3 scale = new Vector3(
-                    scaX != null ? scaX.GetFrameValue(i) : 1,
-                    scaY != null ? scaY.GetFrameValue(i) : 1,
-                    scaZ != null ? scaZ.GetFrameValue(i) : 1);
+                    scaX != null ? scaX.GetFrameValue(i) : bone.Scale.X,
+                    scaY != null ? scaY.GetFrameValue(i) : bone.Scale.Y,
+                    scaZ != null ? scaZ.GetFrameValue(i) : bone.Scale.Z);
 
                 Quaternion quat = new Quaternion(
-                    quatX != null ? quatX.GetFrameValue(i) : 0,
-                    quatY != null ? quatY.GetFrameValue(i) : 0,
-                    quatZ != null ? quatZ.GetFrameValue(i) : 0,
-                    quatW != null ? quatW.GetFrameValue(i) : 1);
+                    quatX != null ? quatX.GetFrameValue(i) : bone_quat.X,
+                    quatY != null ? quatY.GetFrameValue(i) : bone_quat.Y,
+                    quatZ != null ? quatZ.GetFrameValue(i) : bone_quat.Z,
+                    quatW != null ? quatW.GetFrameValue(i) : bone_quat.W);
 
                 if (hasPos)
                     transform.Translations.Add(position);
