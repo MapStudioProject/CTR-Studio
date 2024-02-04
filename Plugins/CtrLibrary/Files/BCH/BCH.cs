@@ -34,6 +34,7 @@ using static MapStudio.UI.AnimationTree;
 using SPICA.Formats.CtrH3D.Camera;
 using Discord;
 using IONET.Collada.FX.Rendering;
+using System.Transactions;
 
 namespace CtrLibrary.Bch
 {
@@ -168,7 +169,7 @@ namespace CtrLibrary.Bch
             this.Workspace.Outliner.SelectionChanged += delegate
             {
                 var node = this.Workspace.Outliner.SelectedNode;
-                if (node is MaterialWrapper) //material tree node
+                if (ShaderWindow != null && node is MaterialWrapper) //material tree node
                 {
                     var mat = ((MaterialWrapper)node).Material;
                     ShaderWindow.Material = mat;
@@ -227,6 +228,30 @@ namespace CtrLibrary.Bch
             AddNodeGroup(H3DData.LightAnimations, H3DGroupType.LightAnim);
             AddNodeGroup(H3DData.FogAnimations, H3DGroupType.FogAnim);
         }
+
+     /*   public void FrameCamera()
+        {
+            if (Render.Renderer.Models.Count == 0)
+                return;
+
+            var AABB = Render.Renderer.Models[0].GetModelAABB();
+            var MdlCenter = AABB.Center;
+
+            float Dimension = 1;
+
+            Dimension = Math.Max(Dimension, Math.Abs(AABB.Size.X));
+            Dimension = Math.Max(Dimension, Math.Abs(AABB.Size.Y));
+            Dimension = Math.Max(Dimension, Math.Abs(AABB.Size.Z));
+            Dimension *= 2;
+
+            var Translation = new OpenTK.Vector3(0, 0, Dimension);
+            GLContext.ActiveContext.Camera.SetPosition(MdlCenter + Translation);
+            GLContext.ActiveContext.Camera.RotationX = 0;
+            GLContext.ActiveContext.Camera.RotationY = 0;
+            GLContext.ActiveContext.Camera.RotationZ = 0;
+
+            GLContext.ActiveContext.Camera.UpdateMatrices();
+        }*/
 
 
         /// <summary>
@@ -559,7 +584,7 @@ namespace CtrLibrary.Bch
         {
             public override string DefaultExtension => ".json";
             public override string[] ExportFilters => new string[] { ".bch", ".json", ".anim" };
-            public override string[] ReplaceFilters => new string[] { ".bch", ".json", ".anim" };
+            public override string[] ReplaceFilters => new string[] { ".bch", ".json", ".gltf", ".glb", ".dae", ".anim" };
 
             public AnimationNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
@@ -593,32 +618,48 @@ namespace CtrLibrary.Bch
             {
                 OnSave();
 
-                if (filePath.EndsWith(".json"))
+                string ext = Path.GetExtension(filePath.ToLower());
+                switch (ext)
                 {
-                    File.WriteAllText(filePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
-                }
-                else if (filePath.ToLower().EndsWith(".anim"))
-                {
-                    BchSkelAnimationImporter.Export(((H3DAnimation)Section), GetModel(), filePath);
-                }
-                else
-                {
-                    var type = ((H3DGroupNode<T>)this.Parent).Type;
-                    ExportRaw(filePath, Section, type);
+                    case ".json":
+                        File.WriteAllText(filePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                        break;
+                    case ".bch":
+                         var type = ((H3DGroupNode<T>)this.Parent).Type;
+                        ExportRaw(filePath, Section, type);
+                        break;
+                    case ".anim":
+                    case ".dae":
+                    case ".glb":
+                    case ".gltf":
+                        BchSkelAnimationImporter.Export(((H3DAnimation)Section), GetModel(), filePath);
+                        break;
+                    default:
+                        throw new Exception($"Unsupported file extension {ext}!"); 
                 }
             }
 
             public override void Replace(string filePath)
             {
                 //Replace as raw binary or json text formats
-                if (filePath.ToLower().EndsWith(".anim"))
+                string ext = Path.GetExtension(filePath.ToLower());
+                switch (ext)
                 {
-                    BchSkelAnimationImporter.Import(filePath, ((H3DAnimation)Section), GetModel());
-                    ReloadName();
-                }
-                else
-                {
-                    base.Replace(filePath);
+                    case ".json":
+                        base.Replace(filePath);
+                        break;
+                    case ".bch":
+                        base.Replace(filePath);
+                        break;
+                    case ".anim":
+                    case ".dae":
+                    case ".glb":
+                    case ".gltf":
+                        BchSkelAnimationImporter.Import(filePath, ((H3DAnimation)Section), GetModel());
+                        ReloadName();
+                        break;
+                    default:
+                        throw new Exception($"Unsupported file extension {ext}!");
                 }
                 ((AnimationWrapper)Tag).Reload((H3DAnimation)Section);
                 ((AnimationWrapper)Tag).AnimationSet();
@@ -703,14 +744,23 @@ namespace CtrLibrary.Bch
         {
             H3DCamera Camera => (H3DCamera)Section;
 
+            public CameraHandler CameraDisplay;
+
             public CameraNode(H3DDict<T> subSections, object section) : base(subSections, section)
             {
                 BchCameraUI cameraUI = new BchCameraUI();
                 cameraUI.Init(Camera);
 
+                //Create a camera handle instance for previewing
+                CameraDisplay = new CameraHandler(Camera);
+
                 this.TagUI.UIDrawer += delegate
                 {
                     cameraUI.Render();
+                };
+                this.OnSelected += delegate
+                {
+                    CameraDisplay.Activate();
                 };
             }
         }
@@ -816,7 +866,7 @@ namespace CtrLibrary.Bch
             public virtual void Replace(string filePath)
             {
                 //Replace as raw binary or json text formats
-                if (filePath.ToLower().EndsWith(".bch"))
+                if (filePath.ToLower().EndsWith(".bch") || filePath.ToLower().EndsWith(".bmdl"))
                 {
                     var type = ((H3DGroupNode<T>)this.Parent).Type;
                     Dict[this.Header] = (T)ReplaceRaw(filePath, type);

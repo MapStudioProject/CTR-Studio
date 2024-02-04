@@ -694,7 +694,7 @@ namespace CtrLibrary.Bcres
 
                 if (((GfxAnimation)Section).TargetAnimGroupName == "SkeletalAnimation")
                 {
-                    this.ContextMenus.Add(new MenuItemModel("Replace (Baked Quaternions)", () => ReplaceAsBaked(false)));
+                    this.ContextMenus.Add(new MenuItemModel("Replace (Baked Quaternions / MK7 Drivers)", () => ReplaceAsBaked(false)));
                     this.ContextMenus.Add(new MenuItemModel("Replace (Baked Matrices)", () => ReplaceAsBaked(true)));
 
                     this.ContextMenus.Add(new MenuItemModel(""));
@@ -722,18 +722,24 @@ namespace CtrLibrary.Bcres
                 {
                     OnSave();
 
-                    if (dlg.FilePath.EndsWith(".json"))
+                    string ext = Path.GetExtension(dlg.FilePath.ToLower());
+                    switch (ext)
                     {
-                        File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
-                    }
-                    else if (dlg.FilePath.ToLower().EndsWith(".anim"))
-                    {
-                        BcresSkelAnimationImporter.Export(((GfxAnimation)Section), GetModel(), dlg.FilePath);
-                    }
-                    else
-                    {
-                        var type = ((H3DGroupNode<T>)this.Parent).Type;
-                        ExportRaw(dlg.FilePath, Section, type);
+                        case ".json":
+                            File.WriteAllText(dlg.FilePath, JsonConvert.SerializeObject(Section, Formatting.Indented));
+                            break;
+                        case ".bcres":
+                            var type = ((H3DGroupNode<T>)this.Parent).Type;
+                            ExportRaw(dlg.FilePath, Section, type);
+                            break;
+                        case ".anim":
+                        case ".dae":
+                        case ".glb":
+                        case ".gltf":
+                            BcresSkelAnimationImporter.Export(((GfxAnimation)Section), GetModel(), dlg.FilePath);
+                            break;
+                        default:
+                            throw new Exception($"Unsupported file extension {ext}!");
                     }
                 }
             }
@@ -754,25 +760,35 @@ namespace CtrLibrary.Bcres
                 if (((GfxAnimation)Section).TargetAnimGroupName == "SkeletalAnimation")
                 {
                     dlg.AddFilter(".anim", "anim");
+                    dlg.AddFilter(".gltf", "gltf");
+                    dlg.AddFilter(".glb", "glb");
+                    dlg.AddFilter(".dae", "dae");
+
                     dlg.FileName = $"{Header}.anim";
                 }
 
                 if (dlg.ShowDialog())
                 {
-                    if (dlg.FilePath.EndsWith(".json"))
+                    string ext = Path.GetExtension(dlg.FilePath.ToLower());
+                    switch (ext)
                     {
-                        Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
-                        Dict[this.Header] = (T)Section;
-                        Dict[this.Header].Name = this.Header;
-                    }
-                    else if (dlg.FilePath.ToLower().EndsWith(".anim"))
-                    {
-                         BcresSkelAnimationImporter.Import(dlg.FilePath, ((GfxAnimation)Section), GetModel());
-                    }
-                    else
-                    {
-                        var type = ((H3DGroupNode<T>)this.Parent).Type;
-                        Section = ReplaceRaw(dlg.FilePath, type);
+                        case ".json":
+                            Section = JsonConvert.DeserializeObject<T>(File.ReadAllText(dlg.FilePath));
+                            Dict[this.Header] = (T)Section;
+                            Dict[this.Header].Name = this.Header;
+                            break;
+                        case ".bcres":
+                            var type = ((H3DGroupNode<T>)this.Parent).Type;
+                            Section = ReplaceRaw(dlg.FilePath, type);
+                            break;
+                        case ".anim":
+                        case ".dae":
+                        case ".glb":
+                        case ".gltf":
+                            BcresSkelAnimationImporter.Import(dlg.FilePath, ((GfxAnimation)Section), GetModel());
+                            break;
+                        default:
+                            throw new Exception($"Unsupported file extension {ext}!");
                     }
 
                     H3DAnimation = ((GfxAnimation)Section).ToH3DAnimation();
@@ -787,6 +803,9 @@ namespace CtrLibrary.Bcres
                 ImguiFileDialog dlg = new ImguiFileDialog();
                 dlg.SaveDialog = false;
                 dlg.AddFilter(".anim", "anim");
+                dlg.AddFilter(".gltf", "gltf");
+                dlg.AddFilter(".glb", "glb");
+                dlg.AddFilter(".dae", "dae");
                 dlg.FileName = $"{Header}.anim";
 
                 if (dlg.ShowDialog())

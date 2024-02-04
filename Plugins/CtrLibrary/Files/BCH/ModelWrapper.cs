@@ -31,6 +31,8 @@ using SPICA.Rendering;
 using SixLabors.ImageSharp;
 using static CtrLibrary.Bch.BCH;
 using SixLabors.ImageSharp.Processing;
+using Toolbox.Core.IO;
+using Toolbox.Core.Imaging;
 
 namespace CtrLibrary.Bch
 {
@@ -309,12 +311,39 @@ namespace CtrLibrary.Bch
         {
             if (filePath.EndsWith(".dae"))
             {
-                int modelIndex = H3DFile.Models.Find(Model.Name);
-                var collada = new SPICA.Formats.Generic.COLLADA.DAE(H3DFile, modelIndex);
-                collada.Save(filePath);
+                /*    var archive = STFileLoader.OpenFileFormat("archive.arc") as IArchiveFile;
+                    if (archive == null)
+                        return;
+
+                    foreach (var file in archive.Files)
+                    {
+                        //Check if file data in archive is BCH
+                        using (var reader = new FileReader(file.FileData, true))
+                        {
+                            if (!reader.CheckSignature(3, "BCH"))
+                                continue;
+                        }
+
+                        //Load BCH
+                        var bch = H3D.Open(file.FileData.ToArray());
+                        for (int i = 0; i < bch.Models.Count; i++)
+                        {
+                            var dae = new SPICA.Formats.Generic.COLLADA.DAE(H3DFile, i);
+                            dae.Save(string.Format("{0}.dae", bch.Models[i].Name));
+                        }
+
+                        string folder = Path.GetDirectoryName(filePath);
+                        foreach (var h3dTex in bch.Textures)
+                        {
+                            //Save image as png
+                            var image = h3dTex.ToBitmap();
+                            image.SaveAsPng(Path.Combine(folder, $"{h3dTex.Name}.png"));
+                            image.Dispose();
+                        }
+                    }
+                    */
 
                 string folder = Path.GetDirectoryName(filePath);
-
                 foreach (var h3dTex in H3DFile.Textures)
                 {
                     //Save image as png
@@ -322,6 +351,10 @@ namespace CtrLibrary.Bch
                     image.SaveAsPng(Path.Combine(folder, $"{h3dTex.Name}.png"));
                     image.Dispose();
                 }
+
+                int modelIndex = H3DFile.Models.Find(Model.Name);
+                var collada = new SPICA.Formats.Generic.COLLADA.DAE(H3DFile, modelIndex);
+                collada.Save(filePath);
             }
             else if (filePath.EndsWith(".json"))
                 File.WriteAllText(filePath, JsonConvert.SerializeObject(Model, Formatting.Indented));
