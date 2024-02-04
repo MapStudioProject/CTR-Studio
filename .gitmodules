@@ -5,6 +5,7 @@
 [submodule "MapStudio.UI"]
 	path = MapStudio.UI
 	url = https://github.com/MapStudioProject/MapStudio.UI
+	branch = ctr-studio
 [submodule "GLFrameworkEngine"]
 	path = GLFrameworkEngine
 	url = https://github.com/MapStudioProject/GLFrameworkEngine
