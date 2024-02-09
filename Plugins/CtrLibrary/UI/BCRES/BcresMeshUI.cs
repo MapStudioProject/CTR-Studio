@@ -86,7 +86,11 @@ namespace CtrLibrary.Bcres
             }
 
             if (ImGui.SliderInt("Render Priority", ref renderPriority, 0, 255))
+            {
                 GfxMesh.RenderPriority = (byte)renderPriority;
+                GfxMesh.H3DMesh.Priority = (byte)renderPriority;
+                GLContext.ActiveContext.UpdateViewport = true;
+            }
 
             //Draw icon
             DrawMatIcon(materialIdx);
