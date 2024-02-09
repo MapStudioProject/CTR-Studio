@@ -40,6 +40,7 @@ using static CtrLibrary.Bch.BCH;
 using Toolbox.Core.Animations;
 using SPICA.Formats.CtrGfx.Camera;
 using SPICA.Formats.CtrH3D.Camera;
+using SPICA.Formats.CtrGfx.AnimGroup;
 
 namespace CtrLibrary.Bcres
 {
@@ -572,10 +573,23 @@ namespace CtrLibrary.Bcres
 
                 this.Dict.Remove((T)Section);
 
+                var meta_data = ((GfxLight)Section).MetaData.ToList();
+                var anim_groups = ((GfxLight)Section).AnimationsGroup.ToList();
+
                 //reinsert instance. GfxLight can change type instance so it has to be reloaded
                 Section = GfxLight.FromH3D(this.H3DLight);
 
                 this.Dict.Insert(index, (T)Section);
+
+                //Re insert meta data and anim groups after conversion
+                ((GfxLight)Section).MetaData = new GfxDict<GfxMetaData>();
+                ((GfxLight)Section).AnimationsGroup = new GfxDict<GfxAnimGroup>();
+
+                foreach (var usd in meta_data)
+                    ((GfxLight)Section).MetaData.Add(usd);
+
+                foreach (var animGroup in anim_groups)
+                    ((GfxLight)Section).AnimationsGroup.Add(animGroup);
             }
         }
 
