@@ -146,7 +146,7 @@ namespace CtrLibrary.Bch
                 {
                     //Assign texture to new material if used
                     string texture = "";
-                    if (!string.IsNullOrEmpty(mat.DiffuseMap?.FilePath))
+                    if (!string.IsNullOrEmpty(mat.DiffuseMap?.FilePath) && !settings.UseOriginalMaterials)
                     {
                         string ext = mat.DiffuseMap.FilePath.Split(".").LastOrDefault();
                         //Map out the texture. Swap out the extension, files can have multiple dots which GetFileWithoutExtension can break.
@@ -331,6 +331,9 @@ namespace CtrLibrary.Bch
         private static void ConvertMesh(IONET.Core.IOScene scene, IOMesh iomesh, 
             H3DModel h3dModel, Matrix4x4[] skinningMatrices, CtrImportSettings settings) 
         {
+            if (iomesh.Vertices.Count == 0)
+                return;
+
             string meshName = iomesh.Name;
 
             if (settings.ImportTangents)
@@ -350,7 +353,9 @@ namespace CtrLibrary.Bch
             //Check how many bones are used total
             var boneList = iomesh.Vertices.SelectMany(x => x.Envelope.Weights.Select(x => x.BoneName)).Distinct().ToList();
             //If only one bone is used, no skinning requred as a bone can be used as a single binded rigid body.
-            if (boneList?.Count == 1 || settings.DisableSkeleton)
+            //if (boneList?.Count == 1 || settings.DisableSkeleton)
+
+            if (settings.DisableSkeleton)
                 skinningCount = 0;
 
             Console.WriteLine($"skinningCount {skinningCount}");

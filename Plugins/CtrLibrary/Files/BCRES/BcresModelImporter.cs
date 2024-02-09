@@ -224,7 +224,7 @@ namespace CtrLibrary.Bcres
 
                 //Check for a match and that the material has diffuse used
                 var iomaterial = scene.Materials.FirstOrDefault(x => x.Label == mat.Name);
-                if (iomaterial != null && iomaterial.DiffuseMap != null)
+                if (iomaterial != null && iomaterial.DiffuseMap != null && !settings.UseOriginalMaterials)
                 {
                     string ext = iomaterial.DiffuseMap.FilePath.Split(".").LastOrDefault();
 
