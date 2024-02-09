@@ -176,7 +176,11 @@ namespace CtrLibrary.Bcres
 
                 var renderPriority = (int)GfxModel.Meshes[selectedMeshID].RenderPriority;
                 if (ImGui.SliderInt("Priority", ref renderPriority, 0, 255))
+                {
                     GfxModel.Meshes[selectedMeshID].RenderPriority = (byte)renderPriority;
+                    GfxModel.Meshes[selectedMeshID].H3DMesh.Priority = (byte)renderPriority;
+                    GLContext.ActiveContext.UpdateViewport = true;
+                }
 
                 ImGui.BeginColumns("meshListHeader", 5);
                 ImGuiHelper.BoldText("Show");
