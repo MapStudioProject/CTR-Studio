@@ -69,7 +69,10 @@ namespace CtrLibrary.Bch
             ImGui.Text($"VertexStride: {GfxMesh.VertexStride}");
 
             if (ImGui.SliderInt("Render Priority", ref renderPriority, 0, 1000))
+            {
                 GfxMesh.Priority = (int)renderPriority;
+                GLContext.ActiveContext.UpdateViewport = true;
+            }
 
             //Draw icon
             DrawMatIcon(materialIdx);

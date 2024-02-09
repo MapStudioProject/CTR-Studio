@@ -72,7 +72,10 @@ namespace CtrLibrary.Bch
 
                     var renderPriority = H3DModel.Meshes[selectedMeshID].Priority;
                     if (ImGui.SliderInt("Priority", ref renderPriority, 0, 255))
+                    {
                         H3DModel.Meshes[selectedMeshID].Priority = renderPriority;
+                        GLContext.ActiveContext.UpdateViewport = true;
+                    }
 
                     ImGui.BeginColumns("meshListHeader", 4);
 
