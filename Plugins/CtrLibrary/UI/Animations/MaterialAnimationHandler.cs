@@ -36,12 +36,7 @@ namespace CtrLibrary
             State.IsAnimated = true;
             var Params = mat.MaterialParams;
 
-            H3DTextureCoord[] TC = new H3DTextureCoord[]
-             {
-                    Params.TextureCoords[0],
-                    Params.TextureCoords[1],
-                    Params.TextureCoords[2]
-             };
+            H3DTextureCoord[] TC = State.TexCoords;
 
             if (group.Element.PrimitiveType == H3DPrimitiveType.RGBA)
             {
@@ -88,7 +83,7 @@ namespace CtrLibrary
                     case H3DTargetType.MaterialTexCoord2Scale: SetVector2(anim, Vector, ref TC[2].Scale); break;
 
                     case H3DTargetType.MaterialTexCoord0Trans: SetVector2(anim, Vector, ref TC[0].Translation); break;
-                    case H3DTargetType.MaterialTexCoord1Trans: SetVector2(anim, Vector, ref TC[1].Translation); break;
+                    case H3DTargetType.MaterialTexCoord1Trans: SetVector2(anim, Vector, ref TC[1].Translation);  break;
                     case H3DTargetType.MaterialTexCoord2Trans: SetVector2(anim, Vector, ref TC[2].Translation); break;
                 }
             }
