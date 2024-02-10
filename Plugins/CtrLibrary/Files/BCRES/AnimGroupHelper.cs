@@ -245,7 +245,7 @@ namespace CtrLibrary.Bcres
                         //Set per used texture map
                         for (int j = 0; j < 3; j++)
                         {
-                            bool hasTextures = mat.TextureMappers[j] != null && !string.IsNullOrEmpty(mat.TextureMappers[j].Texture.Name);
+                            bool hasTextures = mat.TextureMappers[j] != null && !string.IsNullOrEmpty(mat.TextureMappers[j].Texture.Path);
                             if (!hasTextures)
                                 continue;
 
