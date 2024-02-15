@@ -34,8 +34,7 @@ namespace CtrLibrary
             }
         }
 
-        //Todo support SHIFT JIS
-        static Encoding StringEncoding => Encoding.UTF8;
+        static Encoding StringEncoding => Encoding.GetEncoding("SJIS");
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public class FileHeader
@@ -87,7 +86,7 @@ namespace CtrLibrary
 
             public byte TextureFormat { get; set; }
             public byte MipCount { get; set; }
-            public bool Compressed { get; set; }
+            public byte Compressed { get; set; }
             public byte Etc1Quality { get; set; }
         }
 
@@ -95,33 +94,40 @@ namespace CtrLibrary
 
         private List<TextureEntry> Textures = new List<TextureEntry>();
 
+        private List<int[]> MipmapSizes  = new List<int[]>();
+
         public void Load(Stream stream)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using (var reader = new FileReader(stream))
             {
                 reader.SetByteOrder(false);
 
                 FileHeaderInfo = reader.ReadStruct<FileHeader>();
 
-                reader.Position = 0x20;
                 var imageHeaders = reader.ReadMultipleStructs<ImageHeader>(FileHeaderInfo.numTextures);
 
-                reader.SeekBegin(FileHeaderInfo.conversionInfoOffset);
-                var mipmapInfos = reader.ReadMultipleStructs<MipmapEntry>(FileHeaderInfo.conversionInfoOffset);
-
-                //Create each image instance
                 for (int i = 0; i < FileHeaderInfo.numTextures; i++)
                 {
                     TextureEntry entry = new TextureEntry();
-                    entry.MipmapInfo = mipmapInfos[i];
-                    entry.Header = imageHeaders[i];
                     Textures.Add(entry);
 
-                    //Read name
+                    entry.Header = imageHeaders[i];
+
+                    // Read mip map sizes
+                    reader.SeekBegin(0x40 + 4 * i);
+                    MipmapSizes.Add(reader.ReadInt32s(entry.Header.MipCount));
+
+                    // Read name
                     reader.SeekBegin(entry.Header.NameOffset);
                     entry.Name = reader.ReadZeroTerminatedString(StringEncoding);
 
-                    //Read image data
+                    // Read mip map entry
+                    reader.SeekBegin(FileHeaderInfo.conversionInfoOffset + i * MipmapEntry.SIZE);
+                    var mipmapInfo = reader.ReadStruct<MipmapEntry>();
+                    entry.MipmapInfo = mipmapInfo;
+
+                    // Read image data
                     reader.SeekBegin(FileHeaderInfo.textureDataOffset + entry.Header.DataOffset);
                     entry.ImageData = reader.ReadBytes((int)entry.Header.ImageSize);
 
@@ -141,34 +147,39 @@ namespace CtrLibrary
             {
                 // Calculate offsets
                 //From https://github.com/FanTranslatorsInternational/Kuriimu2/blob/dev/plugins/Nintendo/plugin_nintendo/Images/Ctpk.cs#L15
-                var texEntryOffset = 0x20;
-                var dataSizeOffset = texEntryOffset + this.Textures.Count * ImageHeader.SIZE;
-                var namesOffset = dataSizeOffset + this.Textures.Sum(x => x.Header.MipCount + 1) * 4;
-                var hashEntryOffset = namesOffset + ((this.Textures.Sum(x => Encoding.GetEncoding("SJIS").GetByteCount(x.Name) + 1) + 3) & ~3);
-                var mipEntriesOffset = hashEntryOffset + this.Textures.Count * HashEntry.SIZE;
-                var dataOffset = (mipEntriesOffset + this.Textures.Count * MipmapEntry.SIZE + 0x7F) & ~0x7F;
+                var imageHeaderOffset = 0x20;
+                var mipmapSizeOffset = imageHeaderOffset + this.Textures.Count * ImageHeader.SIZE;
+                var namesOffset = mipmapSizeOffset + this.Textures.Sum(x => x.Header.MipCount) * 4;
+                var hashListOffset = namesOffset + ((this.Textures.Sum(x => Encoding.GetEncoding("SJIS").GetByteCount(x.Name) + 1) + 3) & ~3);
+                var mipEntriesOffset = hashListOffset + this.Textures.Count * HashEntry.SIZE;
+                var textureDataOffset = (mipEntriesOffset + this.Textures.Count * MipmapEntry.SIZE + 0x7F) & ~0x7F;
 
-                var headerPos = writer.Position;
+                // write file header
+                FileHeaderInfo.numTextures = (ushort) this.Textures.Count;
+                FileHeaderInfo.textureDataOffset = (uint) textureDataOffset;
+                FileHeaderInfo.textureDataSize = (uint) this.Textures.Sum(x => x.ImageData.Length);
+                FileHeaderInfo.hashListOffset = (uint) hashListOffset;
+                FileHeaderInfo.conversionInfoOffset = (uint) mipEntriesOffset;
                 writer.WriteStruct(FileHeaderInfo);
 
+                // write image headers
+                writer.SeekBegin(imageHeaderOffset);
                 foreach (var tex in this.Textures)
-                {
-
-                }
-
-                //image headers
-                foreach (var tex in this.Textures)
+                    // TODO: As the header contains offsets e..g NameOffset, it would need a calculation
+                    // for each texture's offsets when supporting multiple textures per file
                     writer.WriteStruct(tex.Header);
 
-                //image data sizes
+                // mip map sizes
+                writer.SeekBegin(mipmapSizeOffset);
                 foreach (var tex in this.Textures)
                     writer.Write(tex.CalculateMipSizes());
 
-                //names
+                // names
+                writer.SeekBegin(namesOffset);
                 foreach (var tex in this.Textures)
                     writer.WriteString(tex.Name, StringEncoding);
 
-                //hashes
+                // hashes
                 HashEntry[] hashes = new HashEntry[this.Textures.Count];
                 for (int i = 0; i < this.Textures.Count; i++)
                     hashes[i] = new HashEntry()
@@ -177,14 +188,19 @@ namespace CtrLibrary
                         Index = i,
                     };
 
+                writer.SeekBegin(hashListOffset);
                 for (int i = 0; i < hashes.Length; i++)
                     writer.WriteStruct(hashes[i]);
 
-                //mip infos
+                // mip infos
+                writer.SeekBegin(mipEntriesOffset);
                 foreach (var tex in this.Textures)
                     writer.WriteStruct(tex.MipmapInfo);
 
-                //Header
+                // write data
+                writer.Position = textureDataOffset;
+                foreach (var tex in this.Textures)
+                    writer.Write(tex.ImageBase.Texture.RawBuffer);
             }
         }
 
@@ -220,7 +236,7 @@ namespace CtrLibrary
                     Width = this.Header.Width,
                     Height = this.Header.Height,
                     Format = (PICATextureFormat)this.Header.TextureFormat,
-                    MipmapSize = 1,
+                    MipmapSize = this.Header.MipCount,
                     Name = Name,
                     RawBuffer = this.ImageData,
                 };
