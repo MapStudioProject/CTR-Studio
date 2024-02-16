@@ -30,6 +30,10 @@ namespace CtrLibrary
 
         public Header FileHeader;
 
+        private CTPK ctpk;
+
+        private string name;
+
         public bool Identify(File_Info fileInfo, Stream stream)
         {
             using (FileReader reader = new FileReader(stream, true)) {
@@ -45,8 +49,12 @@ namespace CtrLibrary
                 reader.SeekBegin(FileHeader.DataOffset);
                 var data = reader.ReadBytes(FileHeader.CTPKSize);
 
-                CTPK ctpk = new CTPK();
+                ctpk = new CTPK();
                 ctpk.Load(new MemoryStream(data));
+
+                reader.SeekBegin(FileHeader.NameOffset);
+                this.name = reader.ReadZeroTerminatedString();
+
                 foreach (var child in ctpk.Root.Children)
                     Root.AddChild(child);
             }
@@ -65,6 +73,18 @@ namespace CtrLibrary
 
         public void Save(Stream stream)
         {
+            using (var writer = new FileWriter(stream))
+            {
+                writer.WriteStruct(FileHeader);
+
+                MemoryStream ms = new MemoryStream();
+                ctpk.Save(ms);
+                writer.SeekBegin(FileHeader.DataOffset);
+                writer.Write(ms.ToArray());
+
+                writer.SeekBegin(FileHeader.NameOffset);
+                writer.WriteString(this.name);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
