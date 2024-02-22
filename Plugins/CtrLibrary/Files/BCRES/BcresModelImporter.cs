@@ -640,8 +640,9 @@ namespace CtrLibrary.Bcres
 
             //Clip data (.div file)
             var clipData = CDAB.Instance;
-            if (clipData.Shapes.Count == 0)
-                clipData.Shapes.Add(new CDAB.Shape());
+
+            clipData.Shapes.Clear();
+            clipData.Shapes.Add(new CDAB.Shape());
 
             //Stream per mesh
             CDAB.MeshStream streamData = new CDAB.MeshStream();
