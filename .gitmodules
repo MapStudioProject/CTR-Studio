@@ -13,3 +13,9 @@
 	path = Toolbox.Core
 	url = https://github.com/KillzXGaming/Toolbox.Core
 	branch = map-studio
+[submodule "Plugins/CtrLibrary"]
+	path = Plugins/CtrLibrary
+	url = https://github.com/MapStudioProject/CtrLibrary.git
+[submodule "IONET"]
+	path = IONET
+	url = https://github.com/Ploaj/IONET.git
