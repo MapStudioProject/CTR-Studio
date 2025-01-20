@@ -183,8 +183,13 @@
     <Folder Include="LUTs\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSUnixLike())">
+    <Exec Command="mkdir -p ./bin/$(Configuration)/net6.0/Plugins/net6.0" />
+    <Exec Command="cp -rT ../Plugins/CtrLibrary/bin/$(Configuration)/net6.0 ./bin/$(Configuration)/net6.0/Plugins/net6.0" />
   </Target>
 
 </Project>
