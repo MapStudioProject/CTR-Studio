@@ -44,7 +44,7 @@ namespace CTRStudio
             //Initiate the texture resource creator for making texture instances from STGenericTexture.
             InitGLResourceCreation();
             //Load the window and run the application
-            GraphicsMode mode = new GraphicsMode(new ColorFormat(32), 24, 8, 4, new ColorFormat(32), 2, false);
+            GraphicsMode mode = new GraphicsMode(new ColorFormat(32), 24, 8, 1, new ColorFormat(32), 2, false);
             var asssemblyVersion = GetRepoCompileDate(Runtime.ExecutableDir);
 
             var wnd = new UIFramework.Framework(new MainWindow(argumentHandle), mode, asssemblyVersion, "CTR Studio");

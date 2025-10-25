@@ -11,7 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0030" />
   </ItemGroup>
   
 	<ItemGroup>
@@ -143,6 +144,9 @@
     <None Update="Lib\Licenses\SpirvCrossLicense.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Plugins\PluginsHere.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\CubemapHDR.dds">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -181,5 +185,9 @@
     <Folder Include="Lib\Presets\Combiners\" />
     <Folder Include="LUTs\" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
+  </Target>
 
 </Project>
