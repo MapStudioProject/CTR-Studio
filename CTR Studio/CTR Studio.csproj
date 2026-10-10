@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
-    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -159,6 +159,21 @@
     <None Update="RG_ETC1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="runtimes\linux-x64\native\libassimp.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="runtimes\osx-arm64\native\libassimp.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="runtimes\osx-x64\native\libassimp.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="runtimes\win-x64\native\assimp.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="runtimes\win-x86\native\assimp.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="tinyfiledialogs.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -187,7 +202,6 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
   </Target>
 
 </Project>
