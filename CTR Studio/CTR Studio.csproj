@@ -41,6 +41,10 @@
 	  <ProjectReference Include="..\MapStudio.UI\MapStudio.UI.csproj" />
 	  <ProjectReference Include="..\Plugins\CtrLibrary\CtrLibrary.csproj" />
 	</ItemGroup>
+	
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
+  </Target>
   
 	<ItemGroup>
 	  <Reference Include="ImGui.NET">
@@ -64,6 +68,7 @@
 	    <DependentUpon>Resources.resx</DependentUpon>
 	  </Compile>
 	</ItemGroup>
+	
   
 	<ItemGroup>
 	  <Content Update="Lib\Fonts\fa-regular-400.ttf">
