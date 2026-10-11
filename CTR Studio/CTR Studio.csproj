@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
-    <Platforms>AnyCPU;x86</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
