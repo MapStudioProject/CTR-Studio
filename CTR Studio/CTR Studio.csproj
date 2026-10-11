@@ -8,6 +8,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
     <PlatformTarget>x64</PlatformTarget>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,10 +42,7 @@
 	  <ProjectReference Include="..\MapStudio.UI\MapStudio.UI.csproj" />
 	  <ProjectReference Include="..\Plugins\CtrLibrary\CtrLibrary.csproj" />
 	</ItemGroup>
-	
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
-  </Target>
+
   
 	<ItemGroup>
 	  <Reference Include="ImGui.NET">
@@ -192,7 +190,8 @@
     <Folder Include="LUTs\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-  </Target>
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy ..\Plugins\CtrLibrary\bin\$(Configuration)\net6.0 bin\$(Configuration)\net6.0\Plugins\net6.0\ /E" />
+</Target>
 
 </Project>
